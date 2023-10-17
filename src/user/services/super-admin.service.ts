@@ -1,22 +1,27 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
+import { SuperAdmin } from '../entities/super-admin.entity';
 
 @Injectable()
 export class SuperAdminService {
+  constructor(
+    @InjectRepository(SuperAdmin)
+    private superAdminRepository: Repository<SuperAdmin>,
+  ) {}
   create(createSuperAdminDto: CreateSuperAdminDto) {
     return 'This action adds a super admin';
   }
 
-  findAll() {
-    return `This action returns all super admins`;
+  async findAll() {
+    return await this.superAdminRepository.find();
   }
 
-  findOneById(id: number) {
-    return `This action returns a #${id} super admin`;
+  async findOneById(id: number) {
+    return await this.superAdminRepository.findOneBy({ userId: id });
   }
-
-  findOneByUsername(username: string) {}
 
   update(id: number, updateSuperAdminDto: UpdateSuperAdminDto) {
     return `This action updates a #${id} super admin`;

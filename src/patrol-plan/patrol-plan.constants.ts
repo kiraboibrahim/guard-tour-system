@@ -1,0 +1,7 @@
+export const INDIVIDUAL_PATROL_PLAN = 8192;
+
+export const GROUP_PATROL_PLAN = 16384;
+
+export const ADD_DEVICES_ACTION = 'ADD_DEVICES';
+
+export const REMOVE_DEVICES_ACTION = 'REMOVE_DEVICES';

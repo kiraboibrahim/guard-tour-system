@@ -1,18 +1,25 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
-import { IsIn, IsISO8601 } from 'class-validator';
-import { GENDER_OPTIONS } from '../constants';
-import { Shift } from '../../patrol/entities/shift.entity';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { isInstance, IsISO8601, Matches } from 'class-validator';
+import { Shift } from '../../shift/entities/shift.entity';
 import { Patrol } from '../../patrol/entities/patrol.entity';
+import { IsValidGender } from '../user.validators';
 import { CompanyUser } from './user.base.entity';
-import { SECURITY_GUARD_ROLE } from '../../roles/constants';
+import {
+  IndividualPatrolPlan,
+  PatrolPlan,
+} from '../../patrol-plan/entities/patrol-plan.entity';
+import { TEN_DIGIT_NUMBER_REGEXP } from '../user.constants';
+import { Site } from '../../site/entities/site.entity';
 
-@Entity()
+@Entity('securityGuards')
 export class SecurityGuard extends CompanyUser {
-  role = SECURITY_GUARD_ROLE;
-
   @Column()
-  @IsIn(GENDER_OPTIONS)
+  @IsValidGender()
   gender: string;
+
+  @Column({ unique: true })
+  @Matches(TEN_DIGIT_NUMBER_REGEXP)
+  uniqueId: string; // Security Guard Username
 
   @Column({ type: 'date' })
   @IsISO8601()
@@ -21,9 +28,32 @@ export class SecurityGuard extends CompanyUser {
   @Column()
   armedStatus: boolean;
 
-  @ManyToOne(() => Shift, (shift) => shift.securityGuards, { nullable: true })
+  @Column({ nullable: true })
+  shiftId: number;
+
+  @ManyToOne(() => Shift, (shift) => shift.securityGuards, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   shift: Shift;
+
+  @OneToOne(
+    () => IndividualPatrolPlan,
+    (patrolPlan) => patrolPlan.securityGuard,
+    { nullable: true, onDelete: 'SET NULL' },
+  )
+  patrolPlan: PatrolPlan;
 
   @OneToMany(() => Patrol, (patrol) => patrol.securityGuard)
   patrols: Patrol;
+
+  get deployedSite(): Site {
+    return this.shift?.site;
+  }
+
+  isDeployedToSite(site: Site | number) {
+    return site instanceof Site
+      ? this.deployedSite.id === site.id
+      : (this.deployedSite.id = site);
+  }
 }

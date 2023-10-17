@@ -27,7 +27,7 @@ export class DeviceController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.deviceService.findOne(+id);
+    return this.deviceService.findOneById(+id);
   }
 
   @Patch(':id')

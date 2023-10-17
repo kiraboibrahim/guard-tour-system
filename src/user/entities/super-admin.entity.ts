@@ -1,11 +1,15 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 import { IsEmail } from 'class-validator';
 import { User } from './user.base.entity';
-import { SUPER_ADMIN_ROLE } from '../../roles/constants';
 
-@Entity()
-export class SuperAdmin extends User {
-  role = SUPER_ADMIN_ROLE;
+@Entity('superAdmins')
+export class SuperAdmin {
+  @PrimaryColumn()
+  userId: number;
+
+  @OneToOne(() => User, { eager: true, cascade: true, onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: User;
 
   @Column()
   @IsEmail()

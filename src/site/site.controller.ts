@@ -27,7 +27,7 @@ export class SiteController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.siteService.findOne(+id);
+    return this.siteService.findOneById(+id);
   }
 
   @Patch(':id')
@@ -38,5 +38,18 @@ export class SiteController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.siteService.remove(+id);
+  }
+  @Get(':id/shifts')
+  findAllSiteShifts(@Param('id') id: string) {
+    return [];
+  }
+
+  @Get(':id/devices')
+  findAllSiteDevices(@Param('id') id: string) {
+    return [];
+  }
+  @Get(':id/patrols')
+  findAllSitePatrols(@Param('id') id: string) {
+    return [];
   }
 }

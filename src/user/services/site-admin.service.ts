@@ -1,28 +1,35 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSiteAdminDto } from '../dto/create-site-admin.dto';
 import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
+import { SiteAdmin } from '../entities/site-admin.entity';
+import { UserService } from './user.service';
 
 @Injectable()
 export class SiteAdminService {
-  create(createSiteAdminDto: CreateSiteAdminDto) {
-    return 'This action adds a site admin';
+  constructor(
+    @InjectRepository(SiteAdmin)
+    private siteAdminRepository: Repository<SiteAdmin>,
+    private userService: UserService,
+  ) {}
+  async create(createSiteAdminDto: CreateSiteAdminDto) {
+    return await this.userService.createSiteAdmin(createSiteAdminDto);
   }
 
-  findAll() {
-    return `This action returns all site admins`;
+  async findAll() {
+    return await this.siteAdminRepository.find();
   }
 
-  findOneById(id: number) {
-    return `This action returns a #${id} site admin`;
+  async findOneById(id: number) {
+    return await this.siteAdminRepository.findOneBy({ userId: id });
   }
 
-  findOneByUsername(username: string) {}
-
-  update(id: number, updateSiteAdminDto: UpdateSiteAdminDto) {
-    return `This action updates a #${id} site admin`;
+  async update(id: number, updateSiteAdminDto: UpdateSiteAdminDto) {
+    return await this.userService.updateSiteAdmin(id, updateSiteAdminDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} site admin`;
+  async remove(id: number) {
+    return await this.siteAdminRepository.delete({ userId: id });
   }
 }

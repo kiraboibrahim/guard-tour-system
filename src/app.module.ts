@@ -1,8 +1,12 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
@@ -11,8 +15,39 @@ import { DeviceModule } from './device/device.module';
 import { CompanyModule } from './company/company.module';
 import { PatrolModule } from './patrol/patrol.module';
 import { CoreModule } from './core/core.module';
-import { getTypeOrmModule } from './core/module-loading.utils';
+import { Company } from './company/entities/company.entity';
+import { Device } from './device/entities/device.entity';
+import { Patrol } from './patrol/entities/patrol.entity';
+import { Shift } from './shift/entities/shift.entity';
+import { Site } from './site/entities/site.entity';
+import { User } from './user/entities/user.base.entity';
+import { SuperAdmin } from './user/entities/super-admin.entity';
+import { CompanyAdmin } from './user/entities/company-admin.entity';
+import { SiteAdmin } from './user/entities/site-admin.entity';
+import { SecurityGuard } from './user/entities/security-guard.entity';
+import {
+  PatrolPlan,
+  IndividualPatrolPlan,
+  GroupPatrolPlan,
+} from './patrol-plan/entities/patrol-plan.entity';
+import { ShiftModule } from './shift/shift.module';
+import { PatrolPlanModule } from './patrol-plan/patrol-plan.module';
 
+const entities = [
+  Company,
+  Device,
+  Patrol,
+  Shift,
+  Site,
+  User,
+  SuperAdmin,
+  CompanyAdmin,
+  SiteAdmin,
+  SecurityGuard,
+  PatrolPlan,
+  IndividualPatrolPlan,
+  GroupPatrolPlan,
+];
 @Module({
   imports: [
     UserModule,
@@ -23,7 +58,25 @@ import { getTypeOrmModule } from './core/module-loading.utils';
     PatrolModule,
     CoreModule,
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
-    getTypeOrmModule(),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        const isDebugEnv = configService.get<string>('DEBUG') === 'true';
+        return {
+          type: isDebugEnv ? 'sqlite' : 'mysql',
+          host: configService.get<string>('DB_HOST'),
+          port: +configService.get('DB_PORT'),
+          username: configService.get<string>('DB_USERNAME'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_NAME'),
+          entities: [...entities],
+          synchronize: isDebugEnv,
+        };
+      },
+      inject: [ConfigService],
+    }),
+    ShiftModule,
+    PatrolPlanModule,
   ],
   controllers: [AppController],
   providers: [
@@ -35,6 +88,10 @@ import { getTypeOrmModule } from './core/module-loading.utils';
         whitelist: true,
         forbidNonWhitelisted: true,
       }),
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
     },
   ],
 })

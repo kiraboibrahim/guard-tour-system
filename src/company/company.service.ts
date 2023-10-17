@@ -1,26 +1,47 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { Company } from './entities/company.entity';
+import { SecurityGuard } from '../user/entities/security-guard.entity';
+import { Site } from '../site/entities/site.entity';
+import { PermissionsService } from '../permissions/permissions.service';
 
 @Injectable()
 export class CompanyService {
-  create(createCompanyDto: CreateCompanyDto) {
-    return 'This action adds a new company';
+  constructor(
+    @InjectRepository(Company) private companyRepository: Repository<Company>,
+    @InjectRepository(SecurityGuard)
+    private securityGuardRepository: Repository<SecurityGuard>,
+    @InjectRepository(Site) private siteRepository: Repository<Site>,
+    private permissionsService: PermissionsService,
+  ) {}
+  async create(createCompanyDto: CreateCompanyDto) {
+    const company = this.companyRepository.create(createCompanyDto);
+    return await this.companyRepository.save(company);
   }
 
-  findAll() {
-    return `This action returns all company`;
+  async findAll() {
+    return await this.companyRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOneById(id: number) {
+    return await this.companyRepository.findOneBy({ id });
+  }
+  async update(id: number, updateCompanyDto: UpdateCompanyDto) {
+    await this.companyRepository.update({ id }, updateCompanyDto);
   }
 
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
+  async remove(id: number) {
+    await this.companyRepository.delete(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
+  async findAllCompanySites(id: number) {
+    return await this.siteRepository.findBy({ companyId: id });
+  }
+
+  async findAllCompanySecurityGuards(id: number) {
+    return await this.securityGuardRepository.findBy({ companyId: id });
   }
 }

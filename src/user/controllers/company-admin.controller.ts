@@ -16,30 +16,30 @@ export class CompanyAdminController {
   constructor(private readonly companyAdminService: CompanyAdminService) {}
 
   @Post()
-  create(@Body() createCompanyAdminDto: CreateCompanyAdminDto) {
-    return this.companyAdminService.create(createCompanyAdminDto);
+  async create(@Body() createCompanyAdminDto: CreateCompanyAdminDto) {
+    return await this.companyAdminService.create(createCompanyAdminDto);
   }
 
   @Get()
-  findAll() {
-    return this.companyAdminService.findAll();
+  async findAll() {
+    return await this.companyAdminService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.companyAdminService.findOneById(+id);
+  async findOne(@Param('id') id: string) {
+    return await this.companyAdminService.findOneById(+id);
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateCompanyAdminDto: UpdateCompanyAdminDto,
   ) {
-    return this.companyAdminService.update(+id, updateCompanyAdminDto);
+    return await this.companyAdminService.update(+id, updateCompanyAdminDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.companyAdminService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.companyAdminService.remove(+id);
   }
 }

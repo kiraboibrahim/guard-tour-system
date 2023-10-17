@@ -1,17 +1,8 @@
-import {
-  IsAlpha,
-  IsPhoneNumber,
-  MaxLength,
-  IsStrongPassword,
-  ValidateIf,
-} from 'class-validator';
-import {
-  MIN_LOWERCASE_IN_PASSWORD,
-  MIN_PASSWORD_LENGTH,
-  MIN_UPPERCASE_IN_PASSWORD,
-  MIN_SYMBOLS_IN_PASSWORD,
-  MAX_NAME_LENGTH,
-} from '../constants';
+import { IsAlpha, IsPhoneNumber, MaxLength, Validate } from 'class-validator';
+import { MAX_NAME_LENGTH } from '../user.constants';
+import { HasStrongPasswordQualities } from '../user.validators';
+import { IsUnique } from '../../core/core.validators';
+import { User } from '../entities/user.base.entity';
 
 export class CreateUserDto {
   @IsAlpha()
@@ -23,16 +14,9 @@ export class CreateUserDto {
   lastName: string;
 
   @IsPhoneNumber('UG')
+  @Validate(IsUnique, [User])
   phoneNumber: string;
 
-  @IsStrongPassword({
-    minLength: MIN_PASSWORD_LENGTH,
-    minLowercase: MIN_LOWERCASE_IN_PASSWORD,
-    minUppercase: MIN_UPPERCASE_IN_PASSWORD,
-    minSymbols: MIN_SYMBOLS_IN_PASSWORD,
-  })
+  @HasStrongPasswordQualities()
   password: string;
-
-  @ValidateIf((obj) => obj.password === obj.passwordConfirmation)
-  passwordConfirmation: string;
 }

@@ -13,7 +13,7 @@ import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
 
 @Controller('super-admins')
 export class SuperAdminController {
-  constructor(private readonly superAdminService: SuperAdminService) {}
+  constructor(private superAdminService: SuperAdminService) {}
 
   @Post()
   create(@Body() createSuperAdminDto: CreateSuperAdminDto) {

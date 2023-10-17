@@ -1,28 +1,40 @@
 import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSecurityGuardDto } from '../dto/create-security-guard.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
+import { SecurityGuard } from '../entities/security-guard.entity';
+import { PermissionsService } from '../../permissions/permissions.service';
+import { UserService } from './user.service';
 
 @Injectable()
 export class SecurityGuardService {
-  create(createSecurityGuardDto: CreateSecurityGuardDto) {
-    return 'This action adds a security guard';
+  constructor(
+    @InjectRepository(SecurityGuard)
+    private securityGuardRepository: Repository<SecurityGuard>,
+    private userService: UserService,
+    private permissionsService: PermissionsService,
+  ) {}
+
+  async create(createSecurityGuardDto: CreateSecurityGuardDto) {
+    // TODO: CompanyId of companyAdmin should be === to companyId in DTO otherwise, throw Unauthorized exception
+    return this.userService.createSecurityGuard(createSecurityGuardDto);
   }
 
-  findAll() {
-    return `This action returns all security guards`;
+  async findAll() {
+    return await this.securityGuardRepository.find();
   }
 
-  findOneById(id: number) {
-    return `This action returns a #${id} security guard`;
+  async findOneById(id: number) {
+    return await this.securityGuardRepository.findOneBy({ userId: id });
   }
 
-  findOneByUsername(username: string) {}
-
-  update(id: number, updateSecurityGuardDto: UpdateSecurityGuardDto) {
-    return `This action updates a #${id} security guard`;
+  async update(id: number, updateSecurityGuardDto: UpdateSecurityGuardDto) {
+    // TODO: Authorize updates to the company(Only SuperAdmins update company 2 which security guard belongs)
+    await this.userService.updateSecurityGuard(id, updateSecurityGuardDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} security guard`;
+  async remove(id: number) {
+    await this.securityGuardRepository.delete(id);
   }
 }

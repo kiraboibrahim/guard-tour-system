@@ -1,25 +1,28 @@
 import {
+  Entity,
   PrimaryGeneratedColumn,
   Column,
   BeforeInsert,
   ManyToOne,
+  OneToOne,
+  PrimaryColumn,
+  JoinColumn,
+  BeforeUpdate,
 } from 'typeorm';
-import { IsPhoneNumber, IsStrongPassword } from 'class-validator';
+import { IsPhoneNumber } from 'class-validator';
 import * as argon2 from 'argon2';
+import { Exclude } from 'class-transformer';
 import { Company } from '../../company/entities/company.entity';
-import {
-  MIN_LOWERCASE_IN_PASSWORD,
-  MIN_PASSWORD_LENGTH,
-  MIN_SYMBOLS_IN_PASSWORD,
-  MIN_UPPERCASE_IN_PASSWORD,
-} from '../constants';
-import { UNDEFINED_ROLE } from '../../roles/constants';
+import { HasStrongPasswordQualities } from '../user.validators';
+import { IsValidRole } from '../../roles/roles.validators';
 
+@Entity('users')
 export class User {
-  role = UNDEFINED_ROLE;
-
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ unique: true })
+  username: string;
 
   @Column()
   firstName: string;
@@ -32,21 +35,33 @@ export class User {
   phoneNumber: string;
 
   @Column()
-  @IsStrongPassword({
-    minLength: MIN_PASSWORD_LENGTH,
-    minLowercase: MIN_LOWERCASE_IN_PASSWORD,
-    minUppercase: MIN_UPPERCASE_IN_PASSWORD,
-    minSymbols: MIN_SYMBOLS_IN_PASSWORD,
-  })
+  @Exclude()
+  @HasStrongPasswordQualities()
   password: string;
 
+  @Column()
+  @IsValidRole()
+  role: string;
+
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword() {
     this.password = await argon2.hash(this.password);
   }
 }
 
-export class CompanyUser extends User {
-  @ManyToOne(() => Company)
+export class CompanyUser {
+  @PrimaryColumn()
+  @Exclude()
+  userId: number;
+
+  @Column()
+  companyId: number;
+
+  @OneToOne(() => User, { eager: true, cascade: true, onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: User;
+
+  @ManyToOne(() => Company, { eager: true, onDelete: 'CASCADE' })
   company: Company;
 }

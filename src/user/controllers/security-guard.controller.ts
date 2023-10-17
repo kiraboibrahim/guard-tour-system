@@ -42,4 +42,8 @@ export class SecurityGuardController {
   remove(@Param('id') id: string) {
     return this.securityGuardService.remove(+id);
   }
+  @Get(':id/patrols')
+  findSecurityGuardPatrols(@Param('id') id: string) {
+    return [];
+  }
 }

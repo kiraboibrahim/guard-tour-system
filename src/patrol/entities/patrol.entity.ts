@@ -1,10 +1,10 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { IsISO8601 } from 'class-validator';
+import { IsISO8601, IsMilitaryTime } from 'class-validator';
 import { SecurityGuard } from '../../user/entities/security-guard.entity';
 import { Site } from '../../site/entities/site.entity';
-import { Shift } from './shift.entity';
+import { Shift } from '../../shift/entities/shift.entity';
 
-@Entity()
+@Entity('patrols')
 export class Patrol {
   @PrimaryGeneratedColumn()
   id: number;
@@ -14,9 +14,11 @@ export class Patrol {
   date: string;
 
   @Column({ type: 'time' })
+  @IsMilitaryTime()
   startTime: string;
 
   @Column({ type: 'time' })
+  @IsMilitaryTime()
   endTime: string;
 
   @ManyToOne(() => Site)
