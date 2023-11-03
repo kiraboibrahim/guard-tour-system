@@ -1,28 +1,35 @@
-import { IsInt, IsISO8601, IsMilitaryTime, Validate } from 'class-validator';
+import { IsInt, IsISO8601, IsMilitaryTime } from 'class-validator';
 import { IsExistsAndLoadEntity } from '../../core/core.validators';
 import { SecurityGuard } from '../../user/entities/security-guard.entity';
 import { Site } from '../../site/entities/site.entity';
 import { Shift } from '../../shift/entities/shift.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePatrolDto {
+  @ApiProperty()
   @IsISO8601()
   date: string;
 
+  @ApiProperty()
   @IsMilitaryTime()
   startTime: string;
 
+  @ApiProperty()
   @IsMilitaryTime()
   endTime: string;
 
+  @ApiProperty()
   @IsInt()
-  @Validate(IsExistsAndLoadEntity, [Site, 'site'])
+  @IsExistsAndLoadEntity(Site, 'site')
   siteId: number;
 
+  @ApiProperty()
   @IsInt()
-  @Validate(IsExistsAndLoadEntity, [Shift, 'shift'])
+  @IsExistsAndLoadEntity(Shift, 'shift')
   shiftId: number;
 
+  @ApiProperty()
   @IsInt()
-  @Validate(IsExistsAndLoadEntity, [SecurityGuard, 'securityGuard', 'userId'])
+  @IsExistsAndLoadEntity(SecurityGuard, 'securityGuard', 'userId')
   securityGuardId: number;
 }

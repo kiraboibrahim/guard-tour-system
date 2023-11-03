@@ -8,5 +8,6 @@ import { Patrol } from './entities/patrol.entity';
   imports: [TypeOrmModule.forFeature([Patrol])],
   controllers: [PatrolController],
   providers: [PatrolService],
+  exports: [TypeOrmModule],
 })
 export class PatrolModule {}

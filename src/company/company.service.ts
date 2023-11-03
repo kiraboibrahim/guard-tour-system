@@ -7,6 +7,10 @@ import { Company } from './entities/company.entity';
 import { SecurityGuard } from '../user/entities/security-guard.entity';
 import { Site } from '../site/entities/site.entity';
 import { PermissionsService } from '../permissions/permissions.service';
+import { paginate, PaginateQuery } from 'nestjs-paginate';
+import { COMPANY_PAGINATION_CONFIG } from './company-pagination.config';
+import { SITE_PAGINATION_CONFIG } from '../site/site-pagination.config';
+import { SECURITY_GUARD_PAGINATION_CONFIG } from '../user/pagination-config/security-guard-pagination.config';
 
 @Injectable()
 export class CompanyService {
@@ -22,8 +26,12 @@ export class CompanyService {
     return await this.companyRepository.save(company);
   }
 
-  async findAll() {
-    return await this.companyRepository.find();
+  async findAll(query: PaginateQuery) {
+    return await paginate(
+      query,
+      this.companyRepository,
+      COMPANY_PAGINATION_CONFIG,
+    );
   }
 
   async findOneById(id: number) {
@@ -37,11 +45,17 @@ export class CompanyService {
     await this.companyRepository.delete(id);
   }
 
-  async findAllCompanySites(id: number) {
-    return await this.siteRepository.findBy({ companyId: id });
+  async findAllCompanySites(id: number, query: PaginateQuery) {
+    query.filter = { ...query.filter, companyId: [`${id}`] };
+    return await paginate(query, this.siteRepository, SITE_PAGINATION_CONFIG);
   }
 
-  async findAllCompanySecurityGuards(id: number) {
-    return await this.securityGuardRepository.findBy({ companyId: id });
+  async findAllCompanySecurityGuards(id: number, query: PaginateQuery) {
+    query.filter = { ...query.filter, companyId: [`${id}`] };
+    return await paginate(
+      query,
+      this.securityGuardRepository,
+      SECURITY_GUARD_PAGINATION_CONFIG,
+    );
   }
 }

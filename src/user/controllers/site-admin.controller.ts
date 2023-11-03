@@ -10,7 +10,11 @@ import {
 import { SiteAdminService } from '../services/site-admin.service';
 import { CreateSiteAdminDto } from '../dto/create-site-admin.dto';
 import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
+import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
+import { ApiTags } from '@nestjs/swagger';
+import { SITE_ADMIN_PAGINATION_CONFIG } from '../pagination-config/site-admin-pagination.config';
 
+@ApiTags('Site Admins')
 @Controller('site-admins')
 export class SiteAdminController {
   constructor(private readonly siteAdminService: SiteAdminService) {}
@@ -20,9 +24,10 @@ export class SiteAdminController {
     return this.siteAdminService.create(createSiteAdminDto);
   }
 
+  @ApiPaginationQuery(SITE_ADMIN_PAGINATION_CONFIG)
   @Get()
-  findAll() {
-    return this.siteAdminService.findAll();
+  findAll(@Paginate() query: PaginateQuery) {
+    return this.siteAdminService.findAll(query);
   }
 
   @Get(':id')
@@ -31,15 +36,15 @@ export class SiteAdminController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateSiteAdminDto: UpdateSiteAdminDto,
   ) {
-    return this.siteAdminService.update(+id, updateSiteAdminDto);
+    await this.siteAdminService.update(+id, updateSiteAdminDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.siteAdminService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.siteAdminService.remove(+id);
   }
 }

@@ -1,20 +1,7 @@
-import {
-  SUPER_ADMIN_ROLE,
-  SITE_ADMIN_ROLE,
-  COMPANY_ADMIN_ROLE,
-  SECURITY_GUARD_ROLE,
-} from '../roles/roles.constants';
-
-import {
-  COMPANY_RESOURCE,
-  COMPANY_ADMIN_RESOURCE,
-  DEVICE_RESOURCE,
-  PATROL_RESOURCE,
-  SITE_ADMIN_RESOURCE,
-  SITE_RESOURCE,
-  SECURITY_GUARD_RESOURCE,
-  SHIFT_RESOURCE,
-} from './resources.constants';
+export const CREATE = 'create';
+export const READ = 'read';
+export const UPDATE = 'update';
+export const DELETE = 'delete';
 
 const SUPER_ADMIN_PERMISSIONS = {
   COMPANY_RESOURCE: {
@@ -74,7 +61,7 @@ const COMPANY_ADMIN_PERMISSIONS = {
   SITE_RESOURCE: {
     'create:own': ['*'],
     'read:own': ['*'],
-    'update:own': ['*', '!company'],
+    'update:own': ['*', '!company', '!companyId'],
     'delete:own': ['*'],
   },
   SITE_ADMIN_RESOURCE: {
@@ -92,7 +79,7 @@ const COMPANY_ADMIN_PERMISSIONS = {
   SHIFT_RESOURCE: {
     'create:own': ['*'],
     'read:own': ['*'],
-    'update:own': ['*'],
+    'update:own': ['*', 'shift', '!shiftId'],
     'delete:own': ['*'],
   },
   PATROL_RESOURCE: {

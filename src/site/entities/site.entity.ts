@@ -5,13 +5,8 @@ import {
   ManyToOne,
   OneToOne,
 } from 'typeorm';
-import { IsPhoneNumber, IsLongitude, IsLatitude, IsIn } from 'class-validator';
 import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../user/entities/site-admin.entity';
-import {
-  INDIVIDUAL_PATROL_PLAN,
-  GROUP_PATROL_PLAN,
-} from '../../patrol-plan/patrol-plan.constants';
 
 @Entity('sites')
 export class Site {
@@ -22,27 +17,22 @@ export class Site {
   name: string;
 
   @Column({ type: 'decimal' })
-  @IsLatitude()
   latitude: number;
 
   @Column({ type: 'decimal' })
-  @IsLongitude()
   longitude: number;
 
   @Column()
-  @IsPhoneNumber('UG')
   phoneNumber: string;
 
   @Column()
   supervisorName: string;
 
   @Column()
-  @IsPhoneNumber('UG')
   supervisorPhoneNumber: string;
 
   @Column()
-  @IsIn([INDIVIDUAL_PATROL_PLAN, GROUP_PATROL_PLAN])
-  patrolPlanSetting: number;
+  patrolPlanType: string;
 
   @Column()
   companyId: number;
@@ -55,4 +45,10 @@ export class Site {
     eager: true,
   })
   admin: SiteAdmin;
+
+  belongsToCompany(companyOrId: Company | number) {
+    return companyOrId instanceof Company
+      ? this.companyId === companyOrId.id
+      : this.companyId === companyOrId;
+  }
 }

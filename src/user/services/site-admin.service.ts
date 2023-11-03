@@ -5,6 +5,8 @@ import { CreateSiteAdminDto } from '../dto/create-site-admin.dto';
 import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
 import { SiteAdmin } from '../entities/site-admin.entity';
 import { UserService } from './user.service';
+import { paginate, PaginateQuery } from 'nestjs-paginate';
+import { SITE_ADMIN_PAGINATION_CONFIG } from '../pagination-config/site-admin-pagination.config';
 
 @Injectable()
 export class SiteAdminService {
@@ -17,8 +19,12 @@ export class SiteAdminService {
     return await this.userService.createSiteAdmin(createSiteAdminDto);
   }
 
-  async findAll() {
-    return await this.siteAdminRepository.find();
+  async findAll(query: PaginateQuery) {
+    return await paginate(
+      query,
+      this.siteAdminRepository,
+      SITE_ADMIN_PAGINATION_CONFIG,
+    );
   }
 
   async findOneById(id: number) {
@@ -30,6 +36,6 @@ export class SiteAdminService {
   }
 
   async remove(id: number) {
-    return await this.siteAdminRepository.delete({ userId: id });
+    return await this.userService.remove(id);
   }
 }

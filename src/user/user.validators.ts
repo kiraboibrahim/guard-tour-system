@@ -1,4 +1,4 @@
-import { IsIn, IsStrongPassword } from 'class-validator';
+import { IsIn, IsStrongPassword, Matches } from 'class-validator';
 import {
   GENDER_OPTIONS,
   MIN_LOWERCASE_IN_PASSWORD,
@@ -19,4 +19,9 @@ export const HasStrongPasswordQualities = () => {
 
 export const IsValidGender = () => {
   return IsIn(GENDER_OPTIONS);
+};
+
+export const IsValidSecurityGuardUniqueId = () => {
+  const TEN_DIGIT_NUMBER_REGEXP = new RegExp('[1-9][0-9]{9}');
+  return Matches(TEN_DIGIT_NUMBER_REGEXP);
 };

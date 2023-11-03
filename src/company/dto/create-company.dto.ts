@@ -1,15 +1,19 @@
-import { IsNotEmpty, Validate } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { IsUnique } from '../../core/core.validators';
 import { Company } from '../entities/company.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCompanyDto {
+  @ApiProperty()
   @IsNotEmpty()
   name: string;
 
-  @Validate(IsUnique, [Company])
+  @ApiProperty()
+  @IsUnique(Company)
   @IsNotEmpty()
   registrationNumber: string;
 
+  @ApiProperty()
   @IsNotEmpty()
   address: string;
 }

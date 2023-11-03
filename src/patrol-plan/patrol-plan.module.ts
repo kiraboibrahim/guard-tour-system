@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PatrolPlanService } from './patrol-plan.service';
 import { PatrolPlanController } from './patrol-plan.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -20,9 +20,9 @@ import { ShiftModule } from '../shift/shift.module';
       GroupPatrolPlan,
     ]),
     DeviceModule,
-    UserModule,
-    SiteModule,
-    ShiftModule,
+    forwardRef(() => UserModule),
+    forwardRef(() => SiteModule),
+    forwardRef(() => ShiftModule),
   ],
   controllers: [PatrolPlanController],
   providers: [PatrolPlanService],

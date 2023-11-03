@@ -1,25 +1,29 @@
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { isInstance, IsISO8601, Matches } from 'class-validator';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
+import { IsISO8601 } from 'class-validator';
 import { Shift } from '../../shift/entities/shift.entity';
 import { Patrol } from '../../patrol/entities/patrol.entity';
-import { IsValidGender } from '../user.validators';
 import { CompanyUser } from './user.base.entity';
 import {
   IndividualPatrolPlan,
   PatrolPlan,
 } from '../../patrol-plan/entities/patrol-plan.entity';
-import { TEN_DIGIT_NUMBER_REGEXP } from '../user.constants';
 import { Site } from '../../site/entities/site.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('securityGuards')
 export class SecurityGuard extends CompanyUser {
   @Column()
-  @IsValidGender()
   gender: string;
 
   @Column({ unique: true })
-  @Matches(TEN_DIGIT_NUMBER_REGEXP)
-  uniqueId: string; // Security Guard Username
+  uniqueId: string;
 
   @Column({ type: 'date' })
   @IsISO8601()
@@ -27,6 +31,14 @@ export class SecurityGuard extends CompanyUser {
 
   @Column()
   armedStatus: boolean;
+
+  @Column({ nullable: true })
+  deployedSiteId: number | null;
+
+  @Exclude()
+  @ManyToOne(() => Site, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn()
+  deployedSite: Site;
 
   @Column({ nullable: true })
   shiftId: number;
@@ -37,23 +49,33 @@ export class SecurityGuard extends CompanyUser {
   })
   shift: Shift;
 
+  @Exclude()
   @OneToOne(
     () => IndividualPatrolPlan,
     (patrolPlan) => patrolPlan.securityGuard,
-    { nullable: true, onDelete: 'SET NULL' },
+    { eager: true, nullable: true, onDelete: 'SET NULL' },
   )
+  @JoinColumn()
   patrolPlan: PatrolPlan;
 
   @OneToMany(() => Patrol, (patrol) => patrol.securityGuard)
   patrols: Patrol;
 
-  get deployedSite(): Site {
-    return this.shift?.site;
+  isDeployedToSite(siteOrId: Site | number) {
+    return siteOrId instanceof Site
+      ? this.deployedSiteId === siteOrId.id
+      : this.deployedSiteId === siteOrId;
+  }
+  belongsToShift(shiftOrId: Shift | number) {
+    return shiftOrId instanceof Shift
+      ? this.shiftId === shiftOrId.id
+      : this.shiftId === shiftOrId;
+  }
+  hasPatrolPlan() {
+    return this.patrolPlan;
   }
 
-  isDeployedToSite(site: Site | number) {
-    return site instanceof Site
-      ? this.deployedSite.id === site.id
-      : (this.deployedSite.id = site);
+  isNotDeployedToAnySite() {
+    return this.deployedSiteId === null;
   }
 }

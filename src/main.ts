@@ -21,7 +21,7 @@ function useNestJsDIContainerForClassValidation(app: INestApplication) {
 function setupSwaggerDocs(app: INestApplication) {
   const title = 'Guard Tour Systems';
   const apiDescription = 'Guard Tour Systems API Description';
-  const apiVersion = '1.0';
+  const apiVersion = '1.0.0';
   const docsUrl = 'docs';
   const config = new DocumentBuilder()
     .setTitle(title)

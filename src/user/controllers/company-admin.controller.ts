@@ -10,7 +10,11 @@ import {
 import { CompanyAdminService } from '../services/company-admin.service';
 import { CreateCompanyAdminDto } from '../dto/create-company-admin.dto';
 import { UpdateCompanyAdminDto } from '../dto/update-company-admin.dto';
+import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
+import { ApiTags } from '@nestjs/swagger';
+import { COMPANY_PAGINATION_CONFIG } from '../../company/company-pagination.config';
 
+@ApiTags('Company Admins')
 @Controller('company-admins')
 export class CompanyAdminController {
   constructor(private readonly companyAdminService: CompanyAdminService) {}
@@ -20,9 +24,10 @@ export class CompanyAdminController {
     return await this.companyAdminService.create(createCompanyAdminDto);
   }
 
+  @ApiPaginationQuery(COMPANY_PAGINATION_CONFIG)
   @Get()
-  async findAll() {
-    return await this.companyAdminService.findAll();
+  async findAll(@Paginate() query: PaginateQuery) {
+    return await this.companyAdminService.findAll(query);
   }
 
   @Get(':id')
@@ -35,11 +40,11 @@ export class CompanyAdminController {
     @Param('id') id: string,
     @Body() updateCompanyAdminDto: UpdateCompanyAdminDto,
   ) {
-    return await this.companyAdminService.update(+id, updateCompanyAdminDto);
+    await this.companyAdminService.update(+id, updateCompanyAdminDto);
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.companyAdminService.remove(+id);
+    await this.companyAdminService.remove(+id);
   }
 }

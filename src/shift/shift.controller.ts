@@ -10,7 +10,11 @@ import {
 import { ShiftService } from './shift.service';
 import { CreateShiftDto } from './dto/create-shift.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
+import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
+import { ApiTags } from '@nestjs/swagger';
+import { SHIFT_PAGINATION_CONFIG } from './shift-pagination.config';
 
+@ApiTags('Shifts')
 @Controller('shifts')
 export class ShiftController {
   constructor(private readonly shiftService: ShiftService) {}
@@ -20,9 +24,10 @@ export class ShiftController {
     return this.shiftService.create(createShiftDto);
   }
 
+  @ApiPaginationQuery(SHIFT_PAGINATION_CONFIG)
   @Get()
-  findAll() {
-    return this.shiftService.findAll();
+  findAll(@Paginate() query: PaginateQuery) {
+    return this.shiftService.findAll(query);
   }
 
   @Get(':id')
@@ -36,12 +41,12 @@ export class ShiftController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.shiftService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.shiftService.remove(+id);
   }
 
-  @Get(':id')
-  findShiftPatrolPlan(@Param('id') id: string) {
-    return {};
+  @Get(':id/patrol-plan')
+  async findShiftPatrolPlan(@Param('id') id: string) {
+    return await this.shiftService.findShiftPatrolPlan(+id);
   }
 }

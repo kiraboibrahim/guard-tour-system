@@ -4,15 +4,20 @@ import { IsExistsAndLoadEntity, IsUnique } from '../../core/core.validators';
 import { Company } from '../../company/entities/company.entity';
 import { Site } from '../../site/entities/site.entity';
 import { SiteAdmin } from '../entities/site-admin.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateSiteAdminDto extends CreateUserDto {
+  @ApiProperty()
   @Validate(IsExistsAndLoadEntity, [Company, 'company'])
   companyId: number;
 
-  @Validate(IsExistsAndLoadEntity, [Site, 'site'])
+  @ApiProperty()
+  @IsExistsAndLoadEntity(Site, 'site')
+  @IsUnique(SiteAdmin, 'siteId')
   siteId: number;
 
+  @ApiProperty()
   @IsEmail()
-  @Validate(IsUnique, [SiteAdmin])
+  @IsUnique(SiteAdmin)
   email: string;
 }

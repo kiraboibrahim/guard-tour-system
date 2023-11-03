@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../entities/user.base.entity';
 import { CreateCompanyAdminDto } from '../dto/create-company-admin.dto';
 import { CreateSiteAdminDto } from '../dto/create-site-admin.dto';
@@ -31,10 +31,6 @@ export class UserService {
     private securityGuardRepository: Repository<SecurityGuard>,
   ) {}
 
-  async findAll() {
-    return await this.userRepository.find();
-  }
-
   async findOneById(id: number) {
     return await this.userRepository.findOneBy({ id });
   }
@@ -49,45 +45,50 @@ export class UserService {
     id: number,
     updateCompanyAdminDto: UpdateCompanyAdminDto,
   ) {
-    await this.updateUser(id, updateCompanyAdminDto, COMPANY_ADMIN_ROLE);
+    return await this.updateUser(id, updateCompanyAdminDto, COMPANY_ADMIN_ROLE);
   }
   async updateSiteAdmin(id: number, updateSiteAdminDto: UpdateSiteAdminDto) {
-    await this.updateUser(id, updateSiteAdminDto, SITE_ADMIN_ROLE);
+    return await this.updateUser(id, updateSiteAdminDto, SITE_ADMIN_ROLE);
   }
 
   async updateSecurityGuard(
     id: number,
     updateSecurityGuardDto: UpdateSecurityGuardDto,
   ) {
-    await this.updateUser(id, updateSecurityGuardDto, SECURITY_GUARD_ROLE);
+    return await this.updateUser(
+      id,
+      updateSecurityGuardDto,
+      SECURITY_GUARD_ROLE,
+    );
   }
   private async updateUser(id: number, updateUserDto: any, role: Role) {
     let updateResult = null;
     const userLikeEntity = this.dtoToUserLikeEntity(updateUserDto, role);
-    const { user, ...otherEntityData } = userLikeEntity;
-    const userDataExists = !isEmptyObjet(user);
-    const otherEntityDataExists = !isEmptyObjet(otherEntityData);
-    if (userDataExists) await this.userRepository.update({ id }, user);
+    const { user: commonUserData, ...userSpecificData } = userLikeEntity;
+    const commonUserDataExists = !isEmptyObjet(commonUserData);
+    const userSpecificDataExists = !isEmptyObjet(userSpecificData);
+    if (commonUserDataExists)
+      await this.userRepository.update({ id }, commonUserData);
     switch (role) {
       case COMPANY_ADMIN_ROLE:
-        if (otherEntityDataExists)
+        if (userSpecificDataExists)
           updateResult = await this.companyAdminRepository.update(
             { userId: id },
-            otherEntityData,
+            userSpecificData,
           );
         break;
       case SITE_ADMIN_ROLE:
-        if (otherEntityDataExists)
+        if (userSpecificDataExists)
           updateResult = await this.siteAdminRepository.update(
             { userId: id },
-            otherEntityData,
+            userSpecificData,
           );
         break;
       case SECURITY_GUARD_ROLE:
-        if (otherEntityDataExists)
+        if (userSpecificDataExists)
           updateResult = await this.securityGuardRepository.update(
             { userId: id },
-            otherEntityData,
+            userSpecificData,
           );
         break;
       default:
@@ -97,7 +98,7 @@ export class UserService {
   }
 
   async remove(id: number) {
-    await this.userRepository.delete(id);
+    return await this.userRepository.delete(id);
   }
 
   async createCompanyAdmin(createCompanyAdminDto: CreateCompanyAdminDto) {
@@ -116,22 +117,33 @@ export class UserService {
     const userLikeEntity = this.dtoToUserLikeEntity(createUserDto, role);
     switch (role) {
       case COMPANY_ADMIN_ROLE:
-        return await this.companyAdminRepository.save(userLikeEntity);
+        // Signals work with Entity objects(instantiated thru constructors) and not from {}
+        const companyAdmin = this.companyAdminRepository.create(userLikeEntity);
+        return await this.companyAdminRepository.save(companyAdmin);
       case SITE_ADMIN_ROLE:
-        return await this.siteAdminRepository.save(userLikeEntity);
+        const siteAdmin = this.siteAdminRepository.create(userLikeEntity);
+        return await this.siteAdminRepository.save(siteAdmin);
       case SECURITY_GUARD_ROLE:
-        return await this.securityGuardRepository.save(userLikeEntity);
+        const securityGuard =
+          this.securityGuardRepository.create(userLikeEntity);
+        return await this.securityGuardRepository.save(securityGuard);
       default:
         throw new NotFoundException('Role not found');
     }
   }
   private dtoToUserLikeEntity(dto: any, role: Role) {
     const convert = (obj: any) => {
-      const { firstName, lastName, phoneNumber, password, ...otherData } = obj;
+      const {
+        firstName,
+        lastName,
+        phoneNumber,
+        password,
+        ...userSpecificData
+      } = obj;
       // otherData is any other entity specific data
-      const { email, uniqueId } = otherData;
+      const { email, uniqueId } = userSpecificData;
       return {
-        ...otherData,
+        ...userSpecificData,
         user: {
           firstName,
           lastName,

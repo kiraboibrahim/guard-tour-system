@@ -8,15 +8,12 @@ import {
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { SecurityGuard } from '../../user/entities/security-guard.entity';
 import { Site } from '../../site/entities/site.entity';
 import { Device } from '../../device/entities/device.entity';
 import { Shift } from '../../shift/entities/shift.entity';
-import {
-  INDIVIDUAL_PATROL_PLAN,
-  GROUP_PATROL_PLAN,
-} from '../patrol-plan.constants';
-import { IsIn } from 'class-validator';
+import { IsValidPatrolPlanType } from '../patrol-plan.validators';
 
 // A set of devices to be patrolled
 @Entity('patrolPlans')
@@ -27,6 +24,7 @@ export class PatrolPlan {
   @Column()
   siteId: number;
 
+  @Exclude()
   @ManyToOne(() => Site, { onDelete: 'CASCADE' })
   site: Site;
 
@@ -34,35 +32,70 @@ export class PatrolPlan {
   devices: Device[];
 
   @Column()
-  @IsIn([INDIVIDUAL_PATROL_PLAN, GROUP_PATROL_PLAN])
-  patrolPlanType: number;
+  @IsValidPatrolPlanType()
+  patrolPlanType: string;
 }
 
 @Entity('individualPatrolPlans')
 export class IndividualPatrolPlan {
+  @Expose({ name: 'id' })
   @PrimaryColumn()
   patrolPlanId: number;
 
-  @OneToOne(() => PatrolPlan, { cascade: true, onDelete: 'CASCADE' })
-  @JoinColumn()
-  patrolPlan: PatrolPlan;
-
-  @OneToOne(() => SecurityGuard, (securityGuard) => securityGuard.patrolPlan, {
+  @Exclude()
+  @OneToOne(() => PatrolPlan, {
+    eager: true,
+    cascade: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn()
+  patrolPlan: PatrolPlan;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.patrolPlan[key])
+  siteId: number;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.patrolPlan[key])
+  devices: Device[];
+
+  @Column()
+  securityGuardId: number;
+
+  @Exclude()
+  @OneToOne(() => SecurityGuard, (securityGuard) => securityGuard.patrolPlan, {
+    onDelete: 'CASCADE',
+  })
   securityGuard: SecurityGuard;
 }
 
 @Entity('groupPatrolPlans')
 export class GroupPatrolPlan {
+  @Expose({ name: 'id' })
   @PrimaryColumn()
   patrolPlanId: number;
 
-  @OneToOne(() => PatrolPlan, { cascade: true, onDelete: 'CASCADE' })
+  @Exclude()
+  @OneToOne(() => PatrolPlan, {
+    eager: true,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   patrolPlan: PatrolPlan;
 
+  @Expose()
+  @Transform(({ obj, key }) => obj.patrolPlan[key])
+  siteId: number;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.patrolPlan[key])
+  devices: Device[];
+
+  @Column()
+  shiftId: number;
+
+  @Exclude()
   @OneToOne(() => Shift, (shift) => shift.patrolPlan, { onDelete: 'CASCADE' })
   shift: Shift;
 }

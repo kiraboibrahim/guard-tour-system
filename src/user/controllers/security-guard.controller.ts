@@ -10,7 +10,11 @@ import {
 import { SecurityGuardService } from '../services/security-guard.service';
 import { CreateSecurityGuardDto } from '../dto/create-security-guard.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
+import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
+import { ApiTags } from '@nestjs/swagger';
+import { SECURITY_GUARD_PAGINATION_CONFIG } from '../pagination-config/security-guard-pagination.config';
 
+@ApiTags('Security Guards')
 @Controller('security-guards')
 export class SecurityGuardController {
   constructor(private readonly securityGuardService: SecurityGuardService) {}
@@ -20,9 +24,10 @@ export class SecurityGuardController {
     return this.securityGuardService.create(createSecurityGuardDto);
   }
 
+  @ApiPaginationQuery(SECURITY_GUARD_PAGINATION_CONFIG)
   @Get()
-  findAll() {
-    return this.securityGuardService.findAll();
+  findAll(@Paginate() query: PaginateQuery) {
+    return this.securityGuardService.findAll(query);
   }
 
   @Get(':id')
@@ -31,19 +36,31 @@ export class SecurityGuardController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateSecurityGuardDto: UpdateSecurityGuardDto,
   ) {
-    return this.securityGuardService.update(+id, updateSecurityGuardDto);
+    await this.securityGuardService.update(+id, updateSecurityGuardDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.securityGuardService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.securityGuardService.remove(+id);
   }
+
   @Get(':id/patrols')
-  findSecurityGuardPatrols(@Param('id') id: string) {
-    return [];
+  async findSecurityGuardPatrols(
+    @Param('id') id: string,
+    @Paginate() query: PaginateQuery,
+  ) {
+    return await this.securityGuardService.findAllSecurityGuardPatrols(
+      +id,
+      query,
+    );
+  }
+
+  @Get(':id/patrol-plan')
+  async findSecurityGuardPatrolPlan(@Param('id') id: string) {
+    return this.securityGuardService.findSecurityGuardPatrolPlan(+id);
   }
 }

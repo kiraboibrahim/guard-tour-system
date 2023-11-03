@@ -5,7 +5,6 @@ import { OmitType } from '@nestjs/mapped-types';
 export class UpdatePatrolPlanDto extends OmitType(CreatePatrolPlanDto, [
   'shiftId',
   'securityGuardId',
-  'siteId',
 ] as const) {
   @IsString()
   @IsIn(['ADD_DEVICES', 'REMOVE_DEVICES'])

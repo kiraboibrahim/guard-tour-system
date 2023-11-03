@@ -10,7 +10,11 @@ import {
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
+import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
+import { ApiTags } from '@nestjs/swagger';
+import { DEVICE_PAGINATION_CONFIG } from './device-pagination.config';
 
+@ApiTags('Devices')
 @Controller('devices')
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
@@ -20,9 +24,10 @@ export class DeviceController {
     return this.deviceService.create(createDeviceDto);
   }
 
+  @ApiPaginationQuery(DEVICE_PAGINATION_CONFIG)
   @Get()
-  findAll() {
-    return this.deviceService.findAll();
+  findAll(@Paginate() query: PaginateQuery) {
+    return this.deviceService.findAll(query);
   }
 
   @Get(':id')
@@ -31,12 +36,15 @@ export class DeviceController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDeviceDto: UpdateDeviceDto) {
-    return this.deviceService.update(+id, updateDeviceDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateDeviceDto: UpdateDeviceDto,
+  ) {
+    await this.deviceService.update(+id, updateDeviceDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.deviceService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.deviceService.remove(+id);
   }
 }

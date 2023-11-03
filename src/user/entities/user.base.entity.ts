@@ -9,12 +9,12 @@ import {
   JoinColumn,
   BeforeUpdate,
 } from 'typeorm';
-import { IsPhoneNumber } from 'class-validator';
 import * as argon2 from 'argon2';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { Company } from '../../company/entities/company.entity';
 import { HasStrongPasswordQualities } from '../user.validators';
 import { IsValidRole } from '../../roles/roles.validators';
+import { IsUGPhoneNumber } from '../../core/core.validators';
 
 @Entity('users')
 export class User {
@@ -31,7 +31,7 @@ export class User {
   lastName: string;
 
   @Column({ unique: true })
-  @IsPhoneNumber('UG')
+  @IsUGPhoneNumber()
   phoneNumber: string;
 
   @Column()
@@ -51,17 +51,45 @@ export class User {
 }
 
 export class CompanyUser {
+  @Expose({ name: 'id' })
   @PrimaryColumn()
-  @Exclude()
   userId: number;
 
   @Column()
   companyId: number;
 
+  @Exclude()
   @OneToOne(() => User, { eager: true, cascade: true, onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
 
-  @ManyToOne(() => Company, { eager: true, onDelete: 'CASCADE' })
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  username: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  firstName: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  lastName: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  role: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  phoneNumber: string;
+
+  @Exclude()
+  @ManyToOne(() => Company, { onDelete: 'CASCADE' })
   company: Company;
+
+  belongsToCompany(companyOrId: Company | number) {
+    return companyOrId instanceof Company
+      ? this.companyId === companyOrId.id
+      : this.companyId === companyOrId;
+  }
 }

@@ -61,7 +61,7 @@ const entities = [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        const isDebugEnv = configService.get<string>('DEBUG') === 'true';
+        const isDebugEnv = configService.get<string>('DEBUG') === 'on';
         return {
           type: isDebugEnv ? 'sqlite' : 'mysql',
           host: configService.get<string>('DB_HOST'),
