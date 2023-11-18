@@ -15,12 +15,12 @@ import {
   providers: [_IsUnique, _IsExists, _IsExistsAndLoadEntity, IsAtleastXYears],
   exports: [
     AuthModule,
-    PermissionsModule,
     RolesModule,
+    PermissionsModule,
+    IsAtleastXYears,
     _IsUnique,
     _IsExists,
     _IsExistsAndLoadEntity,
-    IsAtleastXYears,
   ],
 })
 export class CoreModule {}

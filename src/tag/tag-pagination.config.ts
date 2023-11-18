@@ -4,15 +4,15 @@ import {
   PaginationType,
 } from 'nestjs-paginate';
 import { MAX_ITEMS_PER_PAGE } from '../core/core.constants';
-import { Device } from './entities/device.entity';
+import { Tag } from './entities/tag.entity';
 
-export const DEVICE_PAGINATION_CONFIG: PaginateConfig<Device> = {
-  sortableColumns: ['serialNumber'],
-  defaultSortBy: [['serialNumber', 'ASC']],
+export const TAG_PAGINATION_CONFIG: PaginateConfig<Tag> = {
+  searchableColumns: ['uid'],
+  sortableColumns: ['uid'],
   filterableColumns: {
     siteId: [FilterOperator.EQ],
+    companyId: [FilterOperator.EQ],
   },
-  searchableColumns: ['partNumber', 'IMEI', 'simId', 'phoneNumber'],
   loadEagerRelations: true,
   maxLimit: MAX_ITEMS_PER_PAGE,
   paginationType: PaginationType.TAKE_AND_SKIP,

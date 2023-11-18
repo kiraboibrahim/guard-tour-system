@@ -7,11 +7,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   setupAPIVersioning(app);
-  useNestJsDIContainerForClassValidation(app);
+  useNestJsDIContainerForClassValidator(app);
   setupSwaggerDocs(app);
   await app.listen(3000);
 }
-function useNestJsDIContainerForClassValidation(app: INestApplication) {
+function useNestJsDIContainerForClassValidator(app: INestApplication) {
   //See https://github.com/nestjs/nest/issues/528 on how to use nestjs DI container
   // with class-validator. Credit goes to Julianomqs (https://github.com/julianomqs)
   // Use NestJst Container to inject dependencies into validators
@@ -22,14 +22,15 @@ function setupSwaggerDocs(app: INestApplication) {
   const title = 'Guard Tour Systems';
   const apiDescription = 'Guard Tour Systems API Description';
   const apiVersion = '1.0.0';
-  const docsUrl = 'docs';
+  const swaggerUIUrl = 'docs';
   const config = new DocumentBuilder()
     .setTitle(title)
     .setDescription(apiDescription)
     .setVersion(apiVersion)
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup(docsUrl, app, document);
+  SwaggerModule.setup(swaggerUIUrl, app, document);
 }
 function setupAPIVersioning(app: INestApplication) {
   app.enableVersioning({

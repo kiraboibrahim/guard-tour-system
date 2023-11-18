@@ -1,10 +1,11 @@
 import {
+  isArray,
   Validate,
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { LocalDate, ZoneId } from '@js-joda/core';
@@ -20,13 +21,12 @@ import { isISO8601, isString } from 'class-validator';
 export class _IsUnique implements ValidatorConstraintInterface {
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
   async validate(value: any, validationArguments: ValidationArguments) {
-    const [entity, findByColumnName = validationArguments.property] =
-      validationArguments.constraints;
-    const whereOptions = JSON.parse(`{"${findByColumnName}": "${value}"}`);
-    const obj = await this.entityManager
-      .getRepository(entity)
+    const [entityClass, findByColumnName] = validationArguments.constraints;
+    const whereOptions = { [findByColumnName]: value };
+    const entity = await this.entityManager
+      .getRepository(entityClass)
       .findOneBy(whereOptions);
-    return !obj;
+    return !entity;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultMessage(validationArguments?: ValidationArguments): string {
@@ -39,12 +39,12 @@ export class _IsUnique implements ValidatorConstraintInterface {
 export class _IsExists implements ValidatorConstraintInterface {
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
   async validate(value: any, validationArguments: ValidationArguments) {
-    const [entity, findByColumnName = 'id'] = validationArguments.constraints;
-    const whereOptions = JSON.parse(`{"${findByColumnName}": "${value}"}`);
-    const obj = await this.entityManager
-      .getRepository(entity)
+    const [entityClass, findByColumnName] = validationArguments.constraints;
+    const whereOptions = { [findByColumnName]: value };
+    const entity = await this.entityManager
+      .getRepository(entityClass)
       .findOneBy(whereOptions);
-    return !!obj;
+    return !!entity;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultMessage(validationArguments?: ValidationArguments): string {
@@ -58,23 +58,56 @@ export class _IsExistsAndLoadEntity implements ValidatorConstraintInterface {
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
   async validate(value: any, validationArguments: ValidationArguments) {
     const [
-      entity,
+      entityClass,
       propertyKey = validationArguments.property,
-      findByColumnName = 'id',
+      findByColumnName,
+      relations,
     ] = validationArguments.constraints;
-    const whereOptions = JSON.parse(`{"${findByColumnName}": "${value}"}`);
-    const obj = await this.entityManager
-      .getRepository(entity)
-      .findOneBy(whereOptions);
-    const objExists = !!obj;
-    if (objExists) {
+    const whereOptions = { [findByColumnName]: value };
+    const entity = await this.entityManager
+      .getRepository(entityClass)
+      .findOne({ where: whereOptions, relations });
+    const entityExists = !!entity;
+    if (entityExists) {
       const { object } = validationArguments;
       Object.defineProperty(object, propertyKey, {
-        value: obj,
+        value: entity,
         writable: false,
       });
     }
-    return objExists;
+    return entityExists;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  defaultMessage(validationArguments?: ValidationArguments): string {
+    return `${validationArguments?.property} doesn't exist`;
+  }
+}
+
+@ValidatorConstraint({ async: true })
+@Injectable()
+export class _IsExistsAndLoadEntities implements ValidatorConstraintInterface {
+  constructor(@InjectEntityManager() private entityManager: EntityManager) {}
+  async validate(value: any, validationArguments: ValidationArguments) {
+    const [
+      entityClass,
+      propertyKey = validationArguments.property,
+      findByColumnName,
+      relations,
+    ] = validationArguments.constraints;
+    if (!isArray(value)) return false;
+    const whereOptions = { [findByColumnName]: In(value) };
+    const entity = await this.entityManager
+      .getRepository(entityClass)
+      .find({ where: whereOptions, relations });
+    const entityExists = !!entity;
+    if (entityExists) {
+      const { object } = validationArguments;
+      Object.defineProperty(object, propertyKey, {
+        value: entity,
+        writable: false,
+      });
+    }
+    return entityExists;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultMessage(validationArguments?: ValidationArguments): string {
@@ -130,21 +163,23 @@ export const IsConsentingAdult = () => {
 };
 
 export const IsExistsAndLoadEntity = (
-  entity: any,
+  entityClass: any,
   accessEntityByProperty: string,
   findByColumnName: string = 'id',
+  relations?: object,
 ) => {
   return Validate(_IsExistsAndLoadEntity, [
-    entity,
+    entityClass,
     accessEntityByProperty,
     findByColumnName,
+    relations,
   ]);
 };
 
-export const IsUnique = (entity: any, findByColumnName?: string) => {
-  return Validate(_IsUnique, [entity, findByColumnName]);
+export const IsUnique = (entityClass: any, findByColumnName: string = 'id') => {
+  return Validate(_IsUnique, [entityClass, findByColumnName]);
 };
 
-export const IsExists = (entity: any, findByColumnName: string = 'id') => {
-  return Validate(_IsExists, [entity, findByColumnName]);
+export const IsExists = (entityClass: any, findByColumnName: string = 'id') => {
+  return Validate(_IsExists, [entityClass, findByColumnName]);
 };

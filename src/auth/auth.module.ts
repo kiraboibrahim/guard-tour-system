@@ -15,9 +15,9 @@ import { JWT_ACCESS_TOKEN_EXPIRES_IN } from './jwt.constants';
     UserModule,
     PassportModule,
     JwtModule.registerAsync({
-      useFactory: (config: ConfigService) => {
+      useFactory: (configService: ConfigService) => {
         return {
-          secret: config.get<string>('SECRET'),
+          secret: configService.get<string>('SECRET'),
           signOptions: {
             expiresIn: JWT_ACCESS_TOKEN_EXPIRES_IN,
           },

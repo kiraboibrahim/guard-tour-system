@@ -7,7 +7,7 @@ import {
   IndividualPatrolPlan,
   PatrolPlan,
 } from './entities/patrol-plan.entity';
-import { DeviceModule } from '../device/device.module';
+import { TagModule } from '../tag/tag.module';
 import { UserModule } from '../user/user.module';
 import { SiteModule } from '../site/site.module';
 import { ShiftModule } from '../shift/shift.module';
@@ -19,13 +19,13 @@ import { ShiftModule } from '../shift/shift.module';
       IndividualPatrolPlan,
       GroupPatrolPlan,
     ]),
-    DeviceModule,
+    TagModule,
     forwardRef(() => UserModule),
     forwardRef(() => SiteModule),
     forwardRef(() => ShiftModule),
   ],
   controllers: [PatrolPlanController],
   providers: [PatrolPlanService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, PatrolPlanService],
 })
 export class PatrolPlanModule {}

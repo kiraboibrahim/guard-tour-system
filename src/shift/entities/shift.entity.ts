@@ -30,32 +30,22 @@ export class Shift {
   siteId: number;
 
   @Exclude()
-  @ManyToOne(() => Site, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Site, { onDelete: 'CASCADE' })
   site: Site;
 
   @OneToMany(() => SecurityGuard, (securityGuard) => securityGuard.shift, {
     eager: true,
-    cascade: true,
   })
   securityGuards: SecurityGuard[];
 
-  @Column({ nullable: true })
-  patrolPlanId: number;
-
   @Exclude()
-  @OneToOne(() => GroupPatrolPlan, (groupPatrolPlan) => groupPatrolPlan.shift, {
-    cascade: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn()
+  @OneToOne(() => GroupPatrolPlan, (groupPatrolPlan) => groupPatrolPlan.shift)
   patrolPlan: GroupPatrolPlan;
 
-  belongsToSite(siteOrId: Site | number) {
-    return siteOrId instanceof Site
-      ? this.siteId === siteOrId.id
-      : this.siteId === siteOrId;
+  belongsToCompany(companyId: number) {
+    return this.site.belongsToCompany(companyId);
   }
-  hasPatrolPlan() {
-    return this.patrolPlanId !== null;
+  isForSite(siteId: number) {
+    return this.siteId === siteId;
   }
 }

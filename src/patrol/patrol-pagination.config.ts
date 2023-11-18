@@ -10,7 +10,12 @@ export const PATROL_PAGINATION_CONFIG: PaginateConfig<Patrol> = {
   sortableColumns: ['date'],
   defaultSortBy: [['date', 'DESC']],
   filterableColumns: {
-    date: [FilterOperator.EQ],
+    date: [
+      FilterOperator.EQ,
+      FilterOperator.BTW,
+      FilterOperator.GTE,
+      FilterOperator.LTE,
+    ],
     siteId: [FilterOperator.EQ],
   },
   loadEagerRelations: true,

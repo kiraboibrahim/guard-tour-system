@@ -1,4 +1,5 @@
 import {
+  BeforeInsert,
   Column,
   Entity,
   JoinColumn,
@@ -11,11 +12,11 @@ import {
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { SecurityGuard } from '../../user/entities/security-guard.entity';
 import { Site } from '../../site/entities/site.entity';
-import { Device } from '../../device/entities/device.entity';
+import { Tag } from '../../tag/entities/tag.entity';
 import { Shift } from '../../shift/entities/shift.entity';
 import { IsValidPatrolPlanType } from '../patrol-plan.validators';
 
-// A set of devices to be patrolled
+// A set of tags to be patrolled
 @Entity('patrolPlans')
 export class PatrolPlan {
   @PrimaryGeneratedColumn()
@@ -28,12 +29,16 @@ export class PatrolPlan {
   @ManyToOne(() => Site, { onDelete: 'CASCADE' })
   site: Site;
 
-  @OneToMany(() => Device, (device) => device.patrolPlan, { eager: true })
-  devices: Device[];
+  @OneToMany(() => Tag, (tag) => tag.patrolPlan, { eager: true })
+  tags: Tag[];
 
   @Column()
   @IsValidPatrolPlanType()
   patrolPlanType: string;
+
+  belongsToCompany(companyId: number) {
+    return this.site.belongsToCompany(companyId);
+  }
 }
 
 @Entity('individualPatrolPlans')
@@ -57,7 +62,7 @@ export class IndividualPatrolPlan {
 
   @Expose()
   @Transform(({ obj, key }) => obj.patrolPlan[key])
-  devices: Device[];
+  tags: Tag[];
 
   @Column()
   securityGuardId: number;
@@ -66,6 +71,7 @@ export class IndividualPatrolPlan {
   @OneToOne(() => SecurityGuard, (securityGuard) => securityGuard.patrolPlan, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn()
   securityGuard: SecurityGuard;
 }
 
@@ -90,12 +96,18 @@ export class GroupPatrolPlan {
 
   @Expose()
   @Transform(({ obj, key }) => obj.patrolPlan[key])
-  devices: Device[];
+  tags: Tag[];
 
   @Column()
   shiftId: number;
 
   @Exclude()
   @OneToOne(() => Shift, (shift) => shift.patrolPlan, { onDelete: 'CASCADE' })
+  @JoinColumn()
   shift: Shift;
+
+  @BeforeInsert()
+  setShiftId() {
+    this.shiftId = this.shift.id;
+  }
 }

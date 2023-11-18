@@ -1,28 +1,33 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { PatrolService } from './patrol.service';
 import { CreatePatrolDto } from './dto/create-patrol.dto';
-import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
-import { PATROL_PAGINATION_CONFIG } from './patrol-pagination.config';
+import { AuthRequired } from '../auth/auth.decorators';
+import {
+  COMPANY_ADMIN_ROLE,
+  SECURITY_GUARD_ROLE,
+  SUPER_ADMIN_ROLE,
+} from '../roles/roles.constants';
+import { CanCreate } from '../permissions/permissions.decorators';
+import { PATROL_RESOURCE } from '../permissions/permissions';
+import { AllowOnly } from '../roles/roles.decorators';
+import { User } from '../auth/auth.decorators';
+import { User as AuthenticatedUser } from '../auth/auth.types';
 
 @ApiTags('Patrols')
+@AuthRequired(SUPER_ADMIN_ROLE, COMPANY_ADMIN_ROLE)
 @Controller('patrols')
 export class PatrolController {
   constructor(private readonly patrolService: PatrolService) {}
 
   @Post()
-  create(@Body() createPatrolDto: CreatePatrolDto) {
+  @AllowOnly(SECURITY_GUARD_ROLE)
+  @CanCreate(PATROL_RESOURCE)
+  create(
+    @Body() createPatrolDto: CreatePatrolDto,
+    @User() user: AuthenticatedUser,
+  ) {
+    this.patrolService.setUser(user);
     return this.patrolService.create(createPatrolDto);
-  }
-
-  @ApiPaginationQuery(PATROL_PAGINATION_CONFIG)
-  @Get()
-  findAll(@Paginate() query: PaginateQuery) {
-    return this.patrolService.findAll(query);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.patrolService.findOneById(+id);
   }
 }

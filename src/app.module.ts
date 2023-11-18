@@ -11,12 +11,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { SiteModule } from './site/site.module';
-import { DeviceModule } from './device/device.module';
+import { TagModule } from './tag/tag.module';
 import { CompanyModule } from './company/company.module';
 import { PatrolModule } from './patrol/patrol.module';
 import { CoreModule } from './core/core.module';
 import { Company } from './company/entities/company.entity';
-import { Device } from './device/entities/device.entity';
+import { Tag } from './tag/entities/tag.entity';
 import { Patrol } from './patrol/entities/patrol.entity';
 import { Shift } from './shift/entities/shift.entity';
 import { Site } from './site/entities/site.entity';
@@ -35,7 +35,7 @@ import { PatrolPlanModule } from './patrol-plan/patrol-plan.module';
 
 const entities = [
   Company,
-  Device,
+  Tag,
   Patrol,
   Shift,
   Site,
@@ -53,9 +53,11 @@ const entities = [
     UserModule,
     RouterModule.register([{ path: 'users', module: UserModule }]),
     SiteModule,
-    DeviceModule,
+    TagModule,
     CompanyModule,
     PatrolModule,
+    ShiftModule,
+    PatrolPlanModule,
     CoreModule,
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     TypeOrmModule.forRootAsync({
@@ -75,8 +77,6 @@ const entities = [
       },
       inject: [ConfigService],
     }),
-    ShiftModule,
-    PatrolPlanModule,
   ],
   controllers: [AppController],
   providers: [

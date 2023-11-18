@@ -12,17 +12,21 @@ import {
   COMPANY_ADMIN_ROLE,
   SECURITY_GUARD_ROLE,
   SITE_ADMIN_ROLE,
+  SUPER_ADMIN_ROLE,
 } from '../../roles/roles.constants';
 import { Role } from '../../roles/roles.types';
 import { UpdateCompanyAdminDto } from '../dto/update-company-admin.dto';
 import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
 import { isEmptyObjet, removeEmpty } from '../../core/core.utils';
+import { SuperAdmin } from '../entities/super-admin.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(SuperAdmin)
+    private superAdminRepository: Repository<SuperAdmin>,
     @InjectRepository(CompanyAdmin)
     private companyAdminRepository: Repository<CompanyAdmin>,
     @InjectRepository(SiteAdmin)
@@ -36,9 +40,23 @@ export class UserService {
   }
 
   async findOneByUsername(username: string) {
-    return await this.userRepository.findOneBy({
+    const user = await this.userRepository.findOneBy({
       username: username,
     });
+    if (user === null) return null;
+    const whereOptions = { userId: user.id };
+    switch (user.role) {
+      case SUPER_ADMIN_ROLE:
+        return await this.superAdminRepository.findOneBy(whereOptions);
+      case COMPANY_ADMIN_ROLE:
+        return await this.companyAdminRepository.findOneBy(whereOptions);
+      case SITE_ADMIN_ROLE:
+        return await this.siteAdminRepository.findOneBy(whereOptions);
+      case SECURITY_GUARD_ROLE:
+        return await this.securityGuardRepository.findOneBy(whereOptions);
+      default:
+        return null;
+    }
   }
 
   async updateCompanyAdmin(
@@ -155,5 +173,26 @@ export class UserService {
       };
     };
     return removeEmpty(convert(dto));
+  }
+  async userBelongsToCompany(userId: number, companyId: number, role: Role) {
+    switch (role) {
+      case COMPANY_ADMIN_ROLE:
+        return !!(await this.companyAdminRepository.findOneBy({
+          userId,
+          companyId,
+        }));
+      case SITE_ADMIN_ROLE:
+        return !!(await this.siteAdminRepository.findOneBy({
+          userId,
+          companyId,
+        }));
+      case SECURITY_GUARD_ROLE:
+        return !!(await this.securityGuardRepository.findOneBy({
+          userId,
+          companyId,
+        }));
+      default:
+        return false;
+    }
   }
 }

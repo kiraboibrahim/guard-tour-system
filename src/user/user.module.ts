@@ -19,6 +19,7 @@ import { UserService } from './services/user.service';
 import { CompanyModule } from '../company/company.module';
 import { PatrolModule } from '../patrol/patrol.module';
 import { PatrolPlanModule } from '../patrol-plan/patrol-plan.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [

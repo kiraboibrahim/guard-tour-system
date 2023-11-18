@@ -53,9 +53,7 @@ export class SecurityGuard extends CompanyUser {
   @OneToOne(
     () => IndividualPatrolPlan,
     (patrolPlan) => patrolPlan.securityGuard,
-    { eager: true, nullable: true, onDelete: 'SET NULL' },
   )
-  @JoinColumn()
   patrolPlan: PatrolPlan;
 
   @OneToMany(() => Patrol, (patrol) => patrol.securityGuard)
@@ -66,13 +64,8 @@ export class SecurityGuard extends CompanyUser {
       ? this.deployedSiteId === siteOrId.id
       : this.deployedSiteId === siteOrId;
   }
-  belongsToShift(shiftOrId: Shift | number) {
-    return shiftOrId instanceof Shift
-      ? this.shiftId === shiftOrId.id
-      : this.shiftId === shiftOrId;
-  }
-  hasPatrolPlan() {
-    return this.patrolPlan;
+  isInShift(shiftId: number) {
+    return this.shiftId === shiftId;
   }
 
   isNotDeployedToAnySite() {

@@ -9,7 +9,7 @@ export class CreatePatrolPlanDto {
     description: 'Required if securityGuardId is omitted',
   })
   @ValidateIf((object) => object.securityGuardId === undefined)
-  @IsExistsAndLoadEntity(Shift, 'shift')
+  @IsExistsAndLoadEntity(Shift, 'shift', undefined, { site: { tags: true } })
   @IsInt()
   shiftId: number;
 
@@ -17,11 +17,13 @@ export class CreatePatrolPlanDto {
     description: 'Required if shiftId is omitted',
   })
   @ValidateIf((object) => object.shiftId === undefined)
-  @IsExistsAndLoadEntity(SecurityGuard, 'securityGuard', 'userId')
+  @IsExistsAndLoadEntity(SecurityGuard, 'securityGuard', 'userId', {
+    deployedSite: { tags: true },
+  })
   @IsInt()
   securityGuardId: number;
 
-  @ApiProperty({ description: 'Devices that will be patrolled on the site' })
+  @ApiProperty()
   @IsInt({ each: true })
-  deviceIds: number[];
+  tagIds: number[];
 }

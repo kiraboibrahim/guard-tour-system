@@ -30,11 +30,11 @@ export class Patrol {
   site: Site;
 
   @Column({ nullable: true })
-  shiftId: number | null;
+  shiftId: number;
 
   @Exclude()
   @ManyToOne(() => Shift, { onDelete: 'SET NULL', nullable: true })
-  shift: Shift | null;
+  shift: Shift;
 
   @Column()
   securityGuardId: number;

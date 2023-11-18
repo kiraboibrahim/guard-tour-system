@@ -2,9 +2,10 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UpdatePatrolPlanDto } from './dto/update-patrol-plan.dto';
-import { In, IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   GroupPatrolPlan,
@@ -17,14 +18,15 @@ import {
   INDIVIDUAL_PATROL_PLAN,
   REMOVE_DEVICES_ACTION,
 } from './patrol-plan.constants';
-import { Device } from '../device/entities/device.entity';
+import { Tag } from '../tag/entities/tag.entity';
 import { Site } from '../site/entities/site.entity';
 import { CreatePatrolPlanDto } from './dto/create-patrol-plan.dto';
 import { SecurityGuard } from '../user/entities/security-guard.entity';
 import { Shift } from '../shift/entities/shift.entity';
+import { BaseService } from '../core/core.base';
 
 @Injectable()
-export class PatrolPlanService {
+export class PatrolPlanService extends BaseService {
   constructor(
     @InjectRepository(PatrolPlan)
     private patrolPlanRepository: Repository<PatrolPlan>,
@@ -32,116 +34,152 @@ export class PatrolPlanService {
     private groupPatrolPlanRepository: Repository<GroupPatrolPlan>,
     @InjectRepository(IndividualPatrolPlan)
     private individualPatrolPlanRepository: Repository<IndividualPatrolPlan>,
-    @InjectRepository(Device) private deviceRepository: Repository<Device>,
+    @InjectRepository(Tag) private tagRepository: Repository<Tag>,
     @InjectRepository(Site) private siteRepository: Repository<Site>,
-  ) {}
+  ) {
+    super();
+  }
 
   async create(createPatrolPlanDto: CreatePatrolPlanDto) {
-    // Create a patrol plan for a security guard or a shift
-    const { deviceIds } = createPatrolPlanDto;
+    this.validatePatrolPlanDto(createPatrolPlanDto);
     const {
       shift,
       securityGuard,
     }: { shift: Shift; securityGuard: SecurityGuard } =
       createPatrolPlanDto as any;
-    const siteId =
-      shift !== undefined ? shift.siteId : securityGuard.deployedSiteId;
-    if (!siteId)
-      throw new BadRequestException(
-        'Shift or security guard needs to be deployed to a site',
-      );
-    const site = (await this.siteRepository.preload({ id: siteId })) as Site;
-    const devices = await this.validateDevices(deviceIds, site.id);
-    switch (site.patrolPlanType) {
+    const deployedSite = shift.site || securityGuard.deployedSite;
+    const { tagIds } = createPatrolPlanDto;
+    const tags = await this.validateTags(tagIds, deployedSite);
+    await this.installTagsToSite(tags, deployedSite);
+    switch (deployedSite.patrolPlanType) {
       case GROUP_PATROL_PLAN:
-        return await this.createGroupPatrolPlan(shift, devices);
+        return await this.createGroupPatrolPlan(shift, tags);
       case INDIVIDUAL_PATROL_PLAN:
-        return this.createIndividualPatrolPlan(securityGuard, devices);
-      default:
-        throw new NotFoundException('Patrol plan type not found');
+        return await this.createIndividualPatrolPlan(securityGuard, tags);
     }
   }
-  private async createGroupPatrolPlan(shift: Shift, devices: Device[]) {
-    if (shift.hasPatrolPlan())
-      throw new BadRequestException('Shift already has a patrol plan');
+  private validatePatrolPlanDto(dto: CreatePatrolPlanDto) {
+    const {
+      shift,
+      securityGuard,
+    }: { shift: Shift; securityGuard: SecurityGuard } = dto as any;
+    const { companyId } = this.user;
+    const invalidShift =
+      !!shift &&
+      !shift.belongsToCompany(companyId) &&
+      this.user.isCompanyAdmin();
+    const invalidSecurityGuard =
+      !!securityGuard &&
+      !securityGuard.belongsToCompany(companyId) &&
+      this.user.isCompanyAdmin();
+    if (invalidShift || invalidSecurityGuard)
+      throw new UnauthorizedException('Invalid shift or security guard');
+    const deployedSite = shift.site || securityGuard.deployedSite;
+    if (
+      deployedSite &&
+      deployedSite.hasIndividualPatrolPlan() &&
+      !securityGuard
+    ) {
+      throw new BadRequestException(
+        "Security guard is missing or security guard isn't deployed to site",
+      );
+    } else if (deployedSite && deployedSite.hasGroupPatrolPlan() && !shift) {
+      throw new BadRequestException('Shift is missing');
+    }
+    return true;
+  }
+  private async createGroupPatrolPlan(shift: Shift, tags: Tag[]) {
     const basePatrolPlan = this.patrolPlanRepository.create({
       patrolPlanType: GROUP_PATROL_PLAN,
       site: shift.site,
-      devices,
+      tags: tags,
     });
     const patrolPlan = this.groupPatrolPlanRepository.create({
       patrolPlan: basePatrolPlan,
-      shiftId: shift.id,
       shift,
     });
     return await this.groupPatrolPlanRepository.save(patrolPlan);
   }
   private async createIndividualPatrolPlan(
     securityGuard: SecurityGuard,
-    devices: Device[],
+    tags: Tag[],
   ) {
-    if (securityGuard.hasPatrolPlan() || securityGuard.isNotDeployedToAnySite())
+    if (securityGuard.isNotDeployedToAnySite())
       throw new BadRequestException(
-        "Security guard already has a patrol plan or he hasn't been deployed to any site",
+        "Security guard isn't been deployed to any site",
       );
     const basePatrolPlan = this.patrolPlanRepository.create({
       patrolPlanType: INDIVIDUAL_PATROL_PLAN,
-      siteId: securityGuard.deployedSiteId as number,
-      devices,
+      site: securityGuard.deployedSite,
+      tags: tags,
     });
     const patrolPlan = this.individualPatrolPlanRepository.create({
       patrolPlan: basePatrolPlan,
-      securityGuardId: securityGuard.userId,
       securityGuard,
     });
     return await this.individualPatrolPlanRepository.save(patrolPlan);
   }
-  private async validateDevices(deviceIds: number[], siteId: number) {
-    // 1. Devices shouldn't belong to any patrol plan
-    // 2. Devices should be installed on the site
-    const devices = await this.deviceRepository.findBy({
-      id: In([...deviceIds]),
-      patrolPlanId: IsNull(),
-      siteId,
-    });
-    if (devices.length !== deviceIds.length)
+  private async validateTags(tagIds: number[], site: Site) {
+    const tags = await this.tagRepository
+      .createQueryBuilder()
+      .where('id IN (:...tagIds)', { tagIds })
+      .andWhere('patrolPlanId IS NULL')
+      .andWhere('siteId IS NULL')
+      .orWhere('siteId=:siteId', { siteId: site.id })
+      .getMany();
+    const missingTags = tags.length !== tagIds.length;
+    if (missingTags)
       throw new NotFoundException(
-        "Devices need to be installed on site and shouldn't belong to any other patrol plan",
+        'All or some tags have been used on another patrol plan',
       );
-    return devices;
+    return tags;
+  }
+  private async installTagsToSite(tags: Tag[], site: Site) {
+    site.tags.push(...tags);
+    await this.siteRepository.save(site);
   }
   async update(id: number, updatePatrolPlanDto: UpdatePatrolPlanDto) {
-    /* Updates can only add or remove devices from the patrol plan */
-    const patrolPlan = await this.patrolPlanRepository.findOneByOrFail({ id });
-    const { deviceIds, action } = updatePatrolPlanDto;
+    const patrolPlan = await this.patrolPlanRepository.findOneOrFail({
+      where: { id },
+      relations: { site: true },
+    });
+    const { tagIds, action } = updatePatrolPlanDto;
     switch (action) {
       case ADD_DEVICES_ACTION:
-        return await this.addDevicesToPatrolPlan(patrolPlan, deviceIds);
+        return await this.addTagsToPatrolPlan(patrolPlan, tagIds);
       case REMOVE_DEVICES_ACTION:
-        return await this.removeDevicesFromPatrolPlan(patrolPlan, deviceIds);
+        return await this.removeTagsFromPatrolPlan(patrolPlan, tagIds);
     }
   }
-  private async addDevicesToPatrolPlan(
-    patrolPlan: PatrolPlan,
-    deviceIds: number[],
-  ) {
-    const devices = await this.validateDevices(deviceIds, patrolPlan.siteId);
-    patrolPlan.devices.push(...devices);
+  private async addTagsToPatrolPlan(patrolPlan: PatrolPlan, tagIds: number[]) {
+    const tags = await this.validateTags(tagIds, patrolPlan.site);
+    // Adding tags will require installing them to the site to be patrolled
+    await this.installTagsToSite(tags, patrolPlan.site);
+    patrolPlan.tags.push(...tags);
     return await this.patrolPlanRepository.save(patrolPlan);
   }
-  private async removeDevicesFromPatrolPlan(
+  private async removeTagsFromPatrolPlan(
     patrolPlan: PatrolPlan,
-    deviceIds: number[],
+    tagIds: number[],
   ) {
-    const currentPatrolPlanDevices = [...patrolPlan.devices];
-    patrolPlan.devices = currentPatrolPlanDevices.filter((device) =>
-      deviceIds.includes(device.id),
+    const currentPatrolPlanTags = [...patrolPlan.tags];
+    patrolPlan.tags = currentPatrolPlanTags.filter((tag) =>
+      tagIds.includes(tag.id),
     );
-
     return await this.patrolPlanRepository.save(patrolPlan);
   }
-
+  async findOneById(id: number) {
+    return await this.patrolPlanRepository.findOneBy({ id });
+  }
   async remove(id: number) {
     return await this.patrolPlanRepository.delete(id);
+  }
+
+  async patrolPlanBelongsToCompany(patrolPlanId: number, companyId: number) {
+    const patrolPlan = await this.patrolPlanRepository.findOne({
+      where: { id: patrolPlanId },
+      relations: { site: true },
+    });
+    return !!patrolPlan && patrolPlan.belongsToCompany(companyId);
   }
 }

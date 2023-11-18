@@ -11,6 +11,7 @@ export const SITE_PAGINATION_CONFIG: PaginateConfig<Site> = {
   defaultSortBy: [['name', 'DESC']],
   searchableColumns: ['name'],
   filterableColumns: { companyId: [FilterOperator.EQ] },
+  loadEagerRelations: true,
   maxLimit: MAX_ITEMS_PER_PAGE,
   paginationType: PaginationType.TAKE_AND_SKIP,
 };

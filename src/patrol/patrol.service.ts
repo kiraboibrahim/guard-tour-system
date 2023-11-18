@@ -5,40 +5,36 @@ import { LocalTime } from '@js-joda/core';
 import { CreatePatrolDto } from './dto/create-patrol.dto';
 import { Patrol } from './entities/patrol.entity';
 import { Shift } from '../shift/entities/shift.entity';
-import { Site } from '../site/entities/site.entity';
 import { SecurityGuard } from '../user/entities/security-guard.entity';
-import { paginate, PaginateQuery } from 'nestjs-paginate';
-import { PATROL_PAGINATION_CONFIG } from './patrol-pagination.config';
+import { BaseService } from '../core/core.base';
 
 @Injectable()
-export class PatrolService {
+export class PatrolService extends BaseService {
   constructor(
     @InjectRepository(Patrol) private patrolRepository: Repository<Patrol>,
-  ) {}
+  ) {
+    super();
+  }
   async create(createPatrolDto: CreatePatrolDto) {
     this.validatePatrol(createPatrolDto);
-    const patrol = this.patrolRepository.create(createPatrolDto);
+    const { securityGuard }: { securityGuard: SecurityGuard } =
+      createPatrolDto as any;
+    const { deployedSite: site, shift } = securityGuard;
+    const patrol = this.patrolRepository.create({
+      ...createPatrolDto,
+      site,
+      shift,
+    });
     return this.patrolRepository.save(patrol);
   }
   private validatePatrol(createPatrolDto: CreatePatrolDto) {
-    const {
-      shift,
-      site,
-      securityGuard,
-    }: { shift: Shift; site: Site; securityGuard: SecurityGuard } =
+    const { securityGuard }: { securityGuard: SecurityGuard } =
       createPatrolDto as any;
     const { startTime, endTime } = createPatrolDto;
-    if (!shift.belongsToSite(site)) {
-      throw new BadRequestException(
-        "Security guard isn't deployed to the site",
-      );
+    if (!securityGuard.deployedSite) {
+      throw new BadRequestException("Security guard isn't deployed to site");
     }
-    if (!securityGuard.belongsToShift(shift)) {
-      throw new BadRequestException(
-        "Security guard doesn't belong to the shift",
-      );
-    }
-    if (!this.isOnTimePatrol(shift, startTime, endTime)) {
+    if (!this.isOnTimePatrol(securityGuard.shift, startTime, endTime)) {
       throw new BadRequestException('Patrol is so early or late');
     }
     return true;
@@ -57,16 +53,5 @@ export class PatrolService {
       _patrolStartTime.isAfter(_shiftStartTime) &&
       _patrolEndTime.isBefore(_shiftEndTime)
     );
-  }
-  async findAll(query: PaginateQuery) {
-    return await paginate(
-      query,
-      this.patrolRepository,
-      PATROL_PAGINATION_CONFIG,
-    );
-  }
-
-  async findOneById(id: number) {
-    return await this.patrolRepository.findOneBy({ id });
   }
 }

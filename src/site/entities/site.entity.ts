@@ -4,9 +4,16 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../user/entities/site-admin.entity';
+import { Shift } from '../../shift/entities/shift.entity';
+import { Tag } from '../../tag/entities/tag.entity';
+import {
+  GROUP_PATROL_PLAN,
+  INDIVIDUAL_PATROL_PLAN,
+} from '../../patrol-plan/patrol-plan.constants';
 
 @Entity('sites')
 export class Site {
@@ -46,9 +53,19 @@ export class Site {
   })
   admin: SiteAdmin;
 
-  belongsToCompany(companyOrId: Company | number) {
-    return companyOrId instanceof Company
-      ? this.companyId === companyOrId.id
-      : this.companyId === companyOrId;
+  @OneToMany(() => Shift, (shift) => shift.site)
+  shifts: Shift[];
+
+  @OneToMany(() => Tag, (tag) => tag.site)
+  tags: Tag[];
+
+  hasIndividualPatrolPlan() {
+    return this.patrolPlanType === INDIVIDUAL_PATROL_PLAN;
+  }
+  hasGroupPatrolPlan() {
+    return this.patrolPlanType === GROUP_PATROL_PLAN;
+  }
+  belongsToCompany(companyId: number) {
+    return this.companyId === companyId;
   }
 }

@@ -5,12 +5,14 @@ import { CompanyController } from './company.controller';
 import { Company } from './entities/company.entity';
 import { SiteModule } from '../site/site.module';
 import { UserModule } from '../user/user.module';
+import { TagModule } from '../tag/tag.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Company]),
-    forwardRef(() => UserModule),
     SiteModule,
+    TagModule,
+    forwardRef(() => UserModule),
   ],
   controllers: [CompanyController],
   providers: [CompanyService],

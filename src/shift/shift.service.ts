@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { In, IsNull, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateShiftDto } from './dto/create-shift.dto';
@@ -11,24 +15,28 @@ import {
   REMOVE_SECURITY_GUARDS_ACTION,
 } from './shift.constants';
 import { GroupPatrolPlan } from '../patrol-plan/entities/patrol-plan.entity';
-import { paginate, PaginateQuery } from 'nestjs-paginate';
-import { SHIFT_PAGINATION_CONFIG } from './shift-pagination.config';
+import { BaseService } from '../core/core.base';
+import { isUndefined } from '@nestjs/common/utils/shared.utils';
 
 @Injectable()
-export class ShiftService {
+export class ShiftService extends BaseService {
   constructor(
     @InjectRepository(Shift) private shiftRepository: Repository<Shift>,
     @InjectRepository(SecurityGuard)
     private securityGuardRepository: Repository<SecurityGuard>,
     @InjectRepository(GroupPatrolPlan)
     private groupPatrolPlanRepository: Repository<GroupPatrolPlan>,
-  ) {}
+  ) {
+    super();
+  }
   async create(createShiftDto: CreateShiftDto) {
-    //const { companyId, role } = user;
+    const { companyId } = this.user;
     const { startTime, endTime, patrolFrequency, securityGuardIds } =
       createShiftDto;
     const { site }: { site: Site } = createShiftDto as any;
-    // TODO: Check for permissions, user can create own or create any. Own = site.companyId === companyId
+    // Only super admins and company admins can create shifts
+    if (this.user.isCompanyAdmin() && !site.belongsToCompany(companyId))
+      throw new UnauthorizedException("You can't create shift for this site");
     const securityGuards = await this.validateSecurityGuards(securityGuardIds);
     const deployedSecurityGuards = await this.deploySecurityGuardsToSite(
       securityGuards,
@@ -44,10 +52,6 @@ export class ShiftService {
     return await this.shiftRepository.save(shift);
   }
 
-  async findAll(query: PaginateQuery) {
-    return await paginate(query, this.shiftRepository, SHIFT_PAGINATION_CONFIG);
-  }
-
   async findOneById(id: number) {
     return await this.shiftRepository.findOneBy({ id });
   }
@@ -55,13 +59,12 @@ export class ShiftService {
   async update(id: number, updateShiftDto: UpdateShiftDto) {
     const { securityGuardIds, securityGuardAction, ...shiftData } =
       updateShiftDto;
-    // TODO: Check for authorization
     let shift = await this.shiftRepository.findOneByOrFail({ id });
     shift.startTime = shiftData.startTime || shift.startTime;
     shift.endTime = shiftData.endTime || shift.endTime;
     shift.patrolFrequency = shiftData.patrolFrequency || shift.patrolFrequency;
     if (shiftData) {
-      // Update the other shift metadata
+      // Update the other shift metadata: startTime, endTime, patrolFrequency
       shift = await this.shiftRepository.save(shift);
     }
     switch (securityGuardAction) {
@@ -107,7 +110,6 @@ export class ShiftService {
     securityGuards: SecurityGuard[],
     site: Site,
   ) {
-    // Deploy to site to which shift is attached
     return await this.securityGuardRepository.save(
       securityGuards.map((sG) => {
         sG.deployedSiteId = site.id;
@@ -134,19 +136,29 @@ export class ShiftService {
   private async validateSecurityGuards(securityGuardIds: number[]) {
     // 1. Security guards to be added to shift shouldn't belong to any shifts already
     // 2. Security guards should belong to the company of one creating them
+    const companyId = this.user.isCompanyAdmin()
+      ? this.user.companyId
+      : undefined;
     const securityGuards = await this.securityGuardRepository.findBy({
-      // companyId,
+      companyId,
       shiftId: IsNull(),
       userId: In([...securityGuardIds]),
     });
 
     if (securityGuards.length !== securityGuardIds.length)
       throw new NotFoundException(
-        "Some or all security guards already have shifts or don't exist",
+        "Some security guards already have shifts or don't exist",
       );
     return securityGuards;
   }
   async findShiftPatrolPlan(id: number) {
     return this.groupPatrolPlanRepository.findOneBy({ shiftId: id });
+  }
+  async shiftBelongsToCompany(shiftId: number, companyId: number) {
+    const shift = await this.shiftRepository.findOne({
+      where: { id: shiftId },
+      relations: { site: true },
+    });
+    return !!shift && shift.site.belongsToCompany(companyId);
   }
 }

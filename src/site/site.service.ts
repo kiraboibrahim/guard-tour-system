@@ -5,22 +5,23 @@ import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { Site } from './entities/site.entity';
 import { Shift } from '../shift/entities/shift.entity';
-import { Device } from '../device/entities/device.entity';
+import { Tag } from '../tag/entities/tag.entity';
 import { Patrol } from '../patrol/entities/patrol.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
-import { SHIFT_PAGINATION_CONFIG } from '../shift/shift-pagination.config';
-import { DEVICE_PAGINATION_CONFIG } from '../device/device-pagination.config';
 import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol-pagination.config';
 import { SITE_PAGINATION_CONFIG } from './site-pagination.config';
+import { BaseService } from '../core/core.base';
 
 @Injectable()
-export class SiteService {
+export class SiteService extends BaseService {
   constructor(
     @InjectRepository(Site) private siteRepository: Repository<Site>,
     @InjectRepository(Shift) private shiftRepository: Repository<Shift>,
-    @InjectRepository(Device) private deviceRepository: Repository<Device>,
+    @InjectRepository(Tag) private tagRepository: Repository<Tag>,
     @InjectRepository(Patrol) private patrolRepository: Repository<Patrol>,
-  ) {}
+  ) {
+    super();
+  }
   async create(createSiteDto: CreateSiteDto) {
     const site = this.siteRepository.create(createSiteDto);
     return await this.siteRepository.save(site);
@@ -31,7 +32,10 @@ export class SiteService {
   }
 
   async findOneById(id: number) {
-    return await this.siteRepository.findOneBy({ id });
+    return await this.siteRepository.findOne({
+      where: { id },
+      relations: { tags: true },
+    });
   }
 
   async update(id: number, updateSiteDto: UpdateSiteDto) {
@@ -41,18 +45,13 @@ export class SiteService {
   async remove(id: number) {
     return await this.siteRepository.delete(id);
   }
-  async findAllSiteShifts(id: number, query: PaginateQuery) {
-    query.filter = { ...query.filter, siteId: [`${id}`] };
-    return await paginate(query, this.shiftRepository, SHIFT_PAGINATION_CONFIG);
+
+  async findAllSiteShifts(id: number) {
+    return await this.shiftRepository.findBy({ siteId: id });
   }
 
-  async findAllSiteDevices(id: number, query: PaginateQuery) {
-    query.filter = { ...query.filter, siteId: [`${id}`] };
-    return await paginate(
-      query,
-      this.deviceRepository,
-      DEVICE_PAGINATION_CONFIG,
-    );
+  async findAllSiteTags(id: number) {
+    return await this.tagRepository.findBy({ siteId: id });
   }
 
   async findAllSitePatrols(id: number, query: PaginateQuery) {
@@ -64,7 +63,7 @@ export class SiteService {
     );
   }
 
-  async findSiteDevicesCount(id: number) {
-    return await this.deviceRepository.countBy({ siteId: id });
+  async siteBelongsToCompany(siteId: number, companyId: number) {
+    return !!(await this.siteRepository.findOneBy({ id: siteId, companyId }));
   }
 }
