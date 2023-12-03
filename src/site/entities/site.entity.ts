@@ -10,10 +10,6 @@ import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../user/entities/site-admin.entity';
 import { Shift } from '../../shift/entities/shift.entity';
 import { Tag } from '../../tag/entities/tag.entity';
-import {
-  GROUP_PATROL_PLAN,
-  INDIVIDUAL_PATROL_PLAN,
-} from '../../patrol-plan/patrol-plan.constants';
 
 @Entity('sites')
 export class Site {
@@ -39,7 +35,7 @@ export class Site {
   supervisorPhoneNumber: string;
 
   @Column()
-  patrolPlanType: string;
+  patrolType: string;
 
   @Column()
   companyId: number;
@@ -59,12 +55,6 @@ export class Site {
   @OneToMany(() => Tag, (tag) => tag.site)
   tags: Tag[];
 
-  hasIndividualPatrolPlan() {
-    return this.patrolPlanType === INDIVIDUAL_PATROL_PLAN;
-  }
-  hasGroupPatrolPlan() {
-    return this.patrolPlanType === GROUP_PATROL_PLAN;
-  }
   belongsToCompany(companyId: number) {
     return this.companyId === companyId;
   }

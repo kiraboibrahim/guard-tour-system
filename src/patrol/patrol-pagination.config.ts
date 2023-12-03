@@ -18,7 +18,7 @@ export const PATROL_PAGINATION_CONFIG: PaginateConfig<Patrol> = {
     ],
     siteId: [FilterOperator.EQ],
   },
-  loadEagerRelations: true,
+  relations: { securityGuard: { user: true }, site: true },
   maxLimit: MAX_ITEMS_PER_PAGE,
   paginationType: PaginationType.TAKE_AND_SKIP,
 };

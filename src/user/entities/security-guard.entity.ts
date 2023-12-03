@@ -5,20 +5,33 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  PrimaryColumn,
 } from 'typeorm';
-import { IsISO8601 } from 'class-validator';
 import { Shift } from '../../shift/entities/shift.entity';
 import { Patrol } from '../../patrol/entities/patrol.entity';
-import { CompanyUser } from './user.base.entity';
-import {
-  IndividualPatrolPlan,
-  PatrolPlan,
-} from '../../patrol-plan/entities/patrol-plan.entity';
+import { CompanyUser, User } from './user.base.entity';
 import { Site } from '../../site/entities/site.entity';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
+import { Company } from '../../company/entities/company.entity';
 
 @Entity('securityGuards')
 export class SecurityGuard extends CompanyUser {
+  @Expose({ name: 'id' })
+  @PrimaryColumn()
+  userId: number;
+
+  @Exclude()
+  @OneToOne(() => User, { eager: true, cascade: true, onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: User;
+
+  @Column()
+  companyId: number;
+
+  @Exclude()
+  @ManyToOne(() => Company, { onDelete: 'CASCADE' })
+  company: Company;
+
   @Column()
   gender: string;
 
@@ -26,7 +39,6 @@ export class SecurityGuard extends CompanyUser {
   uniqueId: string;
 
   @Column({ type: 'date' })
-  @IsISO8601()
   dateOfBirth: string;
 
   @Column()
@@ -41,34 +53,32 @@ export class SecurityGuard extends CompanyUser {
   deployedSite: Site;
 
   @Column({ nullable: true })
-  shiftId: number;
+  shiftId: number | null;
 
+  @Exclude()
   @ManyToOne(() => Shift, (shift) => shift.securityGuards, {
     nullable: true,
     onDelete: 'SET NULL',
   })
   shift: Shift;
 
-  @Exclude()
-  @OneToOne(
-    () => IndividualPatrolPlan,
-    (patrolPlan) => patrolPlan.securityGuard,
-  )
-  patrolPlan: PatrolPlan;
-
   @OneToMany(() => Patrol, (patrol) => patrol.securityGuard)
   patrols: Patrol;
 
-  isDeployedToSite(siteOrId: Site | number) {
-    return siteOrId instanceof Site
-      ? this.deployedSiteId === siteOrId.id
-      : this.deployedSiteId === siteOrId;
+  isDeployedToSite(siteId: number) {
+    return this.deployedSiteId === siteId;
   }
+
   isInShift(shiftId: number) {
     return this.shiftId === shiftId;
   }
-
-  isNotDeployedToAnySite() {
+  hasNoShift() {
+    return this.shiftId === null;
+  }
+  isNotDeployed() {
     return this.deployedSiteId === null;
+  }
+  belongsToCompany(companyId: number) {
+    return this.companyId === companyId;
   }
 }

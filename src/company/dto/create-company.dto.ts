@@ -9,7 +9,7 @@ export class CreateCompanyDto {
   name: string;
 
   @ApiProperty()
-  @IsUnique(Company)
+  @IsUnique<Company>(Company, 'registrationNumber')
   @IsNotEmpty()
   registrationNumber: string;
 

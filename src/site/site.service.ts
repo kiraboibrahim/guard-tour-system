@@ -4,8 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { Site } from './entities/site.entity';
-import { Shift } from '../shift/entities/shift.entity';
-import { Tag } from '../tag/entities/tag.entity';
 import { Patrol } from '../patrol/entities/patrol.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol-pagination.config';
@@ -16,8 +14,6 @@ import { BaseService } from '../core/core.base';
 export class SiteService extends BaseService {
   constructor(
     @InjectRepository(Site) private siteRepository: Repository<Site>,
-    @InjectRepository(Shift) private shiftRepository: Repository<Shift>,
-    @InjectRepository(Tag) private tagRepository: Repository<Tag>,
     @InjectRepository(Patrol) private patrolRepository: Repository<Patrol>,
   ) {
     super();
@@ -34,7 +30,7 @@ export class SiteService extends BaseService {
   async findOneById(id: number) {
     return await this.siteRepository.findOne({
       where: { id },
-      relations: { tags: true },
+      relations: { tags: true, shifts: { securityGuards: true } },
     });
   }
 
@@ -44,14 +40,6 @@ export class SiteService extends BaseService {
 
   async remove(id: number) {
     return await this.siteRepository.delete(id);
-  }
-
-  async findAllSiteShifts(id: number) {
-    return await this.shiftRepository.findBy({ siteId: id });
-  }
-
-  async findAllSiteTags(id: number) {
-    return await this.tagRepository.findBy({ siteId: id });
   }
 
   async findAllSitePatrols(id: number, query: PaginateQuery) {

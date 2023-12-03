@@ -26,7 +26,7 @@ import {
   CanUpdate,
 } from '../../permissions/permissions.decorators';
 import { SITE_ADMIN_RESOURCE } from '../../permissions/permissions';
-import { AllowOnly, DisAllow } from '../../roles/roles.decorators';
+import { DisAllow } from '../../roles/roles.decorators';
 
 @ApiTags('Site Admins')
 @AuthRequired(SUPER_ADMIN_ROLE, COMPANY_ADMIN_ROLE)
@@ -63,7 +63,9 @@ export class SiteAdminController {
   async update(
     @Param('id') id: string,
     @Body() updateSiteAdminDto: UpdateSiteAdminDto,
+    @User() user: AuthenticatedUser,
   ) {
+    this.siteAdminService.setUser(user);
     await this.siteAdminService.update(+id, updateSiteAdminDto);
   }
 

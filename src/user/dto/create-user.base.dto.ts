@@ -1,6 +1,6 @@
 import { IsAlpha, MaxLength } from 'class-validator';
 import { MAX_NAME_LENGTH } from '../user.constants';
-import { HasStrongPasswordQualities } from '../user.validators';
+import { IsStrongPassword } from '../user.validators';
 import { IsUGPhoneNumber, IsUnique } from '../../core/core.validators';
 import { User } from '../entities/user.base.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -17,11 +17,11 @@ export class CreateUserDto {
   lastName: string;
 
   @ApiProperty()
+  @IsUnique<User>(User, 'phoneNumber')
   @IsUGPhoneNumber()
-  @IsUnique(User)
   phoneNumber: string;
 
   @ApiProperty()
-  @HasStrongPasswordQualities()
+  @IsStrongPassword()
   password: string;
 }

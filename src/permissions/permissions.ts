@@ -20,7 +20,6 @@ export const SHIFT_RESOURCE = 'SHIFT_RESOURCE';
 
 export const PATROL_RESOURCE = 'PATROL_RESOURCE';
 
-export const PATROL_PLAN_RESOURCE = 'PATROL_PLAN_RESOURCE';
 export const SUPER_ADMIN_RESOURCE = 'SUPER_ADMIN_RESOURCE';
 
 export const COMPANY_ADMIN_RESOURCE = 'COMPANY_ADMIN_RESOURCE';
@@ -118,18 +117,16 @@ const COMPANY_ADMIN_PERMISSIONS = {
     'update:own': ['*', 'shift', '!shiftId'],
     'delete:own': ['*'],
   },
-  [PATROL_PLAN_RESOURCE]: {
-    'create:own': ['*'],
-    'read:own': ['*'],
-    'update:own': ['*'],
-    'delete:own': ['*'],
-  },
   [PATROL_RESOURCE]: {
     'read:own': ['*'],
   },
 };
 
 const SITE_ADMIN_PERMISSIONS = {
+  [COMPANY_RESOURCE]: {
+    'read:own': ['*'],
+  },
+
   [SITE_ADMIN_RESOURCE]: {
     'read:own': ['*'],
   },
@@ -145,6 +142,9 @@ const SITE_ADMIN_PERMISSIONS = {
 };
 
 const SECURITY_GUARD_PERMISSIONS = {
+  [COMPANY_RESOURCE]: {
+    'read:own': ['*'],
+  },
   [SECURITY_GUARD_RESOURCE]: {
     'read:own': ['*'],
   },
@@ -156,9 +156,6 @@ const SECURITY_GUARD_PERMISSIONS = {
   },
   [PATROL_RESOURCE]: {
     'create:own': ['*'],
-    'read:own': ['*'],
-  },
-  [PATROL_PLAN_RESOURCE]: {
     'read:own': ['*'],
   },
 };

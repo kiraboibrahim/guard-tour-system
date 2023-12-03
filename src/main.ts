@@ -5,11 +5,12 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  const host = 'localhost';
   const app = await NestFactory.create(AppModule);
   setupAPIVersioning(app);
   useNestJsDIContainerForClassValidator(app);
   setupSwaggerDocs(app);
-  await app.listen(3000);
+  await app.listen(3000, host);
 }
 function useNestJsDIContainerForClassValidator(app: INestApplication) {
   //See https://github.com/nestjs/nest/issues/528 on how to use nestjs DI container

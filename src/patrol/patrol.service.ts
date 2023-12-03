@@ -19,23 +19,26 @@ export class PatrolService extends BaseService {
     this.validatePatrol(createPatrolDto);
     const { securityGuard }: { securityGuard: SecurityGuard } =
       createPatrolDto as any;
-    const { deployedSite: site, shift } = securityGuard;
+    const {
+      deployedSite: site,
+      shift,
+      userId: securityGuardId,
+    } = securityGuard;
     const patrol = this.patrolRepository.create({
       ...createPatrolDto,
+      securityGuardId,
+      securityGuard,
       site,
-      shift,
+      siteId: site.id,
+      shiftId: shift.id,
     });
-    return this.patrolRepository.save(patrol);
+    return await this.patrolRepository.save(patrol);
   }
   private validatePatrol(createPatrolDto: CreatePatrolDto) {
     const { securityGuard }: { securityGuard: SecurityGuard } =
       createPatrolDto as any;
-    const { startTime, endTime } = createPatrolDto;
-    if (!securityGuard.deployedSite) {
+    if (securityGuard.isNotDeployed()) {
       throw new BadRequestException("Security guard isn't deployed to site");
-    }
-    if (!this.isOnTimePatrol(securityGuard.shift, startTime, endTime)) {
-      throw new BadRequestException('Patrol is so early or late');
     }
     return true;
   }

@@ -1,15 +1,12 @@
 import {
   Column,
   Entity,
-  JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Site } from '../../site/entities/site.entity';
 import { SecurityGuard } from '../../user/entities/security-guard.entity';
-import { GroupPatrolPlan } from '../../patrol-plan/entities/patrol-plan.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity('shifts')
@@ -37,15 +34,4 @@ export class Shift {
     eager: true,
   })
   securityGuards: SecurityGuard[];
-
-  @Exclude()
-  @OneToOne(() => GroupPatrolPlan, (groupPatrolPlan) => groupPatrolPlan.shift)
-  patrolPlan: GroupPatrolPlan;
-
-  belongsToCompany(companyId: number) {
-    return this.site.belongsToCompany(companyId);
-  }
-  isForSite(siteId: number) {
-    return this.siteId === siteId;
-  }
 }

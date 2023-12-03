@@ -4,23 +4,23 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { RolesModule } from '../roles/roles.module';
 import {
   _IsUnique,
-  _IsExists,
-  _IsExistsAndLoadEntity,
+  _AreUnique,
+  _LoadEntityIfExists,
+  _LoadEntitiesIfExist,
   IsAtleastXYears,
 } from './core.validators';
 
+const validators = [
+  _IsUnique,
+  _AreUnique,
+  _LoadEntityIfExists,
+  _LoadEntitiesIfExist,
+  IsAtleastXYears,
+];
 @Global()
 @Module({
   imports: [AuthModule, PermissionsModule, RolesModule],
-  providers: [_IsUnique, _IsExists, _IsExistsAndLoadEntity, IsAtleastXYears],
-  exports: [
-    AuthModule,
-    RolesModule,
-    PermissionsModule,
-    IsAtleastXYears,
-    _IsUnique,
-    _IsExists,
-    _IsExistsAndLoadEntity,
-  ],
+  providers: [...validators],
+  exports: [AuthModule, RolesModule, PermissionsModule, ...validators],
 })
 export class CoreModule {}

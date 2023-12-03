@@ -15,7 +15,12 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 import { COMPANY_PAGINATION_CONFIG } from './company-pagination.config';
 import { SITE_PAGINATION_CONFIG } from '../site/site-pagination.config';
 import { SECURITY_GUARD_PAGINATION_CONFIG } from '../user/pagination-config/security-guard-pagination.config';
-import { COMPANY_ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../roles/roles.constants';
+import {
+  COMPANY_ADMIN_ROLE,
+  SECURITY_GUARD_ROLE,
+  SITE_ADMIN_ROLE,
+  SUPER_ADMIN_ROLE,
+} from '../roles/roles.constants';
 import { AuthRequired } from '../auth/auth.decorators';
 import {
   CanCreate,
@@ -53,7 +58,7 @@ export class CompanyController {
   }
 
   @Get(':id')
-  @AlsoAllow(COMPANY_ADMIN_ROLE)
+  @AlsoAllow(COMPANY_ADMIN_ROLE, SITE_ADMIN_ROLE, SECURITY_GUARD_ROLE)
   @CanRead(COMPANY_RESOURCE)
   async findOne(@Param('id') id: string) {
     return await this.companyService.findOneById(+id);

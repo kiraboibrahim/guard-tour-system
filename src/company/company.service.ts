@@ -43,7 +43,6 @@ export class CompanyService extends BaseService {
   }
 
   async findOneById(id: number) {
-    console.log(this.user);
     return await this.companyRepository.findOneBy({ id });
   }
   async update(id: number, updateCompanyDto: UpdateCompanyDto) {

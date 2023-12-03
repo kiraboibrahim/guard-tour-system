@@ -1,18 +1,20 @@
 import {
   isArray,
+  isISO8601,
+  isString,
+  Matches,
   Validate,
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { EntityManager, In } from 'typeorm';
+import { EntityManager, FindOptionsRelations, In } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { LocalDate, ZoneId } from '@js-joda/core';
 import '@js-joda/timezone';
 import { ConfigService } from '@nestjs/config';
-
-import { isISO8601, isString } from 'class-validator';
+import { EntityClass, EntityColumnName } from './core.types';
 
 // See https://github.com/nestjs/nest/issues/528 on how to use nestjs DI container
 // with class-validator. Credit goes to Julianomqs (https://github.com/julianomqs)
@@ -21,6 +23,7 @@ import { isISO8601, isString } from 'class-validator';
 export class _IsUnique implements ValidatorConstraintInterface {
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
   async validate(value: any, validationArguments: ValidationArguments) {
+    if (!value) return false;
     const [entityClass, findByColumnName] = validationArguments.constraints;
     const whereOptions = { [findByColumnName]: value };
     const entity = await this.entityManager
@@ -36,27 +39,30 @@ export class _IsUnique implements ValidatorConstraintInterface {
 
 @ValidatorConstraint({ async: true })
 @Injectable()
-export class _IsExists implements ValidatorConstraintInterface {
+export class _AreUnique implements ValidatorConstraintInterface {
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
   async validate(value: any, validationArguments: ValidationArguments) {
-    const [entityClass, findByColumnName] = validationArguments.constraints;
-    const whereOptions = { [findByColumnName]: value };
-    const entity = await this.entityManager
+    const [entityClass, findByColumnName, relations] =
+      validationArguments.constraints;
+    if (!isArray(value)) return false;
+    const whereOptions = { [findByColumnName]: In(value) };
+    const entities = await this.entityManager
       .getRepository(entityClass)
-      .findOneBy(whereOptions);
-    return !!entity;
+      .find({ where: whereOptions, relations });
+    return entities.length === 0;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultMessage(validationArguments?: ValidationArguments): string {
-    return `${validationArguments?.property} doesn't exist`;
+    return `Each value in ${validationArguments?.property} should be unique`;
   }
 }
 
 @ValidatorConstraint({ async: true })
 @Injectable()
-export class _IsExistsAndLoadEntity implements ValidatorConstraintInterface {
+export class _LoadEntityIfExists implements ValidatorConstraintInterface {
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
   async validate(value: any, validationArguments: ValidationArguments) {
+    if (!value) return false;
     const [
       entityClass,
       propertyKey = validationArguments.property,
@@ -85,29 +91,29 @@ export class _IsExistsAndLoadEntity implements ValidatorConstraintInterface {
 
 @ValidatorConstraint({ async: true })
 @Injectable()
-export class _IsExistsAndLoadEntities implements ValidatorConstraintInterface {
+export class _LoadEntitiesIfExist implements ValidatorConstraintInterface {
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
   async validate(value: any, validationArguments: ValidationArguments) {
     const [
       entityClass,
-      propertyKey = validationArguments.property,
+      entityHolderPropertyKey = validationArguments.property,
       findByColumnName,
       relations,
     ] = validationArguments.constraints;
     if (!isArray(value)) return false;
     const whereOptions = { [findByColumnName]: In(value) };
-    const entity = await this.entityManager
+    const entities = await this.entityManager
       .getRepository(entityClass)
       .find({ where: whereOptions, relations });
-    const entityExists = !!entity;
-    if (entityExists) {
+    const entitiesExist = entities.length === value.length;
+    if (entitiesExist) {
       const { object } = validationArguments;
-      Object.defineProperty(object, propertyKey, {
-        value: entity,
+      Object.defineProperty(object, entityHolderPropertyKey, {
+        value: entities,
         writable: false,
       });
     }
-    return entityExists;
+    return entitiesExist;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultMessage(validationArguments?: ValidationArguments): string {
@@ -162,13 +168,13 @@ export const IsConsentingAdult = () => {
   return Validate(IsAtleastXYears, [18]);
 };
 
-export const IsExistsAndLoadEntity = (
-  entityClass: any,
+export const LoadEntityIfExists = function <T>(
+  entityClass: EntityClass<T>,
   accessEntityByProperty: string,
-  findByColumnName: string = 'id',
-  relations?: object,
-) => {
-  return Validate(_IsExistsAndLoadEntity, [
+  findByColumnName: EntityColumnName<T> | 'id' = 'id',
+  relations?: FindOptionsRelations<T>,
+) {
+  return Validate(_LoadEntityIfExists, [
     entityClass,
     accessEntityByProperty,
     findByColumnName,
@@ -176,10 +182,40 @@ export const IsExistsAndLoadEntity = (
   ]);
 };
 
-export const IsUnique = (entityClass: any, findByColumnName: string = 'id') => {
+export const LoadEntitiesIfExist = function <T>(
+  entityClass: EntityClass<T>,
+  accessEntityByProperty: string,
+  findByColumnName: EntityColumnName<T> | 'id' = 'id',
+  relations?: FindOptionsRelations<T>,
+) {
+  return Validate(_LoadEntitiesIfExist, [
+    entityClass,
+    accessEntityByProperty,
+    findByColumnName,
+    relations,
+  ]);
+};
+
+export const IsUnique = function <T>(
+  entityClass: EntityClass<T>,
+  findByColumnName: EntityColumnName<T>,
+) {
   return Validate(_IsUnique, [entityClass, findByColumnName]);
 };
 
-export const IsExists = (entityClass: any, findByColumnName: string = 'id') => {
-  return Validate(_IsExists, [entityClass, findByColumnName]);
+export const AreUnique = function <T>(
+  entityClass: EntityClass<T>,
+  findByColumnName: EntityColumnName<T>,
+) {
+  return Validate(_AreUnique, [entityClass, findByColumnName]);
+};
+
+export const IsTenDigitString = () => {
+  const TEN_DIGIT_NUMBER_REGEXP = new RegExp('[0-9][0-9]{9}');
+  return Matches(TEN_DIGIT_NUMBER_REGEXP);
+};
+
+export const AreTenDigitStrings = () => {
+  const TEN_DIGIT_NUMBER_REGEXP = new RegExp('[0-9][0-9]{9}');
+  return Matches(TEN_DIGIT_NUMBER_REGEXP, { each: true });
 };

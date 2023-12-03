@@ -57,20 +57,18 @@ export class ShiftController {
 
   @Patch(':id')
   @CanUpdate(SHIFT_RESOURCE)
-  update(@Param('id') id: string, @Body() updateShiftDto: UpdateShiftDto) {
-    return this.shiftService.update(+id, updateShiftDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateShiftDto: UpdateShiftDto,
+    @User() user: AuthenticatedUser,
+  ) {
+    this.shiftService.setUser(user);
+    await this.shiftService.update(+id, updateShiftDto);
   }
 
   @Delete(':id')
   @CanDelete(SHIFT_RESOURCE)
   async remove(@Param('id') id: string) {
     await this.shiftService.remove(+id);
-  }
-
-  @Get(':id/patrol-plan')
-  @AlsoAllow(SITE_ADMIN_ROLE)
-  @CanRead(SHIFT_RESOURCE)
-  async findShiftPatrolPlan(@Param('id') id: string) {
-    return await this.shiftService.findShiftPatrolPlan(+id);
   }
 }

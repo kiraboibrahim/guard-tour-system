@@ -25,12 +25,7 @@ import {
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import {
-  PATROL_RESOURCE,
-  SHIFT_RESOURCE,
-  SITE_RESOURCE,
-  TAG_RESOURCE,
-} from '../permissions/permissions';
+import { PATROL_RESOURCE, SITE_RESOURCE } from '../permissions/permissions';
 import { User as AuthenticatedUser } from '../auth/auth.types';
 import { AlsoAllow, DisAllow } from '../roles/roles.decorators';
 
@@ -52,6 +47,7 @@ export class SiteController {
 
   @Get()
   @DisAllow(COMPANY_ADMIN_ROLE)
+  @CanRead(SITE_RESOURCE)
   findAll(@Paginate() query: PaginateQuery) {
     return this.siteService.findAll(query);
   }
@@ -73,16 +69,6 @@ export class SiteController {
   @CanDelete(SITE_RESOURCE)
   async remove(@Param('id') id: string) {
     await this.siteService.remove(+id);
-  }
-  @Get(':id/shifts')
-  @AlsoAllow(SITE_ADMIN_ROLE)
-  @CanRead(SITE_RESOURCE, SHIFT_RESOURCE)
-  async findAllSiteShifts(
-    @Param('id') id: string,
-    @User() user: AuthenticatedUser,
-  ) {
-    this.siteService.setUser(user);
-    return await this.siteService.findAllSiteShifts(+id);
   }
 
   @Get(':id/patrols')

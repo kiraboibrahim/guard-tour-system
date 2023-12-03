@@ -18,8 +18,6 @@ import { User } from './entities/user.base.entity';
 import { UserService } from './services/user.service';
 import { CompanyModule } from '../company/company.module';
 import { PatrolModule } from '../patrol/patrol.module';
-import { PatrolPlanModule } from '../patrol-plan/patrol-plan.module';
-import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
@@ -31,10 +29,10 @@ import { PermissionsModule } from '../permissions/permissions.module';
       SecurityGuard,
     ]),
     PatrolModule,
-    PatrolPlanModule,
     forwardRef(() => CompanyModule),
   ],
   controllers: [
+    SuperAdminController,
     CompanyAdminController,
     SiteAdminController,
     SecurityGuardController,

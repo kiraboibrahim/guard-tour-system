@@ -1,12 +1,10 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { CompanyUser } from './user.base.entity';
-import { IsEmail } from 'class-validator';
 import { Site } from '../../site/entities/site.entity';
 
 @Entity('siteAdmins')
 export class SiteAdmin extends CompanyUser {
-  @Column()
-  @IsEmail()
+  @Column({ unique: true })
   email: string;
 
   @Column()

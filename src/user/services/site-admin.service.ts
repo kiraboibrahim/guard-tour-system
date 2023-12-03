@@ -8,7 +8,6 @@ import { UserService } from './user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SITE_ADMIN_PAGINATION_CONFIG } from '../pagination-config/site-admin-pagination.config';
 import { BaseService } from '../../core/core.base';
-import { Company } from '../../company/entities/company.entity';
 import { Site } from '../../site/entities/site.entity';
 
 @Injectable()
@@ -45,7 +44,7 @@ export class SiteAdminService extends BaseService {
       const { site }: { site: Site } = dto as any;
       const { companyId } = this.user;
       if (!!site && !site.belongsToCompany(companyId))
-        throw new UnauthorizedException('Invalid site');
+        throw new UnauthorizedException();
       return true;
     };
     const isCreateSiteAdminDto = dto instanceof CreateSiteAdminDto;

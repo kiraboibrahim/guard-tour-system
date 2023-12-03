@@ -4,7 +4,6 @@ import permissions, {
   COMPANY_ADMIN_RESOURCE,
   COMPANY_RESOURCE,
   TAG_RESOURCE,
-  PATROL_PLAN_RESOURCE,
   SECURITY_GUARD_RESOURCE,
   SHIFT_RESOURCE,
   SITE_ADMIN_RESOURCE,
@@ -15,7 +14,6 @@ import { SECURITY_GUARD_ROLE, SITE_ADMIN_ROLE } from '../roles/roles.constants';
 import { TagService } from '../tag/tag.service';
 import { ShiftService } from '../shift/shift.service';
 import { UserService } from '../user/services/user.service';
-import { PatrolPlanService } from '../patrol-plan/patrol-plan.service';
 import { SiteService } from '../site/site.service';
 
 @Injectable()
@@ -24,7 +22,6 @@ export class PermissionsService extends AccessControl {
     private tagService: TagService,
     private shiftService: ShiftService,
     private userService: UserService,
-    private patrolPlanService: PatrolPlanService,
     private siteService: SiteService,
   ) {
     super(permissions);
@@ -50,14 +47,11 @@ export class PermissionsService extends AccessControl {
     resourceId: string,
   ) {
     if (user.isSuperAdmin()) return true;
-
     switch (resource) {
       case COMPANY_RESOURCE:
         return this.userHasAccessToCompany(user, +resourceId);
       case TAG_RESOURCE:
         return await this.userHasAccessToTag(user, +resourceId);
-      case PATROL_PLAN_RESOURCE:
-        return await this.userHasAccessToPatroPlan(user, +resourceId);
       case SHIFT_RESOURCE:
         return await this.userHasAccessToShift(user, +resourceId);
       case SITE_RESOURCE:
@@ -74,9 +68,10 @@ export class PermissionsService extends AccessControl {
   }
   private userHasAccessToCompany(user: User, companyId: number) {
     const { companyId: userCompanyId } = user;
-    const companyAdminAccessToCompanyGranted =
-      user.isCompanyAdmin() && userCompanyId === companyId;
-    return companyAdminAccessToCompanyGranted;
+    const userAccessToCompanyGranted =
+      (user.isCompanyAdmin() || user.isSiteAdmin() || user.isSecurityGuard()) &&
+      userCompanyId === companyId;
+    return userAccessToCompanyGranted;
   }
   private async userHasAccessToSite(user: User, siteId: number) {
     const { companyId } = user;
@@ -102,16 +97,7 @@ export class PermissionsService extends AccessControl {
       (await this.shiftService.shiftBelongsToCompany(shiftId, companyId));
     return companyAdminAccessToShiftGranted;
   }
-  private async userHasAccessToPatroPlan(user: User, patrolPlanId: number) {
-    const { companyId } = user;
-    const companyAdminAccessToPatrolPlanGranted =
-      user.isCompanyAdmin() &&
-      (await this.patrolPlanService.patrolPlanBelongsToCompany(
-        patrolPlanId,
-        companyId,
-      ));
-    return companyAdminAccessToPatrolPlanGranted;
-  }
+
   private async userHasAccessToTag(user: User, tagId: number) {
     const { companyId } = user;
     const companyAdminAccessToTagGranted =

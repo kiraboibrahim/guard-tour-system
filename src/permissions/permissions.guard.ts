@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { REQUIRED_PERMISSIONS_KEY } from './permissions.decorators';
@@ -9,6 +14,7 @@ import { Permission } from './permissions.types';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
+  private readonly logger = new Logger(PermissionsGuard.name);
   constructor(
     private reflector: Reflector,
     private permissionsService: PermissionsService,
@@ -21,7 +27,10 @@ export class PermissionsGuard implements CanActivate {
       REQUIRED_PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],
     );
-    if (!permission) return false;
+    if (!permission) {
+      this.logger.warn(`Specify permissions for route: ${request.url}`);
+      return false;
+    }
     const user = request.user as User;
     permission.resourceId = request.params?.id;
     return this.userHasPermission(user, permission);
@@ -66,15 +75,16 @@ export class PermissionsGuard implements CanActivate {
   async canUserUpdateResource(
     user: User,
     resource: string,
-    resourceId: string,
+    resourceId?: string,
   ) {
     const { role } = user;
-    const userAccessToResourceGranted =
-      await this.permissionsService.userHasAccessToResource(
-        user,
-        resource,
-        resourceId,
-      );
+    const userAccessToResourceGranted = resourceId
+      ? await this.permissionsService.userHasAccessToResource(
+          user,
+          resource,
+          resourceId,
+        )
+      : true; // No resourceId given, default to true and check permissions in the service
     const canUpdateOwn = this.permissionsService
       .can(role)
       .updateOwn(resource).granted;
@@ -86,14 +96,15 @@ export class PermissionsGuard implements CanActivate {
   async canUserDeleteResource(
     user: User,
     resource: string,
-    resourceId: string,
+    resourceId?: string,
   ) {
-    const userAccessToResourceGranted =
-      await this.permissionsService.userHasAccessToResource(
-        user,
-        resource,
-        resourceId,
-      );
+    const userAccessToResourceGranted = resourceId
+      ? await this.permissionsService.userHasAccessToResource(
+          user,
+          resource,
+          resourceId,
+        )
+      : true; // No resourceId given, default to true and check permissions in the service
     const canDeleteOwn = this.permissionsService
       .can(user.role)
       .deleteOwn(resource).granted;

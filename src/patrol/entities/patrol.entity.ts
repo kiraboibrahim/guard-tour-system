@@ -22,11 +22,11 @@ export class Patrol {
   @IsMilitaryTime()
   endTime: string;
 
+  @Exclude()
   @Column()
   siteId: number;
 
-  @Exclude()
-  @ManyToOne(() => Site, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Site, { onDelete: 'CASCADE', eager: true })
   site: Site;
 
   @Column({ nullable: true })
@@ -36,12 +36,13 @@ export class Patrol {
   @ManyToOne(() => Shift, { onDelete: 'SET NULL', nullable: true })
   shift: Shift;
 
+  @Exclude()
   @Column()
   securityGuardId: number;
 
-  @Exclude()
   @ManyToOne(() => SecurityGuard, (securityGuard) => securityGuard.patrols, {
     onDelete: 'CASCADE',
+    eager: true,
   })
   securityGuard: SecurityGuard;
 }

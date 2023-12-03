@@ -20,6 +20,8 @@ import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
 import { isEmptyObjet, removeEmpty } from '../../core/core.utils';
 import { SuperAdmin } from '../entities/super-admin.entity';
+import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
+import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
 
 @Injectable()
 export class UserService {
@@ -58,7 +60,9 @@ export class UserService {
         return null;
     }
   }
-
+  async updateSuperAdmin(id: number, updateSuperAdminDto: UpdateSuperAdminDto) {
+    return await this.updateUser(id, updateSuperAdminDto, SUPER_ADMIN_ROLE);
+  }
   async updateCompanyAdmin(
     id: number,
     updateCompanyAdminDto: UpdateCompanyAdminDto,
@@ -88,6 +92,14 @@ export class UserService {
     if (commonUserDataExists)
       await this.userRepository.update({ id }, commonUserData);
     switch (role) {
+      case SUPER_ADMIN_ROLE:
+        if (userSpecificDataExists) {
+          updateResult = await this.superAdminRepository.update(
+            { userId: id },
+            userSpecificData,
+          );
+        }
+        break;
       case COMPANY_ADMIN_ROLE:
         if (userSpecificDataExists)
           updateResult = await this.companyAdminRepository.update(
@@ -119,6 +131,10 @@ export class UserService {
     return await this.userRepository.delete(id);
   }
 
+  async createSuperAdmin(createSuperAdminDto: CreateSuperAdminDto) {
+    return await this.createUser(createSuperAdminDto, SUPER_ADMIN_ROLE);
+  }
+
   async createCompanyAdmin(createCompanyAdminDto: CreateCompanyAdminDto) {
     return await this.createUser(createCompanyAdminDto, COMPANY_ADMIN_ROLE);
   }
@@ -134,6 +150,9 @@ export class UserService {
   private async createUser(createUserDto: any, role: Role) {
     const userLikeEntity = this.dtoToUserLikeEntity(createUserDto, role);
     switch (role) {
+      case SUPER_ADMIN_ROLE:
+        const superAdmin = this.superAdminRepository.create(userLikeEntity);
+        return await this.superAdminRepository.save(superAdmin);
       case COMPANY_ADMIN_ROLE:
         // Signals work with Entity objects(instantiated thru constructors) and not from {}
         const companyAdmin = this.companyAdminRepository.create(userLikeEntity);
@@ -158,7 +177,7 @@ export class UserService {
         password,
         ...userSpecificData
       } = obj;
-      // otherData is any other entity specific data
+      // userSpecificData is data that doesn't belong to the base user entity
       const { email, uniqueId } = userSpecificData;
       return {
         ...userSpecificData,
@@ -176,6 +195,8 @@ export class UserService {
   }
   async userBelongsToCompany(userId: number, companyId: number, role: Role) {
     switch (role) {
+      case SUPER_ADMIN_ROLE:
+        return false;
       case COMPANY_ADMIN_ROLE:
         return !!(await this.companyAdminRepository.findOneBy({
           userId,

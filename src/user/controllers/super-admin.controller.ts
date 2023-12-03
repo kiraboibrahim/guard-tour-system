@@ -33,15 +33,15 @@ export class SuperAdminController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateSuperAdminDto: UpdateSuperAdminDto,
   ) {
-    return this.superAdminService.update(+id, updateSuperAdminDto);
+    await this.superAdminService.update(+id, updateSuperAdminDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.superAdminService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.superAdminService.remove(+id);
   }
 }

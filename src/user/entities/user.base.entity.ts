@@ -12,9 +12,31 @@ import {
 import * as argon2 from 'argon2';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { Company } from '../../company/entities/company.entity';
-import { HasStrongPasswordQualities } from '../user.validators';
+import { IsStrongPassword } from '../user.validators';
 import { IsValidRole } from '../../roles/roles.validators';
 import { IsUGPhoneNumber } from '../../core/core.validators';
+
+export class UserSerializer {
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  username: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  firstName: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  lastName: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  role: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj.user[key])
+  phoneNumber: string;
+}
 
 @Entity('users')
 export class User {
@@ -36,7 +58,7 @@ export class User {
 
   @Column()
   @Exclude()
-  @HasStrongPasswordQualities()
+  @IsStrongPassword()
   password: string;
 
   @Column()
@@ -50,46 +72,24 @@ export class User {
   }
 }
 
-export class CompanyUser {
+export class CompanyUser extends UserSerializer {
   @Expose({ name: 'id' })
   @PrimaryColumn()
   userId: number;
-
-  @Column()
-  companyId: number;
 
   @Exclude()
   @OneToOne(() => User, { eager: true, cascade: true, onDelete: 'CASCADE' })
   @JoinColumn()
   user: User;
 
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  username: string;
-
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  firstName: string;
-
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  lastName: string;
-
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  role: string;
-
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  phoneNumber: string;
+  @Column()
+  companyId: number;
 
   @Exclude()
   @ManyToOne(() => Company, { onDelete: 'CASCADE' })
   company: Company;
 
-  belongsToCompany(companyOrId: Company | number) {
-    return companyOrId instanceof Company
-      ? this.companyId === companyOrId.id
-      : this.companyId === companyOrId;
+  belongsToCompany(companyId: number) {
+    return this.companyId === companyId;
   }
 }

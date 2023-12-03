@@ -9,8 +9,8 @@ import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SECURITY_GUARD_PAGINATION_CONFIG } from '../pagination-config/security-guard-pagination.config';
 import { Patrol } from '../../patrol/entities/patrol.entity';
 import { PATROL_PAGINATION_CONFIG } from '../../patrol/patrol-pagination.config';
-import { IndividualPatrolPlan } from '../../patrol-plan/entities/patrol-plan.entity';
 import { BaseService } from '../../core/core.base';
+import { UnDeploySecurityGuardsDto } from '../dto/undeploy-security-guards.dto';
 
 @Injectable()
 export class SecurityGuardService extends BaseService {
@@ -19,8 +19,6 @@ export class SecurityGuardService extends BaseService {
     private securityGuardRepository: Repository<SecurityGuard>,
     private userService: UserService,
     @InjectRepository(Patrol) private patrolRepository: Repository<Patrol>,
-    @InjectRepository(IndividualPatrolPlan)
-    private securityGuardPatrolPlanRepository: Repository<IndividualPatrolPlan>,
   ) {
     super();
   }
@@ -56,7 +54,30 @@ export class SecurityGuardService extends BaseService {
   async remove(id: number) {
     return await this.userService.remove(id);
   }
-
+  async unDeploySecurityGuards(
+    unDeploySecurityGuardsDto: UnDeploySecurityGuardsDto,
+  ) {
+    /* UnDeploying a security guard implies nullifying both the deployedSiteId
+    and the ShiftId. The shiftId is nullified because a security guard can't have
+    a shift and yet their deployedSiteId is null */
+    const { securityGuards }: { securityGuards: SecurityGuard[] } =
+      unDeploySecurityGuardsDto as any;
+    const userCompanyId = this.user.isCompanyAdmin()
+      ? this.user.companyId
+      : securityGuards[0].companyId;
+    const securityGuardsBelongToUserCompany = securityGuards.every(
+      (securityGuard) => securityGuard.belongsToCompany(userCompanyId),
+    );
+    if (!securityGuardsBelongToUserCompany) throw new UnauthorizedException();
+    const toBeUnDeployedSecurityGuards = securityGuards.map((securityGuard) => {
+      securityGuard.deployedSiteId = null;
+      securityGuard.shiftId = null;
+      return securityGuard;
+    });
+    return await this.securityGuardRepository.save(
+      toBeUnDeployedSecurityGuards,
+    );
+  }
   async findAllSecurityGuardPatrols(id: number, query: PaginateQuery) {
     query.filter = { ...query.filter, securityGuardId: [`${id}`] };
     return await paginate(
@@ -64,24 +85,5 @@ export class SecurityGuardService extends BaseService {
       this.patrolRepository,
       PATROL_PAGINATION_CONFIG,
     );
-  }
-
-  async findSecurityGuardPatrolPlan(id: number) {
-    const securityGuard = await this.securityGuardRepository.findOneOrFail({
-      where: {
-        userId: id,
-      },
-      relations: {
-        shift: { patrolPlan: { patrolPlan: true } },
-        patrolPlan: true,
-        deployedSite: true,
-      },
-    });
-    const { deployedSite } = securityGuard;
-    if (deployedSite.hasGroupPatrolPlan()) {
-      return securityGuard.shift.patrolPlan;
-    } else {
-      return securityGuard.patrolPlan;
-    }
   }
 }

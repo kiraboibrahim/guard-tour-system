@@ -25,13 +25,7 @@ import { SuperAdmin } from './user/entities/super-admin.entity';
 import { CompanyAdmin } from './user/entities/company-admin.entity';
 import { SiteAdmin } from './user/entities/site-admin.entity';
 import { SecurityGuard } from './user/entities/security-guard.entity';
-import {
-  PatrolPlan,
-  IndividualPatrolPlan,
-  GroupPatrolPlan,
-} from './patrol-plan/entities/patrol-plan.entity';
 import { ShiftModule } from './shift/shift.module';
-import { PatrolPlanModule } from './patrol-plan/patrol-plan.module';
 
 const entities = [
   Company,
@@ -44,9 +38,6 @@ const entities = [
   CompanyAdmin,
   SiteAdmin,
   SecurityGuard,
-  PatrolPlan,
-  IndividualPatrolPlan,
-  GroupPatrolPlan,
 ];
 @Module({
   imports: [
@@ -57,7 +48,6 @@ const entities = [
     CompanyModule,
     PatrolModule,
     ShiftModule,
-    PatrolPlanModule,
     CoreModule,
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     TypeOrmModule.forRootAsync({

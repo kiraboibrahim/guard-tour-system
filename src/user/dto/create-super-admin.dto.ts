@@ -1,12 +1,12 @@
 import { IsEmail } from 'class-validator';
 import { CreateUserDto } from './create-user.base.dto';
-import { IsUnique } from '../../core/core.validators';
-import { SuperAdmin } from '../entities/super-admin.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsUnique } from '../../core/core.validators';
+import { User } from '../entities/user.base.entity';
 
 export class CreateSuperAdminDto extends CreateUserDto {
   @ApiProperty()
+  @IsUnique<User>(User, 'username')
   @IsEmail()
-  @IsUnique(SuperAdmin)
   email: string;
 }

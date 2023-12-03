@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import {
@@ -11,6 +16,7 @@ import { User } from '../auth/auth.types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
+  private readonly logger = new Logger(RolesGuard.name);
   constructor(private reflector: Reflector) {}
   canActivate(
     context: ExecutionContext,
@@ -18,20 +24,22 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const primaryRoles = this.getPrimaryRoles(context);
     if (!primaryRoles.size) {
+      this.logger.warn(`Specify roles for route: ${request.url}`);
       return false;
     }
     const secondaryRoles = this.getSecondaryRoles(context);
     const disallowedRoles = this.getDisallowedRoles(context);
-    const diff = function <T>(A: T[], B: T[]) {
+    const setDiff = function <T>(A: T[], B: T[]) {
       return A.filter(function (elem: T) {
         return B.indexOf(elem) < 0;
       });
     };
     const primaryAndSecondaryRoles = [...primaryRoles, ...secondaryRoles];
     const effectiveRoles = new Set(
-      diff<Role>([...primaryAndSecondaryRoles], [...disallowedRoles]),
+      setDiff<Role>([...primaryAndSecondaryRoles], [...disallowedRoles]),
     );
-    return effectiveRoles.has((request.user as User).role);
+    const userRole = (request.user as User).role;
+    return effectiveRoles.has(userRole);
   }
 
   private getPrimaryRoles(context: ExecutionContext) {

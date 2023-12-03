@@ -1,11 +1,11 @@
-import { IsValidPatrolPlanType } from '../../patrol-plan/patrol-plan.validators';
-import { IsLatitude, IsLongitude, IsString } from 'class-validator';
+import { IsInt, IsLatitude, IsLongitude, IsString } from 'class-validator';
 import {
-  IsExistsAndLoadEntity,
+  LoadEntityIfExists,
   IsUGPhoneNumber,
 } from '../../core/core.validators';
 import { Company } from '../../company/entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsValidPatrolType } from '../../patrol/patrol.validators';
 
 export class CreateSiteDto {
   @ApiProperty()
@@ -33,10 +33,11 @@ export class CreateSiteDto {
   supervisorPhoneNumber: string;
 
   @ApiProperty()
-  @IsValidPatrolPlanType()
-  patrolPlanType: string;
+  @IsValidPatrolType()
+  patrolType: string;
 
   @ApiProperty()
-  @IsExistsAndLoadEntity(Company, 'company')
+  @LoadEntityIfExists<Company>(Company, 'company')
+  @IsInt()
   companyId: number;
 }
