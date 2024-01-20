@@ -5,19 +5,30 @@ import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
 import { SuperAdmin } from '../entities/super-admin.entity';
 import { UserService } from './user.service';
+import { BaseService } from '../../core/core.base';
+import { PermissionsService } from '../../permissions/permissions.service';
+import { Resource } from '../../permissions/permissions';
 
 @Injectable()
-export class SuperAdminService {
+export class SuperAdminService extends BaseService {
   constructor(
     @InjectRepository(SuperAdmin)
     private superAdminRepository: Repository<SuperAdmin>,
     private userService: UserService,
-  ) {}
-  create(createSuperAdminDto: CreateSuperAdminDto) {
-    return this.userService.createSuperAdmin(createSuperAdminDto);
+    private permissionsService: PermissionsService,
+  ) {
+    super();
+  }
+  async create(createSuperAdminDto: CreateSuperAdminDto) {
+    await this.permissionsService
+      .can(this.user)
+      .create(Resource.SUPER_ADMIN, createSuperAdminDto, {
+        throwError: true,
+      });
+    return await this.userService.createSuperAdmin(createSuperAdminDto);
   }
 
-  async findAll() {
+  async find() {
     return await this.superAdminRepository.find();
   }
 
@@ -25,11 +36,16 @@ export class SuperAdminService {
     return await this.superAdminRepository.findOneBy({ userId: id });
   }
 
-  update(id: number, updateSuperAdminDto: UpdateSuperAdminDto) {
-    return this.userService.updateSuperAdmin(id, updateSuperAdminDto);
+  async update(id: number, updateSuperAdminDto: UpdateSuperAdminDto) {
+    await this.permissionsService
+      .can(this.user)
+      .update(Resource.SUPER_ADMIN, id, updateSuperAdminDto, {
+        throwError: true,
+      });
+    return await this.userService.updateSuperAdmin(id, updateSuperAdminDto);
   }
 
-  remove(id: number) {
-    return this.userService.remove(id);
+  async remove(id: number) {
+    return await this.userService.remove(id);
   }
 }

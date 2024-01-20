@@ -3,9 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UserService } from '../user/services/user.service';
 import { SiteAdmin } from '../user/entities/site-admin.entity';
-import { SecurityGuard } from '../user/entities/security-guard.entity';
 import { CompanyAdmin } from '../user/entities/company-admin.entity';
-import { SECURITY_GUARD_ROLE, SITE_ADMIN_ROLE } from '../roles/roles.constants';
+import { Role } from '../roles/roles';
 import { JWTPayload } from './auth.types';
 import { SuperAdmin } from '../user/entities/super-admin.entity';
 
@@ -17,41 +16,40 @@ export class AuthService {
   ) {}
   async validateUser(username: string, password: string) {
     const user = await this.userService.findOneByUsername(username);
-    if (!user) throw new UnauthorizedException();
+    if (!user) throw new UnauthorizedException('Invalid username or password');
     const { user: baseUser } = user;
     const passwordMatch = await argon2.verify(baseUser.password, password);
-    if (!passwordMatch) throw new UnauthorizedException();
+    if (!passwordMatch)
+      throw new UnauthorizedException('Invalid username or password');
     return user;
   }
 
-  async signin(user: SuperAdmin | CompanyAdmin | SiteAdmin | SecurityGuard) {
-    const { user: baseUser } = user;
+  async signin(user: SuperAdmin | CompanyAdmin | SiteAdmin) {
+    const accessToken = await this.getUserAccessToken(user);
+    return {
+      access_token: accessToken,
+    };
+  }
+  async getUserAccessToken(user: SuperAdmin | CompanyAdmin | SiteAdmin) {
+    // _user refers to the instance of User class from which all other types of users derive
+    // and thus _user is the instance that holds attributes shared amongst all users
+    const { user: _user } = user;
     let payload: JWTPayload = {
-      sub: user.userId,
-      role: baseUser.role,
-      username: baseUser.username,
-      firstName: baseUser.firstName,
+      sub: _user.id,
+      role: _user.role as Role,
+      username: _user.username,
+      firstName: _user.firstName,
       companyId: user instanceof SuperAdmin ? undefined : user.companyId,
     };
-    switch (baseUser.role) {
-      case SITE_ADMIN_ROLE:
-        const siteAdmin = user as SiteAdmin;
-        payload = {
-          ...payload,
-          managedSiteId: siteAdmin.siteId,
-        };
-        break;
-      case SECURITY_GUARD_ROLE:
-        const securityGuard = user as SecurityGuard;
-        payload = {
-          ...payload,
-          deployedSiteId: securityGuard.deployedSiteId,
-          shiftId: securityGuard.shiftId,
-        };
-        break;
+
+    // Add a managedSiteId to the payload for a site admin user
+    if (_user.role === Role.SITE_ADMIN) {
+      const siteAdmin = user as SiteAdmin;
+      payload = {
+        ...payload,
+        managedSiteId: siteAdmin.siteId,
+      };
     }
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    return await this.jwtService.signAsync(payload);
   }
 }

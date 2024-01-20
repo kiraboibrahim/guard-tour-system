@@ -1,24 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../entities/user.base.entity';
+import { AuthUser, User } from '../entities/user.base.entity';
 import { CreateCompanyAdminDto } from '../dto/create-company-admin.dto';
 import { CreateSiteAdminDto } from '../dto/create-site-admin.dto';
 import { CreateSecurityGuardDto } from '../dto/create-security-guard.dto';
 import { CompanyAdmin } from '../entities/company-admin.entity';
 import { SiteAdmin } from '../entities/site-admin.entity';
 import { SecurityGuard } from '../entities/security-guard.entity';
-import {
-  COMPANY_ADMIN_ROLE,
-  SECURITY_GUARD_ROLE,
-  SITE_ADMIN_ROLE,
-  SUPER_ADMIN_ROLE,
-} from '../../roles/roles.constants';
-import { Role } from '../../roles/roles.types';
+import { Role } from '../../roles/roles';
 import { UpdateCompanyAdminDto } from '../dto/update-company-admin.dto';
 import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
-import { isEmptyObjet, removeEmpty } from '../../core/core.utils';
+import { isEmptyObjet, removeEmptyObjects } from '../../core/core.utils';
 import { SuperAdmin } from '../entities/super-admin.entity';
 import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
@@ -27,6 +21,8 @@ import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(AuthUser)
+    private authUserRepository: Repository<AuthUser>,
     @InjectRepository(SuperAdmin)
     private superAdminRepository: Repository<SuperAdmin>,
     @InjectRepository(CompanyAdmin)
@@ -38,39 +34,37 @@ export class UserService {
   ) {}
 
   async findOneById(id: number) {
-    return await this.userRepository.findOneBy({ id });
+    return await this.authUserRepository.findOneBy({ id });
   }
 
   async findOneByUsername(username: string) {
-    const user = await this.userRepository.findOneBy({
-      username: username,
+    const user = await this.authUserRepository.findOneBy({
+      username,
     });
     if (user === null) return null;
     const whereOptions = { userId: user.id };
     switch (user.role) {
-      case SUPER_ADMIN_ROLE:
+      case Role.SUPER_ADMIN:
         return await this.superAdminRepository.findOneBy(whereOptions);
-      case COMPANY_ADMIN_ROLE:
+      case Role.COMPANY_ADMIN:
         return await this.companyAdminRepository.findOneBy(whereOptions);
-      case SITE_ADMIN_ROLE:
+      case Role.SITE_ADMIN:
         return await this.siteAdminRepository.findOneBy(whereOptions);
-      case SECURITY_GUARD_ROLE:
-        return await this.securityGuardRepository.findOneBy(whereOptions);
       default:
         return null;
     }
   }
   async updateSuperAdmin(id: number, updateSuperAdminDto: UpdateSuperAdminDto) {
-    return await this.updateUser(id, updateSuperAdminDto, SUPER_ADMIN_ROLE);
+    return await this.updateUser(id, updateSuperAdminDto, Role.SUPER_ADMIN);
   }
   async updateCompanyAdmin(
     id: number,
     updateCompanyAdminDto: UpdateCompanyAdminDto,
   ) {
-    return await this.updateUser(id, updateCompanyAdminDto, COMPANY_ADMIN_ROLE);
+    return await this.updateUser(id, updateCompanyAdminDto, Role.COMPANY_ADMIN);
   }
   async updateSiteAdmin(id: number, updateSiteAdminDto: UpdateSiteAdminDto) {
-    return await this.updateUser(id, updateSiteAdminDto, SITE_ADMIN_ROLE);
+    return await this.updateUser(id, updateSiteAdminDto, Role.SITE_ADMIN);
   }
 
   async updateSecurityGuard(
@@ -80,7 +74,7 @@ export class UserService {
     return await this.updateUser(
       id,
       updateSecurityGuardDto,
-      SECURITY_GUARD_ROLE,
+      Role.SECURITY_GUARD,
     );
   }
   private async updateUser(id: number, updateUserDto: any, role: Role) {
@@ -89,10 +83,14 @@ export class UserService {
     const { user: commonUserData, ...userSpecificData } = userLikeEntity;
     const commonUserDataExists = !isEmptyObjet(commonUserData);
     const userSpecificDataExists = !isEmptyObjet(userSpecificData);
-    if (commonUserDataExists)
+    if (commonUserDataExists && role != Role.SECURITY_GUARD) {
+      await this.authUserRepository.update({ id }, commonUserData);
+    } else if (commonUserDataExists && role == Role.SECURITY_GUARD) {
       await this.userRepository.update({ id }, commonUserData);
+    }
+
     switch (role) {
-      case SUPER_ADMIN_ROLE:
+      case Role.SUPER_ADMIN:
         if (userSpecificDataExists) {
           updateResult = await this.superAdminRepository.update(
             { userId: id },
@@ -100,21 +98,21 @@ export class UserService {
           );
         }
         break;
-      case COMPANY_ADMIN_ROLE:
+      case Role.COMPANY_ADMIN:
         if (userSpecificDataExists)
           updateResult = await this.companyAdminRepository.update(
             { userId: id },
             userSpecificData,
           );
         break;
-      case SITE_ADMIN_ROLE:
+      case Role.SITE_ADMIN:
         if (userSpecificDataExists)
           updateResult = await this.siteAdminRepository.update(
             { userId: id },
             userSpecificData,
           );
         break;
-      case SECURITY_GUARD_ROLE:
+      case Role.SECURITY_GUARD:
         if (userSpecificDataExists)
           updateResult = await this.securityGuardRepository.update(
             { userId: id },
@@ -128,39 +126,45 @@ export class UserService {
   }
 
   async remove(id: number) {
-    return await this.userRepository.delete(id);
+    let deleteResult = await this.authUserRepository.delete(id);
+    const { affected } = deleteResult;
+    const nothingDeleted = affected === 0;
+    if (nothingDeleted) {
+      deleteResult = await this.userRepository.delete(id);
+    }
+    return deleteResult;
   }
 
   async createSuperAdmin(createSuperAdminDto: CreateSuperAdminDto) {
-    return await this.createUser(createSuperAdminDto, SUPER_ADMIN_ROLE);
+    return await this.createUser(createSuperAdminDto, Role.SUPER_ADMIN);
   }
 
   async createCompanyAdmin(createCompanyAdminDto: CreateCompanyAdminDto) {
-    return await this.createUser(createCompanyAdminDto, COMPANY_ADMIN_ROLE);
+    return await this.createUser(createCompanyAdminDto, Role.COMPANY_ADMIN);
   }
 
   async createSiteAdmin(createSiteAdminDto: CreateSiteAdminDto) {
-    return await this.createUser(createSiteAdminDto, SITE_ADMIN_ROLE);
+    return await this.createUser(createSiteAdminDto, Role.SITE_ADMIN);
   }
 
   async createSecurityGuard(createSecurityGuardDto: CreateSecurityGuardDto) {
-    return await this.createUser(createSecurityGuardDto, SECURITY_GUARD_ROLE);
+    return await this.createUser(createSecurityGuardDto, Role.SECURITY_GUARD);
   }
 
   private async createUser(createUserDto: any, role: Role) {
     const userLikeEntity = this.dtoToUserLikeEntity(createUserDto, role);
     switch (role) {
-      case SUPER_ADMIN_ROLE:
+      case Role.SUPER_ADMIN:
         const superAdmin = this.superAdminRepository.create(userLikeEntity);
         return await this.superAdminRepository.save(superAdmin);
-      case COMPANY_ADMIN_ROLE:
-        // Signals work with Entity objects(instantiated thru constructors) and not from {}
+      case Role.COMPANY_ADMIN:
+        // Signals work with Entity objects(instantiated thru constructors) and not from literal objects- {}
         const companyAdmin = this.companyAdminRepository.create(userLikeEntity);
         return await this.companyAdminRepository.save(companyAdmin);
-      case SITE_ADMIN_ROLE:
+      case Role.SITE_ADMIN:
         const siteAdmin = this.siteAdminRepository.create(userLikeEntity);
         return await this.siteAdminRepository.save(siteAdmin);
-      case SECURITY_GUARD_ROLE:
+      case Role.SECURITY_GUARD:
         const securityGuard =
           this.securityGuardRepository.create(userLikeEntity);
         return await this.securityGuardRepository.save(securityGuard);
@@ -170,50 +174,25 @@ export class UserService {
   }
   private dtoToUserLikeEntity(dto: any, role: Role) {
     const convert = (obj: any) => {
-      const {
-        firstName,
-        lastName,
-        phoneNumber,
-        password,
-        ...userSpecificData
-      } = obj;
-      // userSpecificData is data that doesn't belong to the base user entity
-      const { email, uniqueId } = userSpecificData;
-      return {
+      const { firstName, lastName, phoneNumber, ...userSpecificData } = obj;
+      const user = {
         ...userSpecificData,
         user: {
           firstName,
           lastName,
           phoneNumber,
-          password,
-          username: email || uniqueId,
           role,
         },
       };
+      if (role !== Role.SECURITY_GUARD) {
+        // We ar dealing with a dto of an AuthUser
+        // userSpecificData is data that doesn't belong to the base user entity
+        const { email, password } = userSpecificData;
+        user.user = { ...user.user, password, username: email };
+        return user;
+      }
+      return user;
     };
-    return removeEmpty(convert(dto));
-  }
-  async userBelongsToCompany(userId: number, companyId: number, role: Role) {
-    switch (role) {
-      case SUPER_ADMIN_ROLE:
-        return false;
-      case COMPANY_ADMIN_ROLE:
-        return !!(await this.companyAdminRepository.findOneBy({
-          userId,
-          companyId,
-        }));
-      case SITE_ADMIN_ROLE:
-        return !!(await this.siteAdminRepository.findOneBy({
-          userId,
-          companyId,
-        }));
-      case SECURITY_GUARD_ROLE:
-        return !!(await this.securityGuardRepository.findOneBy({
-          userId,
-          companyId,
-        }));
-      default:
-        return false;
-    }
+    return removeEmptyObjects(convert(dto));
   }
 }

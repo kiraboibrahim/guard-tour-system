@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSecurityGuardDto } from '../dto/create-security-guard.dto';
@@ -10,7 +10,8 @@ import { SECURITY_GUARD_PAGINATION_CONFIG } from '../pagination-config/security-
 import { Patrol } from '../../patrol/entities/patrol.entity';
 import { PATROL_PAGINATION_CONFIG } from '../../patrol/patrol-pagination.config';
 import { BaseService } from '../../core/core.base';
-import { UnDeploySecurityGuardsDto } from '../dto/undeploy-security-guards.dto';
+import { PermissionsService } from '../../permissions/permissions.service';
+import { Resource } from '../../permissions/permissions';
 
 @Injectable()
 export class SecurityGuardService extends BaseService {
@@ -19,20 +20,26 @@ export class SecurityGuardService extends BaseService {
     private securityGuardRepository: Repository<SecurityGuard>,
     private userService: UserService,
     @InjectRepository(Patrol) private patrolRepository: Repository<Patrol>,
+    private permissionsService: PermissionsService,
   ) {
     super();
   }
 
   async create(createSecurityGuardDto: CreateSecurityGuardDto) {
-    const { companyId: expectedCompanyId } = this.user;
-    const { companyId: givenCompanyId } = createSecurityGuardDto;
-    const invalidCompanyId = givenCompanyId !== expectedCompanyId;
-    if (this.user.isCompanyAdmin() && invalidCompanyId)
-      throw new UnauthorizedException('Invalid company');
+    await this.permissionsService
+      .can(this.user)
+      .create(Resource.SECURITY_GUARD, createSecurityGuardDto, {
+        throwError: true,
+      });
     return this.userService.createSecurityGuard(createSecurityGuardDto);
   }
 
-  async findAll(query: PaginateQuery) {
+  async find(query: PaginateQuery) {
+    await this.permissionsService
+      .can(this.user)
+      .filter(Resource.SECURITY_GUARD)
+      .with(query);
+    this.filterOnUserCompany(query);
     return await paginate(
       query,
       this.securityGuardRepository,
@@ -40,11 +47,18 @@ export class SecurityGuardService extends BaseService {
     );
   }
 
-  async findOneById(id: number) {
-    return await this.securityGuardRepository.findOneBy({ userId: id });
+  async findOneById(id: string) {
+    return await this.securityGuardRepository.findOne({
+      where: [{ userId: +id }, { uniqueId: id }],
+    });
   }
 
   async update(id: number, updateSecurityGuardDto: UpdateSecurityGuardDto) {
+    await this.permissionsService
+      .can(this.user)
+      .update(Resource.SECURITY_GUARD, id, updateSecurityGuardDto, {
+        throwError: true,
+      });
     return await this.userService.updateSecurityGuard(
       id,
       updateSecurityGuardDto,
@@ -54,36 +68,23 @@ export class SecurityGuardService extends BaseService {
   async remove(id: number) {
     return await this.userService.remove(id);
   }
-  async unDeploySecurityGuards(
-    unDeploySecurityGuardsDto: UnDeploySecurityGuardsDto,
-  ) {
-    /* UnDeploying a security guard implies nullifying both the deployedSiteId
-    and the ShiftId. The shiftId is nullified because a security guard can't have
-    a shift and yet their deployedSiteId is null */
-    const { securityGuards }: { securityGuards: SecurityGuard[] } =
-      unDeploySecurityGuardsDto as any;
-    const userCompanyId = this.user.isCompanyAdmin()
-      ? this.user.companyId
-      : securityGuards[0].companyId;
-    const securityGuardsBelongToUserCompany = securityGuards.every(
-      (securityGuard) => securityGuard.belongsToCompany(userCompanyId),
-    );
-    if (!securityGuardsBelongToUserCompany) throw new UnauthorizedException();
-    const toBeUnDeployedSecurityGuards = securityGuards.map((securityGuard) => {
-      securityGuard.deployedSiteId = null;
-      securityGuard.shiftId = null;
-      return securityGuard;
-    });
-    return await this.securityGuardRepository.save(
-      toBeUnDeployedSecurityGuards,
-    );
-  }
-  async findAllSecurityGuardPatrols(id: number, query: PaginateQuery) {
-    query.filter = { ...query.filter, securityGuardId: [`${id}`] };
-    return await paginate(
-      query,
-      this.patrolRepository,
-      PATROL_PAGINATION_CONFIG,
-    );
+
+  async findSecurityGuardPatrols(id: string, query: PaginateQuery) {
+    if (this.user) {
+      await this.permissionsService
+        .can(this.user)
+        .filter(Resource.PATROL)
+        .with(query);
+    } else {
+      query.filter = {}; // turn off filtering for unauthenticated users
+    }
+    const queryBuilder = this.patrolRepository
+      .createQueryBuilder('patrol')
+      .where('patrol.securityGuardId = :securityGuardId', {
+        securityGuardId: +id,
+      })
+      .leftJoin('patrol.securityGuard', 'securityGuard')
+      .orWhere('securityGuard.uniqueId = :uniqueId', { uniqueId: id });
+    return await paginate(query, queryBuilder, PATROL_PAGINATION_CONFIG);
   }
 }

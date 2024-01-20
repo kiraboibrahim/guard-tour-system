@@ -1,0 +1,2 @@
+export const INSTALL_TAGS_ACTION = 'INSTALL';
+export const UNINSTALL_TAGS_ACTION = 'UNINSTALL';

@@ -11,16 +11,24 @@ import {
   PRIMARY_ROLES_KEY,
   SECONDARY_ROLES_KEY,
 } from './roles.decorators';
-import { Role } from './roles.types';
+import { Role } from './roles';
 import { User } from '../auth/auth.types';
+import { IsPublicMixin } from '../auth/auth.mixins';
+import { applyMixins } from '../core/core.utils';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class RolesGuard implements CanActivate, IsPublicMixin {
   private readonly logger = new Logger(RolesGuard.name);
   constructor(private reflector: Reflector) {}
+
+  isPublic: (reflector: Reflector, context: ExecutionContext) => boolean;
+
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    const isPublic = this.isPublic(this.reflector, context);
+    if (isPublic) return true;
+
     const request = context.switchToHttp().getRequest();
     const primaryRoles = this.getPrimaryRoles(context);
     if (!primaryRoles.size) {
@@ -39,7 +47,7 @@ export class RolesGuard implements CanActivate {
       setDiff<Role>([...primaryAndSecondaryRoles], [...disallowedRoles]),
     );
     const userRole = (request.user as User).role;
-    return effectiveRoles.has(userRole);
+    return effectiveRoles.has(Role.ANY) || effectiveRoles.has(userRole);
   }
 
   private getPrimaryRoles(context: ExecutionContext) {
@@ -50,6 +58,7 @@ export class RolesGuard implements CanActivate {
       ]) || [],
     );
   }
+
   private getSecondaryRoles(context: ExecutionContext) {
     return new Set(
       this.reflector.getAllAndOverride<Role[]>(SECONDARY_ROLES_KEY, [
@@ -66,3 +75,5 @@ export class RolesGuard implements CanActivate {
     );
   }
 }
+
+applyMixins(RolesGuard, IsPublicMixin);

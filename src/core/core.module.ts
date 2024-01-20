@@ -7,7 +7,7 @@ import {
   _AreUnique,
   _LoadEntityIfExists,
   _LoadEntitiesIfExist,
-  IsAtleastXYears,
+  IsAtLeastNYears,
 } from './core.validators';
 
 const validators = [
@@ -15,7 +15,7 @@ const validators = [
   _AreUnique,
   _LoadEntityIfExists,
   _LoadEntitiesIfExist,
-  IsAtleastXYears,
+  IsAtLeastNYears,
 ];
 @Global()
 @Module({

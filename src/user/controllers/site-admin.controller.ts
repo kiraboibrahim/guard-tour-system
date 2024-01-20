@@ -13,29 +13,26 @@ import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
 import { SITE_ADMIN_PAGINATION_CONFIG } from '../pagination-config/site-admin-pagination.config';
-import { AuthRequired, User } from '../../auth/auth.decorators';
+import { Auth, User } from '../../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../../auth/auth.types';
-import {
-  COMPANY_ADMIN_ROLE,
-  SUPER_ADMIN_ROLE,
-} from '../../roles/roles.constants';
+
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
 } from '../../permissions/permissions.decorators';
-import { SITE_ADMIN_RESOURCE } from '../../permissions/permissions';
-import { DisAllow } from '../../roles/roles.decorators';
+import { Resource } from '../../permissions/permissions';
+import { Role } from '../../roles/roles';
 
 @ApiTags('Site Admins')
-@AuthRequired(SUPER_ADMIN_ROLE, COMPANY_ADMIN_ROLE)
+@Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
 @Controller('site-admins')
 export class SiteAdminController {
   constructor(private readonly siteAdminService: SiteAdminService) {}
 
   @Post()
-  @CanCreate(SITE_ADMIN_RESOURCE)
+  @CanCreate(Resource.SITE_ADMIN)
   create(
     @Body() createSiteAdminDto: CreateSiteAdminDto,
     @User() user: AuthenticatedUser,
@@ -46,32 +43,32 @@ export class SiteAdminController {
 
   @ApiPaginationQuery(SITE_ADMIN_PAGINATION_CONFIG)
   @Get()
-  @DisAllow(COMPANY_ADMIN_ROLE)
-  @CanRead(SITE_ADMIN_RESOURCE)
-  findAll(@Paginate() query: PaginateQuery) {
-    return this.siteAdminService.findAll(query);
+  @CanRead(Resource.SITE_ADMIN)
+  find(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
+    this.siteAdminService.setUser(user);
+    return this.siteAdminService.find(query);
   }
 
   @Get(':id')
-  @CanRead(SITE_ADMIN_RESOURCE)
+  @CanRead(Resource.SITE_ADMIN, undefined, { [Resource.SITE_ADMIN]: 'id' })
   findOne(@Param('id') id: string) {
     return this.siteAdminService.findOneById(+id);
   }
 
   @Patch(':id')
-  @CanUpdate(SITE_ADMIN_RESOURCE)
+  @CanUpdate(Resource.SITE_ADMIN)
   async update(
     @Param('id') id: string,
     @Body() updateSiteAdminDto: UpdateSiteAdminDto,
     @User() user: AuthenticatedUser,
   ) {
     this.siteAdminService.setUser(user);
-    await this.siteAdminService.update(+id, updateSiteAdminDto);
+    return await this.siteAdminService.update(+id, updateSiteAdminDto);
   }
 
   @Delete(':id')
-  @CanDelete(SITE_ADMIN_RESOURCE)
+  @CanDelete(Resource.SITE_ADMIN)
   async remove(@Param('id') id: string) {
-    await this.siteAdminService.remove(+id);
+    return await this.siteAdminService.remove(+id);
   }
 }

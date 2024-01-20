@@ -1,22 +1,16 @@
-import { Role } from '../roles/roles.types';
-import {
-  COMPANY_ADMIN_ROLE,
-  SECURITY_GUARD_ROLE,
-  SITE_ADMIN_ROLE,
-  SUPER_ADMIN_ROLE,
-} from '../roles/roles.constants';
+import { Role } from '../roles/roles';
 
 export type JWTPayload = {
   sub: number;
   role: Role;
   username: string;
   firstName: string;
-  // companyId is undefined for superAdmins coz superAdmins aren't affiliated to any companies
+  // companyId is undefined for superAdmins because superAdmins aren't affiliated to any company
   companyId?: number;
   managedSiteId?: number;
-  // deployedSiteId can be null when security guard isn't deployed yet
+  // deployedSiteId will be null when a security guard isn't deployed yet
   deployedSiteId?: number | null;
-  // shiftId can be null when security guard isn't deployed yet
+  // shiftId will also be null when a security guard isn't deployed yet
   shiftId?: number | null;
 };
 
@@ -28,20 +22,20 @@ export class BaseUser {
   companyId: number;
 
   isSuperAdmin() {
-    return this.role === SUPER_ADMIN_ROLE;
+    return this.role === Role.SUPER_ADMIN;
   }
   isCompanyAdmin() {
-    return this.role === COMPANY_ADMIN_ROLE;
+    return this.role === Role.COMPANY_ADMIN;
   }
   isSiteAdmin() {
-    return this.role === SITE_ADMIN_ROLE;
+    return this.role === Role.SITE_ADMIN;
   }
 
   isSecurityGuard() {
-    return this.role === SECURITY_GUARD_ROLE;
+    return this.role === Role.SECURITY_GUARD;
   }
   belongsToCompany(companyId: number) {
-    return this.companyId && this.companyId === companyId;
+    return !!this.companyId && this.companyId === companyId;
   }
 }
 
@@ -52,8 +46,8 @@ export class SiteAdmin extends BaseUser {
 }
 
 export class SecurityGuard extends BaseUser {
-  deployedSiteId: number;
   shiftId: number;
+  deployedSiteId: number;
 }
 
 export type User = SuperAdmin | CompanyAdmin | SiteAdmin | SecurityGuard;

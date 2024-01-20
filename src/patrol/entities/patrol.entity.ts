@@ -2,7 +2,6 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { IsISO8601, IsMilitaryTime } from 'class-validator';
 import { SecurityGuard } from '../../user/entities/security-guard.entity';
 import { Site } from '../../site/entities/site.entity';
-import { Shift } from '../../shift/entities/shift.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity('patrols')
@@ -18,23 +17,12 @@ export class Patrol {
   @IsMilitaryTime()
   startTime: string;
 
-  @Column({ type: 'time' })
-  @IsMilitaryTime()
-  endTime: string;
-
   @Exclude()
   @Column()
   siteId: number;
 
   @ManyToOne(() => Site, { onDelete: 'CASCADE', eager: true })
   site: Site;
-
-  @Column({ nullable: true })
-  shiftId: number;
-
-  @Exclude()
-  @ManyToOne(() => Shift, { onDelete: 'SET NULL', nullable: true })
-  shift: Shift;
 
   @Exclude()
   @Column()
@@ -45,4 +33,8 @@ export class Patrol {
     eager: true,
   })
   securityGuard: SecurityGuard;
+
+  belongsToCompany(companyId: number) {
+    return this.site.belongsToCompany(companyId);
+  }
 }

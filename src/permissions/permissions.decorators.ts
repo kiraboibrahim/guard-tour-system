@@ -1,63 +1,42 @@
-import {
-  createParamDecorator,
-  ExecutionContext,
-  SetMetadata,
-} from '@nestjs/common';
-import {
-  COMPANY_ADMIN_RESOURCE,
-  COMPANY_RESOURCE,
-  CREATE,
-  DELETE,
-  PATROL_RESOURCE,
-  READ,
-  SECURITY_GUARD_RESOURCE,
-  SHIFT_RESOURCE,
-  SITE_ADMIN_RESOURCE,
-  TAG_RESOURCE,
-  UPDATE,
-} from './permissions';
-import { Paginate, PaginateQuery } from 'nestjs-paginate';
-import { User } from '../auth/auth.types';
+import { SetMetadata } from '@nestjs/common';
+import { Action } from './permissions';
+import { ResourcesParams } from './permissions.types';
+import { Resource } from './permissions';
 
-export const REQUIRED_PERMISSIONS_KEY = 'requiredPermission';
+export const REQUIRED_PERMISSIONS_KEY = 'REQUIRED_PERMISSIONS';
 
-export const CanCreate = (resource: string) =>
-  SetMetadata(REQUIRED_PERMISSIONS_KEY, { action: CREATE, resource });
-
-export const CanRead = (resource: string, childResource?: string) =>
-  SetMetadata(REQUIRED_PERMISSIONS_KEY, {
-    action: READ,
+export const CanCreate = (resource: Resource) => {
+  return SetMetadata(REQUIRED_PERMISSIONS_KEY, {
+    action: Action.CREATE,
     resource,
-    childResource,
   });
+};
 
-export const CanUpdate = (resource: string) =>
-  SetMetadata(REQUIRED_PERMISSIONS_KEY, { action: UPDATE, resource });
+export const CanRead = (
+  resource: string,
+  parentResources?: Resource[],
+  resourcesParams?: ResourcesParams,
+) => {
+  return SetMetadata(REQUIRED_PERMISSIONS_KEY, {
+    action: Action.READ,
+    resource,
+    parentResources,
+    resourcesParams,
+  });
+};
 
-export const CanDelete = (resource: string) =>
-  SetMetadata(REQUIRED_PERMISSIONS_KEY, { action: DELETE, resource });
+export const CanUpdate = (resource: Resource, resourceParam = 'id') => {
+  return SetMetadata(REQUIRED_PERMISSIONS_KEY, {
+    action: Action.UPDATE,
+    resource,
+    resourcesParams: { [resource]: resourceParam },
+  });
+};
 
-export const GetPaginateQuery = (resource: string) => {
-  return createParamDecorator((data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const user = request.user as User;
-    switch (resource) {
-      case COMPANY_RESOURCE:
-        return Paginate();
-      case PATROL_RESOURCE:
-        return Paginate();
-      case SHIFT_RESOURCE:
-        return Paginate();
-      case TAG_RESOURCE:
-        return;
-      case COMPANY_ADMIN_RESOURCE:
-        return;
-      case SITE_ADMIN_RESOURCE:
-        return;
-      case SECURITY_GUARD_RESOURCE:
-        return;
-      default:
-        return {} as PaginateQuery;
-    }
+export const CanDelete = (resource: Resource, resourceParam = 'id') => {
+  return SetMetadata(REQUIRED_PERMISSIONS_KEY, {
+    action: Action.DELETE,
+    resource,
+    resourcesParams: { [resource]: resourceParam },
   });
 };

@@ -9,34 +9,30 @@ import {
 } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { CreateTagsDto } from './dto/create-tags.dto';
-import {
-  UpdateTagDto,
-  UninstallTagsFromSiteDto,
-  InstallTagsToSiteDto,
-} from './dto/update-tag.dto';
+import { UpdateTagUIDDto } from './dto/update-tag-uid.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
 import { TAG_PAGINATION_CONFIG } from './tag-pagination.config';
-import { COMPANY_ADMIN_ROLE, SUPER_ADMIN_ROLE } from '../roles/roles.constants';
+import { Role } from '../roles/roles';
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { TAG_RESOURCE } from '../permissions/permissions';
-import { AuthRequired, User as User } from '../auth/auth.decorators';
+import { Resource } from '../permissions/permissions';
+import { Auth, User as User } from '../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
-import { DisAllow } from '../roles/roles.decorators';
+import { TagsActionDto } from './dto/tags-action.dto';
 
 @ApiTags('Tags')
-@AuthRequired(SUPER_ADMIN_ROLE, COMPANY_ADMIN_ROLE)
+@Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
 @Controller('tags')
 export class TagController {
   constructor(private tagService: TagService) {}
 
   @Post()
-  @CanCreate(TAG_RESOURCE)
+  @CanCreate(Resource.TAG)
   create(
     @Body() createTagsDto: CreateTagsDto,
     @User() user: AuthenticatedUser,
@@ -47,39 +43,36 @@ export class TagController {
 
   @ApiPaginationQuery(TAG_PAGINATION_CONFIG)
   @Get()
-  @DisAllow(COMPANY_ADMIN_ROLE)
-  @CanRead(TAG_RESOURCE)
-  findAll(@Paginate() query: PaginateQuery) {
-    return this.tagService.findAll(query);
+  @CanRead(Resource.TAG)
+  find(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
+    this.tagService.setUser(user);
+    return this.tagService.find(query);
   }
 
-  @Patch('install')
-  @CanUpdate(TAG_RESOURCE)
-  async uninstallTagsFromSite(
-    @Body() installTagsToSiteDto: InstallTagsToSiteDto,
+  @Patch('actions')
+  @CanUpdate(Resource.TAG)
+  async handleTagsActions(
+    @Body() tagsActionDto: TagsActionDto,
     @User() user: AuthenticatedUser,
   ) {
     this.tagService.setUser(user);
-    await this.tagService.installTagsToSite(installTagsToSiteDto);
+    return await this.tagService.handleTagsActions(tagsActionDto);
   }
-  @Patch('uninstall')
-  @CanUpdate(TAG_RESOURCE)
-  async installTagsToSite(
-    @Body() uninstallTagsFromSiteDto: UninstallTagsFromSiteDto,
-    @User() user: AuthenticatedUser,
-  ) {
-    this.tagService.setUser(user);
-    await this.tagService.uninstallTagsFromSite(uninstallTagsFromSiteDto);
-  }
+
   @Patch(':id')
-  @CanUpdate(TAG_RESOURCE)
-  async update(@Param('id') id: string, @Body() updateTagDto: UpdateTagDto) {
-    await this.tagService.update(+id, updateTagDto);
+  @CanUpdate(Resource.TAG)
+  async updateTagUID(
+    @Param('id') id: string,
+    @Body() updateTagUIDDto: UpdateTagUIDDto,
+    @User() user: AuthenticatedUser,
+  ) {
+    this.tagService.setUser(user);
+    return await this.tagService.updateTagUID(+id, updateTagUIDDto);
   }
 
   @Delete(':id')
-  @CanDelete(TAG_RESOURCE)
+  @CanDelete(Resource.TAG)
   async remove(@Param('id') id: string) {
-    await this.tagService.remove(+id);
+    return await this.tagService.remove(+id);
   }
 }

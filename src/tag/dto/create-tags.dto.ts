@@ -1,9 +1,5 @@
-import { IsInt } from 'class-validator';
-import {
-  AreTenDigitStrings,
-  AreUnique,
-  LoadEntityIfExists,
-} from '../../core/core.validators';
+import { IsInt, IsOptional, IsString } from 'class-validator';
+import { AreUnique, LoadEntityIfExists } from '../../core/core.validators';
 import { ApiProperty } from '@nestjs/swagger';
 import { Company } from '../../company/entities/company.entity';
 import { Tag } from '../entities/tag.entity';
@@ -12,12 +8,13 @@ import { Site } from '../../site/entities/site.entity';
 export class CreateTagsDto {
   @ApiProperty()
   @AreUnique<Tag>(Tag, 'uid')
-  @AreTenDigitStrings()
+  @IsString({ each: true })
   UIDs: string[];
 
   @ApiProperty()
-  @LoadEntityIfExists<Site>(Site, 'site')
+  @LoadEntityIfExists<Site>(Site, 'site', 'id', { tags: true })
   @IsInt()
+  @IsOptional()
   siteId: number;
 
   @ApiProperty()

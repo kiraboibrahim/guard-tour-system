@@ -1,9 +1,9 @@
 import { Column, Entity } from 'typeorm';
 import { IsEmail } from 'class-validator';
-import { CompanyUser } from './user.base.entity';
+import { AuthCompanyUser } from './user.base.entity';
 
 @Entity('companyAdmins')
-export class CompanyAdmin extends CompanyUser {
+export class CompanyAdmin extends AuthCompanyUser {
   @Column({ unique: true })
   @IsEmail()
   email: string;

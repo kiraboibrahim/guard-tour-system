@@ -4,14 +4,16 @@ import { CreateUserDto } from './create-user.base.dto';
 import {
   LoadEntityIfExists,
   IsConsentingAdult,
-  IsTenDigitString,
   IsUnique,
 } from '../../core/core.validators';
 import { Company } from '../../company/entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { SecurityGuard } from '../entities/security-guard.entity';
+import { OmitType } from '@nestjs/mapped-types';
 
-export class CreateSecurityGuardDto extends CreateUserDto {
+export class CreateSecurityGuardDto extends OmitType(CreateUserDto, [
+  'password',
+] as const) {
   @ApiProperty()
   @LoadEntityIfExists(Company, 'company')
   @IsInt()
@@ -19,7 +21,6 @@ export class CreateSecurityGuardDto extends CreateUserDto {
 
   @ApiProperty()
   @IsUnique<SecurityGuard>(SecurityGuard, 'uniqueId')
-  @IsTenDigitString()
   uniqueId: string;
 
   @ApiProperty()

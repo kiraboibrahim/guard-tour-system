@@ -8,13 +8,15 @@ import {
 } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../user/entities/site-admin.entity';
-import { Shift } from '../../shift/entities/shift.entity';
 import { Tag } from '../../tag/entities/tag.entity';
 
 @Entity('sites')
 export class Site {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ unique: true })
+  tagId: string;
 
   @Column()
   name: string;
@@ -35,9 +37,6 @@ export class Site {
   supervisorPhoneNumber: string;
 
   @Column()
-  patrolType: string;
-
-  @Column()
   companyId: number;
 
   @ManyToOne(() => Company)
@@ -48,9 +47,6 @@ export class Site {
     eager: true,
   })
   admin: SiteAdmin;
-
-  @OneToMany(() => Shift, (shift) => shift.site)
-  shifts: Shift[];
 
   @OneToMany(() => Tag, (tag) => tag.site)
   tags: Tag[];

@@ -12,7 +12,6 @@ export const SECURITY_GUARD_PAGINATION_CONFIG: PaginateConfig<SecurityGuard> = {
   searchableColumns: ['uniqueId', 'user.(firstName)'],
   filterableColumns: {
     companyId: [FilterOperator.EQ],
-    deployedSiteId: [FilterOperator.EQ],
   },
   relations: { user: true },
   maxLimit: MAX_ITEMS_PER_PAGE,

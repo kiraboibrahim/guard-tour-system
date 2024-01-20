@@ -1,170 +1,167 @@
-import {
-  COMPANY_ADMIN_ROLE,
-  SECURITY_GUARD_ROLE,
-  SITE_ADMIN_ROLE,
-  SUPER_ADMIN_ROLE,
-} from '../roles/roles.constants';
+export enum Action {
+  CREATE = 'CREATE_ACTION',
+  READ = 'READ_ACTION',
+  UPDATE = 'UPDATE_ACTION',
+  DELETE = 'DELETE_ACTION',
+}
 
-export const CREATE = 'CREATE';
-export const READ = 'READ';
-export const UPDATE = 'UPDATE';
-export const DELETE = 'DELETE';
+export enum Resource {
+  SUPER_ADMIN = 'SUPER_ADMIN_RESOURCE',
+  COMPANY = 'COMPANY_RESOURCE',
+  COMPANY_ADMIN = 'COMPANY_ADMIN_RESOURCE',
+  SITE_ADMIN = 'SITE_ADMIN_RESOURCE',
+  SECURITY_GUARD = 'SECURITY_GUARD_RESOURCE',
+  SITE = 'SITE_RESOURCE',
+  TAG = 'TAG_RESOURCE',
+  SHIFT = 'SHIFT_RESOURCE',
+  PATROL = 'PATROL_RESOURCE',
+}
 
-export const COMPANY_RESOURCE = 'COMPANY_RESOURCE';
-
-export const TAG_RESOURCE = 'TAG_RESOURCE';
-
-export const SITE_RESOURCE = 'SITE_RESOURCE';
-
-export const SHIFT_RESOURCE = 'SHIFT_RESOURCE';
-
-export const PATROL_RESOURCE = 'PATROL_RESOURCE';
-
-export const SUPER_ADMIN_RESOURCE = 'SUPER_ADMIN_RESOURCE';
-
-export const COMPANY_ADMIN_RESOURCE = 'COMPANY_ADMIN_RESOURCE';
-
-export const SITE_ADMIN_RESOURCE = 'SITE_ADMIN_RESOURCE';
-
-export const SECURITY_GUARD_RESOURCE = 'SECURITY_GUARD_RESOURCE';
-
+/*
 const SUPER_ADMIN_PERMISSIONS = {
-  [COMPANY_RESOURCE]: {
+  [Resource.COMPANY]: {
     'create:any': ['*'],
     'read:any': ['*'],
     'update:any': ['*'],
     'delete:any': ['*'],
   },
-  [TAG_RESOURCE]: {
+  [Resource.TAG]: {
     'create:any': ['*'],
     'read:any': ['*'],
     'update:any': ['*'],
     'delete:any': ['*'],
   },
-  [SITE_RESOURCE]: {
+  [Resource.SITE]: {
     'create:any': ['*'],
     'read:any': ['*'],
     'update:any': ['*'],
     'delete:any': ['*'],
   },
-  [SUPER_ADMIN_RESOURCE]: {
+  [Resource.SUPER_ADMIN]: {
     'read:own': ['*'],
     'update:own': ['*'],
   },
-  [COMPANY_ADMIN_RESOURCE]: {
+  [Resource.COMPANY_ADMIN]: {
     'create:any': ['*'],
     'read:any': ['*'],
     'update:any': ['*'],
     'delete:any': ['*'],
   },
-  [SITE_ADMIN_RESOURCE]: {
+  [Resource.SITE_ADMIN]: {
     'create:any': ['*'],
     'read:any': ['*'],
     'update:any': ['*'],
     'delete:any': ['*'],
   },
-  [SECURITY_GUARD_RESOURCE]: {
+  [Resource.SECURITY_GUARD]: {
     'create:any': ['*'],
     'read:any': ['*'],
     'update:any': ['*'],
     'delete:any': ['*'],
   },
-  [SHIFT_RESOURCE]: {
+  [Resource.SHIFT]: {
     'create:any': ['*'],
     'read:any': ['*'],
     'update:any': ['*'],
     'delete:any': ['*'],
   },
-  [PATROL_RESOURCE]: {
+  [Resource.PATROL]: {
     'read:any': ['*'],
   },
 };
 
 const COMPANY_ADMIN_PERMISSIONS = {
-  [COMPANY_RESOURCE]: {
+  [Resource.COMPANY]: {
     'read:own': ['*'],
   },
-  [TAG_RESOURCE]: {
+  [Resource.TAG]: {
     'create:own': ['*'],
     'read:own': ['*'],
     'update:own': ['*'],
     'delete:own': ['*'],
   },
-  [SITE_RESOURCE]: {
+  [Resource.SITE]: {
     'create:own': ['*'],
     'read:own': ['*'],
     'update:own': ['*', '!company', '!companyId'],
     'delete:own': ['*'],
   },
-  [COMPANY_ADMIN_RESOURCE]: {
+  [Resource.COMPANY_ADMIN]: {
     'read:own': ['*'],
   },
-  [SITE_ADMIN_RESOURCE]: {
+  [Resource.SITE_ADMIN]: {
     'create:own': ['*'],
     'read:own': ['*'],
     'update:own': ['*', '!company', '!companyId'],
     'delete:own': ['*'],
   },
-  [SECURITY_GUARD_RESOURCE]: {
+  [Resource.SECURITY_GUARD]: {
     'create:own': ['*'],
     'read:own': ['*'],
     'update:own': ['*', '!company', '!companyId'],
     'delete:own': ['*'],
   },
-  [SHIFT_RESOURCE]: {
+  [Resource.SHIFT]: {
     'create:own': ['*'],
     'read:own': ['*'],
     'update:own': ['*', 'shift', '!shiftId'],
     'delete:own': ['*'],
   },
-  [PATROL_RESOURCE]: {
+  [Resource.PATROL]: {
     'read:own': ['*'],
   },
 };
 
 const SITE_ADMIN_PERMISSIONS = {
-  [COMPANY_RESOURCE]: {
+  [Resource.COMPANY]: {
     'read:own': ['*'],
   },
 
-  [SITE_ADMIN_RESOURCE]: {
+  [Resource.SITE_ADMIN]: {
     'read:own': ['*'],
   },
-  [PATROL_RESOURCE]: {
+  [Resource.SITE]: {
     'read:own': ['*'],
   },
-  [SHIFT_RESOURCE]: {
+  [Resource.PATROL]: {
     'read:own': ['*'],
   },
-  [TAG_RESOURCE]: {
+  [Resource.SHIFT]: {
+    'read:own': ['*'],
+  },
+  [Resource.TAG]: {
     'read:own': ['*'],
   },
 };
 
 const SECURITY_GUARD_PERMISSIONS = {
-  [COMPANY_RESOURCE]: {
+  [Resource.COMPANY]: {
     'read:own': ['*'],
   },
-  [SECURITY_GUARD_RESOURCE]: {
+  [Resource.SECURITY_GUARD]: {
     'read:own': ['*'],
   },
-  [SITE_RESOURCE]: {
+  [Resource.SITE]: {
     'read:own': ['*'],
   },
-  [SHIFT_RESOURCE]: {
+  [Resource.SHIFT]: {
     'read:own': ['*'],
   },
-  [PATROL_RESOURCE]: {
+  [Resource.PATROL]: {
     'create:own': ['*'],
+    'read:own': ['*'],
+  },
+  [Resource.TAG]: {
     'read:own': ['*'],
   },
 };
 
 const PERMISSIONS = {
-  [SUPER_ADMIN_ROLE]: SUPER_ADMIN_PERMISSIONS,
-  [COMPANY_ADMIN_ROLE]: COMPANY_ADMIN_PERMISSIONS,
-  [SITE_ADMIN_ROLE]: SITE_ADMIN_PERMISSIONS,
-  [SECURITY_GUARD_ROLE]: SECURITY_GUARD_PERMISSIONS,
+  [Role.SUPER_ADMIN]: SUPER_ADMIN_PERMISSIONS,
+  [Role.COMPANY_ADMIN]: COMPANY_ADMIN_PERMISSIONS,
+  [Role.SITE_ADMIN]: SITE_ADMIN_PERMISSIONS,
+  [Role.SECURITY_GUARD]: SECURITY_GUARD_PERMISSIONS,
 };
 
 export default PERMISSIONS;
+*/

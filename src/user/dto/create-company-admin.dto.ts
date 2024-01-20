@@ -3,7 +3,7 @@ import { IsEmail } from 'class-validator';
 import { IsUnique, LoadEntityIfExists } from '../../core/core.validators';
 import { Company } from '../../company/entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../entities/user.base.entity';
+import { AuthUser } from '../entities/user.base.entity';
 
 export class CreateCompanyAdminDto extends CreateUserDto {
   @ApiProperty()
@@ -11,7 +11,7 @@ export class CreateCompanyAdminDto extends CreateUserDto {
   companyId: number;
 
   @ApiProperty()
-  @IsUnique<User>(User, 'username')
+  @IsUnique<AuthUser>(AuthUser, 'username')
   @IsEmail()
   email: string;
 }

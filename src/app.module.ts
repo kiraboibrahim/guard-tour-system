@@ -18,22 +18,20 @@ import { CoreModule } from './core/core.module';
 import { Company } from './company/entities/company.entity';
 import { Tag } from './tag/entities/tag.entity';
 import { Patrol } from './patrol/entities/patrol.entity';
-import { Shift } from './shift/entities/shift.entity';
 import { Site } from './site/entities/site.entity';
-import { User } from './user/entities/user.base.entity';
+import { AuthUser, User } from './user/entities/user.base.entity';
 import { SuperAdmin } from './user/entities/super-admin.entity';
 import { CompanyAdmin } from './user/entities/company-admin.entity';
 import { SiteAdmin } from './user/entities/site-admin.entity';
 import { SecurityGuard } from './user/entities/security-guard.entity';
-import { ShiftModule } from './shift/shift.module';
 
 const entities = [
   Company,
   Tag,
   Patrol,
-  Shift,
   Site,
   User,
+  AuthUser,
   SuperAdmin,
   CompanyAdmin,
   SiteAdmin,
@@ -47,22 +45,21 @@ const entities = [
     TagModule,
     CompanyModule,
     PatrolModule,
-    ShiftModule,
     CoreModule,
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        const isDebugEnv = configService.get<string>('DEBUG') === 'on';
+        const isDevEnv = configService.get<string>('DEBUG') === 'on';
         return {
-          type: isDebugEnv ? 'sqlite' : 'mysql',
+          type: isDevEnv ? 'sqlite' : 'mysql',
           host: configService.get<string>('DB_HOST'),
           port: +configService.get('DB_PORT'),
           username: configService.get<string>('DB_USERNAME'),
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
           entities: [...entities],
-          synchronize: isDebugEnv,
+          synchronize: isDevEnv,
         };
       },
       inject: [ConfigService],

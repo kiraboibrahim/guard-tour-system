@@ -3,8 +3,8 @@ import {
   Post,
   UseGuards,
   Request,
-  Get,
   Header,
+  Delete,
 } from '@nestjs/common';
 import { LocalAuthGuard } from './local-auth.guard';
 import { AuthService } from './auth.service';
@@ -38,7 +38,7 @@ export class AuthController {
   async signin(@Request() req: any) {
     return await this.authService.signin(req.user);
   }
-  @Get('signout')
+  @Delete('signout')
   @Header('Clear-Site-Data', '*')
   signout() {
     return;

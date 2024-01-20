@@ -5,15 +5,9 @@ import { SiteController } from './site.controller';
 import { Site } from './entities/site.entity';
 import { TagModule } from '../tag/tag.module';
 import { PatrolModule } from '../patrol/patrol.module';
-import { ShiftModule } from '../shift/shift.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Site]),
-    TagModule,
-    PatrolModule,
-    ShiftModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Site]), TagModule, PatrolModule],
   controllers: [SiteController],
   providers: [SiteService],
   exports: [TypeOrmModule, SiteService],

@@ -14,7 +14,7 @@ import { SuperAdmin } from './entities/super-admin.entity';
 import { CompanyAdmin } from './entities/company-admin.entity';
 import { SiteAdmin } from './entities/site-admin.entity';
 import { SecurityGuard } from './entities/security-guard.entity';
-import { User } from './entities/user.base.entity';
+import { AuthUser, User } from './entities/user.base.entity';
 import { UserService } from './services/user.service';
 import { CompanyModule } from '../company/company.module';
 import { PatrolModule } from '../patrol/patrol.module';
@@ -23,6 +23,7 @@ import { PatrolModule } from '../patrol/patrol.module';
   imports: [
     TypeOrmModule.forFeature([
       User,
+      AuthUser,
       SuperAdmin,
       CompanyAdmin,
       SiteAdmin,

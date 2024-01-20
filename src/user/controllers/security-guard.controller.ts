@@ -13,34 +13,25 @@ import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
 import { SECURITY_GUARD_PAGINATION_CONFIG } from '../pagination-config/security-guard-pagination.config';
-import { AuthRequired, User } from '../../auth/auth.decorators';
+import { Auth, IsPublic, User } from '../../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../../auth/auth.types';
-import {
-  COMPANY_ADMIN_ROLE,
-  SECURITY_GUARD_ROLE,
-  SUPER_ADMIN_ROLE,
-} from '../../roles/roles.constants';
-import { AlsoAllow, DisAllow } from '../../roles/roles.decorators';
+import { Role } from '../../roles/roles';
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
 } from '../../permissions/permissions.decorators';
-import {
-  PATROL_RESOURCE,
-  SECURITY_GUARD_RESOURCE,
-} from '../../permissions/permissions';
-import { UnDeploySecurityGuardsDto } from '../dto/undeploy-security-guards.dto';
+import { Resource } from '../../permissions/permissions';
 
 @ApiTags('Security Guards')
-@AuthRequired(SUPER_ADMIN_ROLE, COMPANY_ADMIN_ROLE)
+@Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
 @Controller('security-guards')
 export class SecurityGuardController {
   constructor(private readonly securityGuardService: SecurityGuardService) {}
 
   @Post()
-  @CanCreate(SECURITY_GUARD_RESOURCE)
+  @CanCreate(Resource.SECURITY_GUARD)
   create(
     @Body() createSecurityGuardDto: CreateSecurityGuardDto,
     @User() user: AuthenticatedUser,
@@ -51,58 +42,43 @@ export class SecurityGuardController {
 
   @ApiPaginationQuery(SECURITY_GUARD_PAGINATION_CONFIG)
   @Get()
-  @DisAllow(COMPANY_ADMIN_ROLE)
-  @CanRead(SECURITY_GUARD_RESOURCE)
-  findAll(@Paginate() query: PaginateQuery) {
-    return this.securityGuardService.findAll(query);
+  @CanRead(Resource.SECURITY_GUARD)
+  find(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
+    this.securityGuardService.setUser(user);
+    return this.securityGuardService.find(query);
   }
 
   @Get(':id')
-  @AlsoAllow(SECURITY_GUARD_ROLE)
-  @CanRead(SECURITY_GUARD_RESOURCE)
+  @IsPublic()
   findOne(@Param('id') id: string) {
-    return this.securityGuardService.findOneById(+id);
-  }
-
-  @Patch('undeploy')
-  @CanUpdate(SECURITY_GUARD_RESOURCE)
-  async unDeploySecurityGuards(
-    @Body() unDeploySecurityGuardsDto: UnDeploySecurityGuardsDto,
-    @User() user: AuthenticatedUser,
-  ) {
-    this.securityGuardService.setUser(user);
-    await this.securityGuardService.unDeploySecurityGuards(
-      unDeploySecurityGuardsDto,
-    );
+    return this.securityGuardService.findOneById(id);
   }
 
   @Patch(':id')
-  @CanUpdate(SECURITY_GUARD_RESOURCE)
+  @CanUpdate(Resource.SECURITY_GUARD)
   async update(
     @Param('id') id: string,
     @Body() updateSecurityGuardDto: UpdateSecurityGuardDto,
     @User() user: AuthenticatedUser,
   ) {
     this.securityGuardService.setUser(user);
-    await this.securityGuardService.update(+id, updateSecurityGuardDto);
+    return await this.securityGuardService.update(+id, updateSecurityGuardDto);
   }
 
   @Delete(':id')
-  @CanDelete(SECURITY_GUARD_RESOURCE)
+  @CanDelete(Resource.SECURITY_GUARD)
   async remove(@Param('id') id: string) {
-    await this.securityGuardService.remove(+id);
+    return await this.securityGuardService.remove(+id);
   }
 
   @Get(':id/patrols')
-  @AlsoAllow(SECURITY_GUARD_ROLE)
-  @CanRead(SECURITY_GUARD_RESOURCE, PATROL_RESOURCE)
-  async findAllSecurityGuardPatrols(
+  @IsPublic()
+  async findSecurityGuardPatrols(
     @Param('id') id: string,
     @Paginate() query: PaginateQuery,
+    @User() user: AuthenticatedUser,
   ) {
-    return await this.securityGuardService.findAllSecurityGuardPatrols(
-      +id,
-      query,
-    );
+    this.securityGuardService.setUser(user);
+    return await this.securityGuardService.findSecurityGuardPatrols(id, query);
   }
 }

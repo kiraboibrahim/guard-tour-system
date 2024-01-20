@@ -12,12 +12,7 @@ import {
   BaseUser,
 } from './auth.types';
 import { plainToInstance } from 'class-transformer';
-import {
-  COMPANY_ADMIN_ROLE,
-  SECURITY_GUARD_ROLE,
-  SITE_ADMIN_ROLE,
-  SUPER_ADMIN_ROLE,
-} from '../roles/roles.constants';
+import { Role } from '../roles/roles';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -34,16 +29,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const userPayload = { id, ...rest };
     let user;
     switch (userPayload.role) {
-      case SUPER_ADMIN_ROLE:
+      case Role.SUPER_ADMIN:
         user = plainToInstance(SuperAdmin, userPayload);
         break;
-      case COMPANY_ADMIN_ROLE:
+      case Role.COMPANY_ADMIN:
         user = plainToInstance(CompanyAdmin, userPayload);
         break;
-      case SITE_ADMIN_ROLE:
+      case Role.SITE_ADMIN:
         user = plainToInstance(SiteAdmin, userPayload);
         break;
-      case SECURITY_GUARD_ROLE:
+      case Role.SECURITY_GUARD:
         user = plainToInstance(SecurityGuard, userPayload);
         break;
       default:

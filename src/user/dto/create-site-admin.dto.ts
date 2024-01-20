@@ -4,7 +4,7 @@ import { IsUnique, LoadEntityIfExists } from '../../core/core.validators';
 import { Company } from '../../company/entities/company.entity';
 import { Site } from '../../site/entities/site.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../entities/user.base.entity';
+import { AuthUser } from '../entities/user.base.entity';
 import { SiteAdmin } from '../entities/site-admin.entity';
 
 export class CreateSiteAdminDto extends CreateUserDto {
@@ -20,7 +20,7 @@ export class CreateSiteAdminDto extends CreateUserDto {
   siteId: number;
 
   @ApiProperty()
-  @IsUnique<User>(User, 'username')
+  @IsUnique<AuthUser>(AuthUser, 'username')
   @IsEmail()
   email: string;
 }

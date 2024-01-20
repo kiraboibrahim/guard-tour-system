@@ -2,7 +2,6 @@ import {
   isArray,
   isISO8601,
   isString,
-  Matches,
   Validate,
   ValidationArguments,
   ValidatorConstraint,
@@ -65,7 +64,7 @@ export class _LoadEntityIfExists implements ValidatorConstraintInterface {
     if (!value) return false;
     const [
       entityClass,
-      propertyKey = validationArguments.property,
+      property = validationArguments.property,
       findByColumnName,
       relations,
     ] = validationArguments.constraints;
@@ -76,7 +75,7 @@ export class _LoadEntityIfExists implements ValidatorConstraintInterface {
     const entityExists = !!entity;
     if (entityExists) {
       const { object } = validationArguments;
-      Object.defineProperty(object, propertyKey, {
+      Object.defineProperty(object, property, {
         value: entity,
         writable: false,
       });
@@ -96,7 +95,7 @@ export class _LoadEntitiesIfExist implements ValidatorConstraintInterface {
   async validate(value: any, validationArguments: ValidationArguments) {
     const [
       entityClass,
-      entityHolderPropertyKey = validationArguments.property,
+      entitiesHolderProperty = validationArguments.property,
       findByColumnName,
       relations,
     ] = validationArguments.constraints;
@@ -108,7 +107,7 @@ export class _LoadEntitiesIfExist implements ValidatorConstraintInterface {
     const entitiesExist = entities.length === value.length;
     if (entitiesExist) {
       const { object } = validationArguments;
-      Object.defineProperty(object, entityHolderPropertyKey, {
+      Object.defineProperty(object, entitiesHolderProperty, {
         value: entities,
         writable: false,
       });
@@ -123,7 +122,7 @@ export class _LoadEntitiesIfExist implements ValidatorConstraintInterface {
 
 @ValidatorConstraint({ async: false })
 @Injectable()
-export class IsAtleastXYears implements ValidatorConstraintInterface {
+export class IsAtLeastNYears implements ValidatorConstraintInterface {
   constructor(private configService: ConfigService) {}
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(value: any, validationArguments: ValidationArguments) {
@@ -165,7 +164,7 @@ export const IsUGPhoneNumber = () => {
 };
 
 export const IsConsentingAdult = () => {
-  return Validate(IsAtleastXYears, [18]);
+  return Validate(IsAtLeastNYears, [18]);
 };
 
 export const LoadEntityIfExists = function <T>(
@@ -208,14 +207,4 @@ export const AreUnique = function <T>(
   findByColumnName: EntityColumnName<T>,
 ) {
   return Validate(_AreUnique, [entityClass, findByColumnName]);
-};
-
-export const IsTenDigitString = () => {
-  const TEN_DIGIT_NUMBER_REGEXP = new RegExp('[0-9][0-9]{9}');
-  return Matches(TEN_DIGIT_NUMBER_REGEXP);
-};
-
-export const AreTenDigitStrings = () => {
-  const TEN_DIGIT_NUMBER_REGEXP = new RegExp('[0-9][0-9]{9}');
-  return Matches(TEN_DIGIT_NUMBER_REGEXP, { each: true });
 };

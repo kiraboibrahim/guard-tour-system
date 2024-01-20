@@ -1,17 +1,12 @@
-import {
-  COMPANY_ADMIN_ROLE,
-  SECURITY_GUARD_ROLE,
-  SITE_ADMIN_ROLE,
-  SUPER_ADMIN_ROLE,
-} from './roles.constants';
+import { Role } from './roles';
 import { IsIn } from 'class-validator';
 
 export const IsValidRole = () => {
   const valid_roles = [
-    SUPER_ADMIN_ROLE,
-    COMPANY_ADMIN_ROLE,
-    SITE_ADMIN_ROLE,
-    SECURITY_GUARD_ROLE,
+    Role.SUPER_ADMIN,
+    Role.COMPANY_ADMIN,
+    Role.SITE_ADMIN,
+    Role.SECURITY_GUARD,
   ];
   return IsIn(valid_roles);
 };

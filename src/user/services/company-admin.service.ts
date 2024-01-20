@@ -7,19 +7,34 @@ import { CompanyAdmin } from '../entities/company-admin.entity';
 import { UserService } from './user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { COMPANY_ADMIN_PAGINATION_CONFIG } from '../pagination-config/company-admin-pagination.config';
+import { BaseService } from '../../core/core.base';
+import { PermissionsService } from '../../permissions/permissions.service';
+import { Resource } from '../../permissions/permissions';
 
 @Injectable()
-export class CompanyAdminService {
+export class CompanyAdminService extends BaseService {
   constructor(
     @InjectRepository(CompanyAdmin)
     private companyAdminRepository: Repository<CompanyAdmin>,
     private userService: UserService,
-  ) {}
+    private permissionsService: PermissionsService,
+  ) {
+    super();
+  }
   async create(createCompanyAdminDto: CreateCompanyAdminDto) {
+    await this.permissionsService
+      .can(this.user)
+      .create(Resource.COMPANY_ADMIN, createCompanyAdminDto, {
+        throwError: true,
+      });
     return await this.userService.createCompanyAdmin(createCompanyAdminDto);
   }
 
-  async findAll(query: PaginateQuery) {
+  async find(query: PaginateQuery) {
+    await this.permissionsService
+      .can(this.user)
+      .filter(Resource.COMPANY_ADMIN)
+      .with(query);
     return await paginate(
       query,
       this.companyAdminRepository,
@@ -32,6 +47,11 @@ export class CompanyAdminService {
   }
 
   async update(id: number, updateCompanyAdminDto: UpdateCompanyAdminDto) {
+    await this.permissionsService
+      .can(this.user)
+      .update(Resource.COMPANY_ADMIN, id, updateCompanyAdminDto, {
+        throwError: true,
+      });
     return await this.userService.updateCompanyAdmin(id, updateCompanyAdminDto);
   }
 

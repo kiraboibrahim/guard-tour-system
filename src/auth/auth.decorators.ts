@@ -1,8 +1,9 @@
-import { Role } from '../roles/roles.types';
+import { Role } from '../roles/roles';
 import {
   applyDecorators,
   createParamDecorator,
   ExecutionContext,
+  SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { AllowOnly } from '../roles/roles.decorators';
@@ -11,7 +12,7 @@ import { RolesGuard } from '../roles/roles.guard';
 import { PermissionsGuard } from '../permissions/permissions.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
-export const AuthRequired = (...roles: Role[]) => {
+export const Auth = (...roles: Role[]) => {
   return applyDecorators(
     ApiBearerAuth(),
     AllowOnly(...roles),
@@ -25,3 +26,8 @@ export const User = createParamDecorator(
     return request.user;
   },
 );
+
+export const IS_PUBLIC_KEY = 'IS_PUBLIC';
+export const IsPublic = () => {
+  return SetMetadata(IS_PUBLIC_KEY, true);
+};
