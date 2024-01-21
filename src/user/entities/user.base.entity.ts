@@ -17,6 +17,7 @@ import { IsValidRole } from '../../roles/roles.validators';
 import { IsUGPhoneNumber } from '../../core/core.validators';
 import { Role } from '../../roles/roles';
 
+// A basic user that contains fields shared by all users
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -55,7 +56,7 @@ export class UserSerializer {
   phoneNumber: string;
 }
 
-/* An AuthUser is one who will be authenticated by the system */
+/* An AuthUser is one who will be authenticated by the system using a username and password */
 @Entity('authUsers')
 export class AuthUser extends User {
   @Column({ unique: true })
@@ -75,14 +76,20 @@ export class AuthUser extends User {
 
 export class AuthUserSerializer extends UserSerializer {
   @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  username: string;
+  @Transform(({ obj }) => obj.user['username'])
+  email: string;
 }
 
-class BaseCompanyUser extends UserSerializer {
+// A user who is affiliated to a company
+export class CompanyUser extends UserSerializer {
   @Expose({ name: 'id' })
   @PrimaryColumn()
   userId: number;
+
+  @Exclude()
+  @OneToOne(() => User, { eager: true, cascade: true, onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: User;
 
   @Column()
   companyId: number;
@@ -97,20 +104,24 @@ class BaseCompanyUser extends UserSerializer {
 }
 
 /* An AuthCompanyUser is one who will be authenticated by the system and he/she will also be affiliated to a company */
-export class AuthCompanyUser extends BaseCompanyUser {
+export class AuthCompanyUser extends AuthUserSerializer {
+  @Expose({ name: 'id' })
+  @PrimaryColumn()
+  userId: number;
+
   @Exclude()
   @OneToOne(() => AuthUser, { eager: true, cascade: true, onDelete: 'CASCADE' })
   @JoinColumn()
   user: AuthUser;
 
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  username: string;
-}
+  @Column()
+  companyId: number;
 
-export class CompanyUser extends BaseCompanyUser {
   @Exclude()
-  @OneToOne(() => User, { eager: true, cascade: true, onDelete: 'CASCADE' })
-  @JoinColumn()
-  user: User;
+  @ManyToOne(() => Company, { onDelete: 'CASCADE' })
+  company: Company;
+
+  belongsToCompany(companyId: number) {
+    return this.companyId === companyId;
+  }
 }

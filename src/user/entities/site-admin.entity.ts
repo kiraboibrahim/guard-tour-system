@@ -4,9 +4,6 @@ import { Site } from '../../site/entities/site.entity';
 
 @Entity('siteAdmins')
 export class SiteAdmin extends AuthCompanyUser {
-  @Column({ unique: true })
-  email: string;
-
   @Column()
   siteId: number;
 

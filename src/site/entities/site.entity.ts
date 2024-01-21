@@ -15,7 +15,7 @@ export class Site {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   tagId: string;
 
   @Column()

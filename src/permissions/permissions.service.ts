@@ -378,7 +378,7 @@ export class PermissionsService {
     updateSuperAdminDto: UpdateSuperAdminDto,
   ) {
     const { id: userId } = this.user;
-    return superAdminId === userId;
+    return this.user.isSuperAdmin() && superAdminId === userId;
   }
   private canUserUpdateCompany(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

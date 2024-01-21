@@ -1,5 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
-import { IsEmail } from 'class-validator';
+import { Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 import { AuthUser, AuthUserSerializer } from './user.base.entity';
 import { Exclude, Expose } from 'class-transformer';
 
@@ -13,8 +12,4 @@ export class SuperAdmin extends AuthUserSerializer {
   @OneToOne(() => AuthUser, { eager: true, cascade: true, onDelete: 'CASCADE' })
   @JoinColumn()
   user: AuthUser;
-
-  @Column({ unique: true })
-  @IsEmail()
-  email: string;
 }

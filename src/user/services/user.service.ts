@@ -83,9 +83,10 @@ export class UserService {
     const { user: commonUserData, ...userSpecificData } = userLikeEntity;
     const commonUserDataExists = !isEmptyObjet(commonUserData);
     const userSpecificDataExists = !isEmptyObjet(userSpecificData);
-    if (commonUserDataExists && role != Role.SECURITY_GUARD) {
+    const isAuthUser = role != Role.SECURITY_GUARD;
+    if (commonUserDataExists && isAuthUser) {
       await this.authUserRepository.update({ id }, commonUserData);
-    } else if (commonUserDataExists && role == Role.SECURITY_GUARD) {
+    } else if (commonUserDataExists && !isAuthUser) {
       await this.userRepository.update({ id }, commonUserData);
     }
 
@@ -153,12 +154,14 @@ export class UserService {
 
   private async createUser(createUserDto: any, role: Role) {
     const userLikeEntity = this.dtoToUserLikeEntity(createUserDto, role);
+    // Password hashing is based on a signal and signals are only executed for entity objects(instantiated thru constructors)
+    // and not from literal objects- {}. The preceding code uses the repository create() method to create entities so that
+    // signals will be executed
     switch (role) {
       case Role.SUPER_ADMIN:
         const superAdmin = this.superAdminRepository.create(userLikeEntity);
         return await this.superAdminRepository.save(superAdmin);
       case Role.COMPANY_ADMIN:
-        // Signals work with Entity objects(instantiated thru constructors) and not from literal objects- {}
         const companyAdmin = this.companyAdminRepository.create(userLikeEntity);
         return await this.companyAdminRepository.save(companyAdmin);
       case Role.SITE_ADMIN:
@@ -174,6 +177,8 @@ export class UserService {
   }
   private dtoToUserLikeEntity(dto: any, role: Role) {
     const convert = (obj: any) => {
+      // userSpecificData contains fields that are specific to each type of user. In other words, it contains
+      // fields that aren't shared amongst the different users
       const { firstName, lastName, phoneNumber, ...userSpecificData } = obj;
       const user = {
         ...userSpecificData,
@@ -184,11 +189,13 @@ export class UserService {
           role,
         },
       };
-      if (role !== Role.SECURITY_GUARD) {
-        // We ar dealing with a dto of an AuthUser
-        // userSpecificData is data that doesn't belong to the base user entity
+      const isAuthUser = role !== Role.SECURITY_GUARD;
+      if (isAuthUser) {
+        // We are creating a DTO of an AuthUser. An AuthUser is one who will authenticate with the system
+        // This kind of user requires a password and username
         const { email, password } = userSpecificData;
         user.user = { ...user.user, password, username: email };
+        delete user['email'];
         return user;
       }
       return user;
