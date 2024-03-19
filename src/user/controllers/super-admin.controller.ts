@@ -23,7 +23,7 @@ import { Resource } from '../../permissions/permissions';
 import { Role } from '../../roles/roles';
 
 @ApiTags('Super Admins')
-@Auth(Role.ANY)
+@Auth(Role.SUPER_ADMIN)
 @Controller('super-admins')
 export class SuperAdminController {
   constructor(private superAdminService: SuperAdminService) {}

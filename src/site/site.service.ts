@@ -60,11 +60,6 @@ export class SiteService extends BaseService {
 
   async findSitePatrols(id: number, query: PaginateQuery) {
     query.filter = { ...query.filter, siteId: [`${id}`] };
-    await this.permissionsService
-      .can(this.user)
-      .filter(Resource.PATROL)
-      .with(query);
-
     return await paginate(
       query,
       this.patrolRepository,

@@ -25,7 +25,7 @@ import { UpdateCompanyAdminDto } from '../user/dto/update-company-admin.dto';
 import { CreateSuperAdminDto } from '../user/dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from '../user/dto/update-super-admin.dto';
 import { PaginateQuery } from 'nestjs-paginate';
-import { isArray } from 'class-validator';
+import { isArray, isString } from 'class-validator';
 import { CreatePatrolDto } from '../patrol/dto/create-patrol.dto';
 import { TagsActionDto } from '../tag/dto/tags-action.dto';
 import { INSTALL_TAGS_ACTION } from '../tag/tag.constants';
@@ -653,65 +653,85 @@ export class PermissionsService {
     }
   }
   private async canUserFilterOnCompany(filter: any) {
-    const { companyId } = filter;
-    if (!companyId) return true;
+    let canFilterOnCompanies = true;
+    const companyIds = this.extractIdsFromFilter(filter);
+    const noCompaniesProvided = companyIds.length === 0;
+    if (noCompaniesProvided) return true;
 
-    const canFilterOnSingleCompany = async (companyId: number) => {
-      return this.hasReadPerms(Resource.COMPANY, companyId);
-    };
-
-    let canFilterOnCompany = true;
-    if (isArray(companyId)) {
-      const moreThanOneCompany = companyId.length > 1;
-      if (moreThanOneCompany) {
-        // Only super admins can filter on more than one company because they aren't attached to any company while
-        // the rest of the users can only belong to a single company
-        canFilterOnCompany = this.user.isSuperAdmin();
-      } else {
-        canFilterOnCompany = await canFilterOnSingleCompany(companyId[0]);
-      }
+    const manyCompaniesProvided = companyIds.length > 1;
+    if (manyCompaniesProvided) {
+      // Only super admins can filter on more than one company because they aren't attached to any company while
+      // the rest of the users can only belong to a single company
+      canFilterOnCompanies = this.user.isSuperAdmin();
     } else {
-      // Other users(company admins, site admins, security guards) can only filter on a single company and that company
-      // should be the company to which they belong.
-      canFilterOnCompany = await canFilterOnSingleCompany(companyId);
+      canFilterOnCompanies = await this.hasReadPerms(
+        Resource.COMPANY,
+        companyIds[0],
+      );
     }
-    if (!canFilterOnCompany) {
+    if (!canFilterOnCompanies) {
       throw new ForbiddenException(
         "You aren't allowed to filter on the given company",
       );
     }
-    return canFilterOnCompany;
+    return canFilterOnCompanies;
   }
 
   private async canUserFilterOnSite(filter: any) {
-    // The site is named differently in some pagination queries
-    const { deployedSiteId: deployedSiteId } = filter;
-    let { siteId } = filter;
-    siteId = siteId || deployedSiteId;
-    if (!siteId) return true;
+    let canFilterOnSites = true;
+    const siteIds = this.extractIdsFromFilter(filter);
+    const noSitesProvided = siteIds.length === 0;
+    if (noSitesProvided) return true;
+
     // Filtering on many sites is allowed for every user for as long as the sites belong to the user's
     // company except for super admins who don't have any restrictions on the sites they can filter on
-    let canFilterOnSite = true;
+    const singleSiteProvided = siteIds.length === 1;
     const { companyId: userCompanyId } = this.user;
-    if (isArray(siteId)) {
-      const cleanSiteIds = siteId.map((siteId) => Number.parseInt(siteId));
-      canFilterOnSite =
+    if (singleSiteProvided) {
+      canFilterOnSites =
         this.user.isSuperAdmin() ||
         (!this.user.isSuperAdmin() &&
-          (await this.sitesBelongToCompany(cleanSiteIds, userCompanyId)));
+          (await this.sitesBelongToCompany(siteIds, userCompanyId)));
     } else {
-      const cleanSiteIds = [+siteId];
-      canFilterOnSite =
+      canFilterOnSites =
         this.user.isSuperAdmin() ||
         (!this.user.isSuperAdmin() &&
-          (await this.sitesBelongToCompany(cleanSiteIds, userCompanyId)));
+          (await this.sitesBelongToCompany(siteIds, userCompanyId)));
     }
-    if (!canFilterOnSite) {
+    if (!canFilterOnSites) {
       throw new ForbiddenException(
         "You aren't allowed to filter on the given site(s)",
       );
     }
-    return canFilterOnSite;
+
+    return canFilterOnSites;
+  }
+
+  private extractIdsFromFilter(filter: any) {
+    const {
+      siteId,
+      companyId,
+    }: { siteId: string | string[]; companyId: string | string[] } = filter;
+    const filterValue = siteId || companyId;
+
+    let ids: number[] = [];
+    const idsRegex = /^.*\$in:(?<ids>[0-9,]+)$/i;
+    const nullIdRegex = /^\$null$/i;
+
+    if (isArray(filterValue)) {
+      ids = filterValue.map((id) => +id);
+    } else if (isString(siteId) && siteId.trim() != '') {
+      ids = filterValue
+        .match(idsRegex)
+        ?.groups?.siteIds.split(',')
+        .map((id) => +id) || [+filterValue];
+    }
+    if (
+      !filterValue ||
+      (isString(filterValue) && nullIdRegex.test(filterValue))
+    )
+      ids = [];
+    return ids;
   }
 
   private handleUndefinedResource() {

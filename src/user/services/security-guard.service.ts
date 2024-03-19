@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Brackets, IsNull, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSecurityGuardDto } from '../dto/create-security-guard.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
@@ -31,7 +31,29 @@ export class SecurityGuardService extends BaseService {
       .create(Resource.SECURITY_GUARD, createSecurityGuardDto, {
         throwError: true,
       });
-    return this.userService.createSecurityGuard(createSecurityGuardDto);
+    // TODO: After creating a security guard, get all patrols with a guard's unique ID but without a security guard relation(null) and set them to the guard
+    const securityGuard = await this.userService.createSecurityGuard(
+      createSecurityGuardDto,
+    );
+    await this.fixNullGuardPatrols(securityGuard as SecurityGuard);
+    return securityGuard;
+  }
+
+  async fixNullGuardPatrols(securityGuard: SecurityGuard) {
+    // Get all the guard's patrols whose security guard field is null and set it to the
+    // given guard
+    let securityGuardPatrols = await this.patrolRepository.find({
+      where: {
+        securityGuardUniqueId: securityGuard.uniqueId,
+        securityGuard: IsNull(),
+      },
+    });
+    securityGuardPatrols = securityGuardPatrols.map((patrol) => {
+      patrol.securityGuard = securityGuard;
+      patrol.securityGuardId = securityGuard.userId;
+      return patrol;
+    });
+    return this.patrolRepository.save(securityGuardPatrols);
   }
 
   async find(query: PaginateQuery) {
@@ -78,13 +100,19 @@ export class SecurityGuardService extends BaseService {
     } else {
       query.filter = {}; // turn off filtering for unauthenticated users
     }
-    const queryBuilder = this.patrolRepository
+    const patrolsQueryBuilder = this.patrolRepository
       .createQueryBuilder('patrol')
-      .where('patrol.securityGuardId = :securityGuardId', {
-        securityGuardId: +id,
-      })
+      .leftJoin('patrol.site', 'site')
       .leftJoin('patrol.securityGuard', 'securityGuard')
-      .orWhere('securityGuard.uniqueId = :uniqueId', { uniqueId: id });
-    return await paginate(query, queryBuilder, PATROL_PAGINATION_CONFIG);
+      .where(
+        new Brackets((qb) => {
+          qb.where('securityGuard.userId = :securityGuardId', {
+            securityGuardId: +id,
+          }).orWhere('patrol.securityGuardUniqueId = :uniqueId', {
+            uniqueId: id,
+          });
+        }),
+      );
+    return await paginate(query, patrolsQueryBuilder, PATROL_PAGINATION_CONFIG);
   }
 }

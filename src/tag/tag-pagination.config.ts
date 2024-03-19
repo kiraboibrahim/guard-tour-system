@@ -10,7 +10,7 @@ export const TAG_PAGINATION_CONFIG: PaginateConfig<Tag> = {
   searchableColumns: ['uid'],
   sortableColumns: ['uid'],
   filterableColumns: {
-    siteId: [FilterOperator.EQ],
+    siteId: [FilterOperator.IN, FilterOperator.NULL],
     companyId: [FilterOperator.EQ],
   },
   loadEagerRelations: true,

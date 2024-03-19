@@ -152,24 +152,34 @@ export class UserService {
     return await this.createUser(createSecurityGuardDto, Role.SECURITY_GUARD);
   }
 
-  private async createUser(createUserDto: any, role: Role) {
+  private async createUser(
+    createUserDto: any,
+    role: Role,
+  ): Promise<SuperAdmin | CompanyAdmin | SiteAdmin | SecurityGuard> {
     const userLikeEntity = this.dtoToUserLikeEntity(createUserDto, role);
     // Password hashing is based on a signal and signals are only executed for entity objects(instantiated thru constructors)
     // and not from literal objects- {}. The preceding code uses the repository create() method to create entities so that
     // signals will be executed
     switch (role) {
       case Role.SUPER_ADMIN:
-        const superAdmin = this.superAdminRepository.create(userLikeEntity);
+        const superAdmin = this.superAdminRepository.create(
+          userLikeEntity,
+        ) as any;
         return await this.superAdminRepository.save(superAdmin);
       case Role.COMPANY_ADMIN:
-        const companyAdmin = this.companyAdminRepository.create(userLikeEntity);
+        const companyAdmin = this.companyAdminRepository.create(
+          userLikeEntity,
+        ) as any;
         return await this.companyAdminRepository.save(companyAdmin);
       case Role.SITE_ADMIN:
-        const siteAdmin = this.siteAdminRepository.create(userLikeEntity);
+        const siteAdmin = this.siteAdminRepository.create(
+          userLikeEntity,
+        ) as any;
         return await this.siteAdminRepository.save(siteAdmin);
       case Role.SECURITY_GUARD:
-        const securityGuard =
-          this.securityGuardRepository.create(userLikeEntity);
+        const securityGuard = this.securityGuardRepository.create(
+          userLikeEntity,
+        ) as any;
         return await this.securityGuardRepository.save(securityGuard);
       default:
         throw new NotFoundException('Role not found');

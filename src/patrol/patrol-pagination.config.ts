@@ -16,7 +16,7 @@ export const PATROL_PAGINATION_CONFIG: PaginateConfig<Patrol> = {
       FilterOperator.GTE,
       FilterOperator.LTE,
     ],
-    siteId: [FilterOperator.EQ],
+    siteId: [FilterOperator.IN],
   },
   relations: { securityGuard: { user: true }, site: true },
   maxLimit: MAX_ITEMS_PER_PAGE,

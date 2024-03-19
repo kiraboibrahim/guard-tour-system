@@ -24,13 +24,19 @@ export class Patrol {
   @ManyToOne(() => Site, { onDelete: 'CASCADE', eager: true })
   site: Site;
 
+  // TODO: Remove nullable: true after updating the database
   @Exclude()
-  @Column()
+  @Column({ nullable: true })
+  securityGuardUniqueId: string;
+
+  @Exclude()
+  @Column({ nullable: true })
   securityGuardId: number;
 
   @ManyToOne(() => SecurityGuard, (securityGuard) => securityGuard.patrols, {
     onDelete: 'CASCADE',
     eager: true,
+    nullable: true,
   })
   securityGuard: SecurityGuard;
 

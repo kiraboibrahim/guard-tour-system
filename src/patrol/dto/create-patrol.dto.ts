@@ -21,6 +21,7 @@ export class CreatePatrolDto {
     {
       user: true,
     },
+    true,
   )
   @IsString()
   securityGuardUniqueId: string;

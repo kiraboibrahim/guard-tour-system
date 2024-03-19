@@ -5,13 +5,12 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const host = 'localhost';
-  const port = 3000;
+  const [host, port] = ['localhost', 3000];
   const app = await NestFactory.create(AppModule);
-  app.enableCors({ origin: true });
   setupAPIVersioning(app);
   useNestDIContainerForClassValidator(app);
   setupSwaggerDocs(app);
+  app.enableCors({ origin: true });
   await app.listen(port, host);
 }
 function useNestDIContainerForClassValidator(app: INestApplication) {

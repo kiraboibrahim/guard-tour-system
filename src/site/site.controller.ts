@@ -74,12 +74,11 @@ export class SiteController {
   @Get(':id/patrols')
   @AlsoAllow(Role.SITE_ADMIN)
   @CanRead(Resource.PATROL, [Resource.SITE], { [Resource.SITE]: 'id' })
+  @IsPublic()
   async findSitePatrols(
     @Param('id') id: string,
     @Paginate() query: PaginateQuery,
-    @User() user: AuthenticatedUser,
   ) {
-    this.siteService.setUser(user);
     return await this.siteService.findSitePatrols(+id, query);
   }
 }

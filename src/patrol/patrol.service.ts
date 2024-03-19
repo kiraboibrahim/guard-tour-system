@@ -17,13 +17,14 @@ export class PatrolService extends BaseService {
     super();
   }
   async create(createPatrolDto: CreatePatrolDto) {
-    // No permission checks done here. This means anyone in the can create a patrol(even false patrols)
+    // Alert: No permission checks done here. This means anyone can create a patrol(even false patrols)
     // TODO: Add another form of authentication to the function of creating patrols i.e biometric auth
     const {
       securityGuard,
       site,
     }: { securityGuard: SecurityGuard; site: Site } = createPatrolDto as any;
-    const { userId: securityGuardId } = securityGuard;
+
+    const securityGuardId = !!securityGuard ? securityGuard.userId : undefined;
     const patrol = this.patrolRepository.create({
       ...createPatrolDto,
       securityGuardId,
