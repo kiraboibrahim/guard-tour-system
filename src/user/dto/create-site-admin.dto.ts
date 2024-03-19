@@ -1,5 +1,5 @@
 import { IsEmail, IsInt } from 'class-validator';
-import { CreateUserDto } from './create-user.base.dto';
+import { CreateAuthUserDto } from './create-user.base.dto';
 import { IsUnique, LoadEntityIfExists } from '../../core/core.validators';
 import { Company } from '../../company/entities/company.entity';
 import { Site } from '../../site/entities/site.entity';
@@ -7,7 +7,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { AuthUser } from '../entities/user.base.entity';
 import { SiteAdmin } from '../entities/site-admin.entity';
 
-export class CreateSiteAdminDto extends CreateUserDto {
+export class CreateSiteAdminDto extends CreateAuthUserDto {
   @ApiProperty()
   @LoadEntityIfExists<Company>(Company, 'company')
   @IsInt()
