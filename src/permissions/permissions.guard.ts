@@ -36,7 +36,8 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
       [context.getHandler(), context.getClass()],
     );
     if (!permission) {
-      this.logger.warn(`Specify permissions for route: ${this.request.url}`);
+      const errorMsg = `Access denied because permissions for this route(${this.request.url}) aren't defined. If the route is public, then it should be accessed without authentication(access token) otherwise you have to specify permissions for this route in the controller`;
+      this.logger.warn(errorMsg);
       return false;
     }
     const user = this.request.user as User;
