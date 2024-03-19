@@ -12,8 +12,8 @@ export class BaseService {
 
   get user() {
     if (!this._user) {
-      const _class = this.constructor.name;
-      const errorMsg = `You need to set the 'user' in the controller by calling ${_class}.setUser(user). If you have then, the 'user' argument is undefined or the route is public`;
+      const serviceClassName = this.constructor.name;
+      const errorMsg = `The 'user' is undefined(not authenticated). If the route isn't meant to be public, then you have to invoke ${serviceClassName}.setUser(user) in the controller in addition to changing the route from public to private`;
       this.logger.error(errorMsg);
     }
     return this._user;
