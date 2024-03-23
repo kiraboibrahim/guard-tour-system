@@ -25,7 +25,6 @@ export class Patrol {
   site: Site;
 
   // TODO: Remove nullable: true after updating the database
-  @Exclude()
   @Column({ nullable: true })
   securityGuardUniqueId: string;
 
