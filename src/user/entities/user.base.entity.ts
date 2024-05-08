@@ -91,6 +91,7 @@ export class CompanyUser extends UserSerializer {
   @JoinColumn()
   user: User;
 
+  @Exclude()
   @Column()
   companyId: number;
 
