@@ -13,7 +13,8 @@ export const COMPANY_ADMIN_PAGINATION_CONFIG: PaginateConfig<CompanyAdmin> = {
   filterableColumns: {
     companyId: [FilterOperator.EQ],
   },
-  relations: { user: true },
-  maxLimit: MAX_ITEMS_PER_PAGE,
+  relations: { user: true, company: true },
+  maxLimit: 0,
+  defaultLimit: MAX_ITEMS_PER_PAGE,
   paginationType: PaginationType.TAKE_AND_SKIP,
 };

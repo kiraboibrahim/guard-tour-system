@@ -94,8 +94,7 @@ export class CompanyUser extends UserSerializer {
   @Column()
   companyId: number;
 
-  @Exclude()
-  @ManyToOne(() => Company, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Company, { onDelete: 'CASCADE', eager: true })
   company: Company;
 
   belongsToCompany(companyId: number) {
