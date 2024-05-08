@@ -6,7 +6,8 @@ export const COMPANY_PAGINATION_CONFIG: PaginateConfig<Company> = {
   sortableColumns: ['id', 'name'],
   defaultSortBy: [['name', 'DESC']],
   searchableColumns: ['name', 'registrationNumber'],
-  maxLimit: MAX_ITEMS_PER_PAGE,
+  maxLimit: 0,
+  defaultLimit: MAX_ITEMS_PER_PAGE,
   loadEagerRelations: true,
   paginationType: PaginationType.TAKE_AND_SKIP,
 };

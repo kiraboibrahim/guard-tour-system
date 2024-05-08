@@ -44,6 +44,7 @@ export class TagService extends BaseService {
       .can(this.user)
       .filter(Resource.TAG)
       .with(query);
+    // Don't raise error incase one filters on company that they don't belong to
     this.filterOnUserCompany(query);
     return await paginate(query, this.tagRepository, TAG_PAGINATION_CONFIG);
   }

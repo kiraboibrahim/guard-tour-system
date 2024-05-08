@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsInt, IsString, ValidateIf } from 'class-validator';
+import { IsIn, IsInt, ValidateIf } from 'class-validator';
 import { INSTALL_TAGS_ACTION, UNINSTALL_TAGS_ACTION } from '../tag.constants';
 import {
   LoadEntitiesIfExist,

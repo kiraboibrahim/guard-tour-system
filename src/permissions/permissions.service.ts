@@ -904,6 +904,7 @@ export class PermissionsService {
       deployedSiteId,
     } = this.user as any;
 
+    // Super Admins can read any resource except for fellow super admins
     if (this.user.isSuperAdmin() && resource !== Resource.SUPER_ADMIN)
       return true;
 

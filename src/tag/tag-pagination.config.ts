@@ -14,6 +14,7 @@ export const TAG_PAGINATION_CONFIG: PaginateConfig<Tag> = {
     companyId: [FilterOperator.EQ],
   },
   loadEagerRelations: true,
-  maxLimit: MAX_ITEMS_PER_PAGE,
+  maxLimit: 0,
+  defaultLimit: MAX_ITEMS_PER_PAGE,
   paginationType: PaginationType.TAKE_AND_SKIP,
 };

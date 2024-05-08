@@ -12,11 +12,26 @@ export const CanCreate = (resource: Resource) => {
   });
 };
 
+/**
+ *
+ * @param resource The eventual resource that will be read
+ * @param parentResources The parent resource to which the resource belongs
+ * @param resourcesParams A mapping of resource names to the parameter names used in the route. This allows us to extract route params
+ * @constructor
+ */
 export const CanRead = (
-  resource: string,
+  resource: Resource,
   parentResources?: Resource[],
   resourcesParams?: ResourcesParams,
 ) => {
+  // When resourcesParams hasn't been given or when the resource to be read(Not the parent resources) doesn't
+  // exist with in the resourcesParams, then go ahead and apply the default ':id' param for the resource
+  if (
+    resourcesParams === undefined ||
+    resourcesParams[resource] === undefined
+  ) {
+    resourcesParams = { [resource]: 'id' };
+  }
   return SetMetadata(REQUIRED_PERMISSIONS_KEY, {
     action: Action.READ,
     resource,

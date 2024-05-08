@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company } from './entities/company.entity';
@@ -9,12 +9,19 @@ import { COMPANY_PAGINATION_CONFIG } from './company-pagination.config';
 import { BaseService } from '../core/core.base';
 import { PermissionsService } from '../permissions/permissions.service';
 import { Resource } from '../permissions/permissions';
+import { SecurityGuard } from '../user/entities/security-guard.entity';
+import { SiteAdmin } from '../user/entities/site-admin.entity';
+import { CompanyAdmin } from '../user/entities/company-admin.entity';
+import { Site } from '../site/entities/site.entity';
+import { Patrol } from '../patrol/entities/patrol.entity';
+import { Tag } from '../tag/entities/tag.entity';
 
 @Injectable()
 export class CompanyService extends BaseService {
   constructor(
     @InjectRepository(Company) private companyRepository: Repository<Company>,
     private permissionsService: PermissionsService,
+    @InjectEntityManager() private entityManager: EntityManager,
   ) {
     super();
   }
@@ -39,7 +46,14 @@ export class CompanyService extends BaseService {
   }
 
   async findOneById(id: number) {
-    return await this.companyRepository.findOneBy({ id });
+    const company = await this.companyRepository.findOneBy({ id });
+    if (!!company) {
+      const companyStats = await this.getCompanyStats(id);
+      return {
+        ...company,
+        stats: companyStats,
+      };
+    }
   }
   async update(id: number, updateCompanyDto: UpdateCompanyDto) {
     await this.permissionsService
@@ -50,5 +64,37 @@ export class CompanyService extends BaseService {
 
   async remove(id: number) {
     return await this.companyRepository.delete(id);
+  }
+
+  async getCompanyStats(companyId: number) {
+    const companyAdminCount = await this.entityManager
+      .getRepository(CompanyAdmin)
+      .countBy({ companyId });
+    const siteAdminCount = await this.entityManager
+      .getRepository(SiteAdmin)
+      .countBy({ companyId });
+    const securityGuardCount = await this.entityManager
+      .getRepository(SecurityGuard)
+      .countBy({ companyId });
+
+    const siteCount = await this.entityManager
+      .getRepository(Site)
+      .countBy({ companyId });
+    const tagCount = await this.entityManager
+      .getRepository(Tag)
+      .countBy({ companyId });
+    const patrolCount = await this.entityManager.getRepository(Patrol).count({
+      relations: { site: true },
+      where: { site: { companyId } },
+    });
+
+    return {
+      companyAdminCount,
+      siteAdminCount,
+      securityGuardCount,
+      siteCount,
+      tagCount,
+      patrolCount,
+    };
   }
 }

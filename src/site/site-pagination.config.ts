@@ -9,9 +9,10 @@ import { Site } from './entities/site.entity';
 export const SITE_PAGINATION_CONFIG: PaginateConfig<Site> = {
   sortableColumns: ['id', 'name'],
   defaultSortBy: [['name', 'DESC']],
-  searchableColumns: ['name'],
+  searchableColumns: ['name', 'tagId'],
   filterableColumns: { companyId: [FilterOperator.EQ] },
   loadEagerRelations: true,
-  maxLimit: MAX_ITEMS_PER_PAGE,
+  maxLimit: 0,
+  defaultLimit: MAX_ITEMS_PER_PAGE,
   paginationType: PaginationType.TAKE_AND_SKIP,
 };
