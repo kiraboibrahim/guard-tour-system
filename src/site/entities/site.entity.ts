@@ -9,6 +9,7 @@ import {
 import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../user/entities/site-admin.entity';
 import { Tag } from '../../tag/entities/tag.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('sites')
 export class Site {
@@ -36,10 +37,19 @@ export class Site {
   @Column()
   supervisorPhoneNumber: string;
 
+  @Exclude()
   @Column()
   companyId: number;
 
-  @ManyToOne(() => Company)
+  // TODO: Remember to set nullable to false after population this field for the existing records in DB.
+  @Column({ nullable: true })
+  requiredPatrolsPerGuard: number;
+
+  // TODO: Remember to set nullable to false after population this field for the existing records in DB.
+  @Column({ nullable: true, type: 'decimal' })
+  notificationCycle: number;
+
+  @ManyToOne(() => Company, { eager: true })
   company: Company;
 
   @OneToOne(() => SiteAdmin, (siteAdmin) => siteAdmin.site, {

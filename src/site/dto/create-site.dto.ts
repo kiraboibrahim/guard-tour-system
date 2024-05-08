@@ -1,4 +1,11 @@
-import { IsInt, IsLatitude, IsLongitude, IsString } from 'class-validator';
+import {
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsNumber,
+  IsString,
+  IsIn,
+} from 'class-validator';
 import {
   LoadEntityIfExists,
   IsUGPhoneNumber,
@@ -25,6 +32,15 @@ export class CreateSiteDto {
   @ApiProperty()
   @IsLongitude()
   longitude: number;
+
+  @ApiProperty()
+  @IsInt()
+  requiredPatrolsPerGuard: number;
+
+  @ApiProperty()
+  @IsIn([1.5, 3.0, 6.0, 12.0])
+  @IsNumber()
+  notificationCycle: number;
 
   @ApiProperty()
   @IsUGPhoneNumber()
