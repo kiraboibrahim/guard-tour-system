@@ -9,6 +9,8 @@ import {
   _LoadEntitiesIfExist,
   IsAtLeastNYears,
 } from './core.validators';
+import { SMSService } from './services/sms.service';
+import { TasksModule } from '../tasks/tasks.module';
 
 const validators = [
   _IsUnique,
@@ -19,8 +21,14 @@ const validators = [
 ];
 @Global()
 @Module({
-  imports: [AuthModule, PermissionsModule, RolesModule],
-  providers: [...validators],
-  exports: [AuthModule, RolesModule, PermissionsModule, ...validators],
+  imports: [AuthModule, PermissionsModule, RolesModule, TasksModule],
+  providers: [SMSService, ...validators],
+  exports: [
+    AuthModule,
+    RolesModule,
+    PermissionsModule,
+    SMSService,
+    ...validators,
+  ],
 })
 export class CoreModule {}

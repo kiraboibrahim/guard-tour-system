@@ -5,6 +5,8 @@ import {
   IsNumber,
   IsString,
   IsIn,
+  IsOptional,
+  IsBoolean,
 } from 'class-validator';
 import {
   LoadEntityIfExists,
@@ -14,6 +16,7 @@ import {
 import { Company } from '../../company/entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Site } from '../entities/site.entity';
+import { MAX_PATROL_DELAY_DURATIONS, PATROL_TYPE } from '../site.constants';
 
 export class CreateSiteDto {
   @ApiProperty()
@@ -38,9 +41,20 @@ export class CreateSiteDto {
   requiredPatrolsPerGuard: number;
 
   @ApiProperty()
-  @IsIn([1.5, 3.0, 6.0, 12.0])
+  @IsBoolean()
+  @IsOptional()
+  notificationsEnabled: boolean;
+
+  @ApiProperty()
+  @IsIn(MAX_PATROL_DELAY_DURATIONS)
   @IsNumber()
+  @IsOptional()
   notificationCycle: number;
+
+  @ApiProperty()
+  @IsIn([PATROL_TYPE.INDIVIDUAL, PATROL_TYPE.GROUP])
+  @IsOptional({})
+  patrolType: string;
 
   @ApiProperty()
   @IsUGPhoneNumber()

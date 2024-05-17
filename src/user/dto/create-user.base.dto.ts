@@ -1,8 +1,7 @@
 import { IsAlpha, MaxLength } from 'class-validator';
 import { MAX_NAME_LENGTH } from '../user.constants';
 import { IsStrongPassword } from '../user.validators';
-import { IsUGPhoneNumber, IsUnique } from '../../core/core.validators';
-import { AuthUser, User } from '../entities/user.base.entity';
+import { IsUGPhoneNumber } from '../../core/core.validators';
 import { ApiProperty } from '@nestjs/swagger';
 
 // The user DTO that contains common fields for non-authenticated users
@@ -18,8 +17,6 @@ export class CreateNonAuthUserDto {
   lastName: string;
 
   @ApiProperty()
-  @IsUnique<AuthUser>(AuthUser, 'phoneNumber')
-  @IsUnique<User>(User, 'phoneNumber')
   @IsUGPhoneNumber()
   phoneNumber: string;
 }

@@ -31,10 +31,16 @@ export class SecurityGuardService extends BaseService {
       .create(Resource.SECURITY_GUARD, createSecurityGuardDto, {
         throwError: true,
       });
-    // TODO: After creating a security guard, get all patrols with a guard's unique ID but without a security guard relation(null) and set them to the guard
     const securityGuard = await this.userService.createSecurityGuard(
       createSecurityGuardDto,
     );
+    /**
+     * Guards can submit patrols without prior registration with the system.
+     * Because of this, the securityGuard relationship for all patrols submitted
+     * by a guard before registration are null. However, to fix this, when a
+     * guard is registered, we associate his patrols to him(set the relationship)
+     * incase he has any patrols that were done before registration.
+     */
     await this.fixNullGuardPatrols(securityGuard as SecurityGuard);
     return securityGuard;
   }

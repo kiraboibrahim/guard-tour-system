@@ -14,6 +14,8 @@ import { LocalDate, ZoneId } from '@js-joda/core';
 import '@js-joda/timezone';
 import { ConfigService } from '@nestjs/config';
 import { EntityClass, EntityColumnName } from './core.types';
+import { isUGPhoneNumber } from './core.utils';
+import { AIRTEL_UG_REGEX, LYCA_UG_REGEX, MTN_UG_REGEX } from './core.constants';
 
 // See https://github.com/nestjs/nest/issues/528 on how to use nestjs DI container
 // with class-validator. Credit goes to Julianomqs (https://github.com/julianomqs)
@@ -149,15 +151,14 @@ export class IsAtLeastNYears implements ValidatorConstraintInterface {
 @ValidatorConstraint({ async: false })
 @Injectable()
 export class _IsUGPhoneNumber implements ValidatorConstraintInterface {
-  UG_PHONE_NUMBER_REGEX = /\+?2567[0-9]{8}/;
   constructor() {}
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(value: any, validationArguments: ValidationArguments) {
     if (!isString(value)) return false;
-    return this.UG_PHONE_NUMBER_REGEX.test(value);
+    return isUGPhoneNumber(value);
   }
   defaultMessage(validationArguments?: ValidationArguments): string {
-    return `${validationArguments?.property} should match ${this.UG_PHONE_NUMBER_REGEX}`;
+    return `${validationArguments?.property} should match ${MTN_UG_REGEX} or ${AIRTEL_UG_REGEX} or ${LYCA_UG_REGEX}`;
   }
 }
 

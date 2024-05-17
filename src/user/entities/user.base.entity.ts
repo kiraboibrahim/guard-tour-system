@@ -16,6 +16,7 @@ import { IsStrongPassword } from '../user.validators';
 import { IsValidRole } from '../../roles/roles.validators';
 import { IsUGPhoneNumber } from '../../core/core.validators';
 import { Role } from '../../roles/roles';
+import { hashPassword } from '../../core/core.utils';
 
 // A basic user that contains fields shared by all users
 @Entity('users')
@@ -29,7 +30,7 @@ export class User {
   @Column()
   lastName: string;
 
-  @Column({ unique: true })
+  @Column()
   @IsUGPhoneNumber()
   phoneNumber: string;
 
@@ -70,7 +71,7 @@ export class AuthUser extends User {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
-    this.password = await argon2.hash(this.password);
+    this.password = await hashPassword(this.password);
   }
 }
 

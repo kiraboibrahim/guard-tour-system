@@ -10,6 +10,7 @@ import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../user/entities/site-admin.entity';
 import { Tag } from '../../tag/entities/tag.entity';
 import { Exclude } from 'class-transformer';
+import { PATROL_TYPE } from '../site.constants';
 
 @Entity('sites')
 export class Site {
@@ -41,11 +42,14 @@ export class Site {
   @Column()
   companyId: number;
 
-  // TODO: Remember to set nullable to false after population this field for the existing records in DB.
+  /* TODO: Remove 'nullable: true' once this field has been updated for all the sites */
   @Column({ nullable: true })
   requiredPatrolsPerGuard: number;
 
-  // TODO: Remember to set nullable to false after population this field for the existing records in DB.
+  @Column({ type: 'boolean', default: false })
+  notificationsEnabled: boolean;
+
+  /* TODO: Remove 'nullable: true' once this field has been updated for all the sites */
   @Column({ nullable: true, type: 'decimal' })
   notificationCycle: number;
 
@@ -64,4 +68,7 @@ export class Site {
   belongsToCompany(companyId: number) {
     return this.companyId === companyId;
   }
+
+  @Column({ default: PATROL_TYPE.INDIVIDUAL })
+  patrolType: string;
 }

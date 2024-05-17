@@ -24,11 +24,17 @@ export const CanRead = (
   parentResources?: Resource[],
   resourcesParams?: ResourcesParams,
 ) => {
-  // When resourcesParams hasn't been given or when the resource to be read(Not the parent resources) doesn't
-  // exist with in the resourcesParams, then go ahead and apply the default ':id' param for the resource
+  /*
+  Allow the user to use the shortcut @CanRead(<resource to read>) since the other parameters are optional
+  However the accessing <resource to read> requires knowledge of the route parameter used for the ID which
+  by default has been taken to be 'id'. When the resourcesParams is undefined or the <resource to read> is
+  missing an entry in the resourcesParams(undefined) and the parentResources is also undefined, then a shortcut
+  is being used by the user.
+  */
   if (
-    resourcesParams === undefined ||
-    resourcesParams[resource] === undefined
+    (resourcesParams === undefined ||
+      resourcesParams[resource] === undefined) &&
+    parentResources === undefined
   ) {
     resourcesParams = { [resource]: 'id' };
   }

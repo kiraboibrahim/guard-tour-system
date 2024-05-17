@@ -24,6 +24,11 @@ import { SuperAdmin } from './user/entities/super-admin.entity';
 import { CompanyAdmin } from './user/entities/company-admin.entity';
 import { SiteAdmin } from './user/entities/site-admin.entity';
 import { SecurityGuard } from './user/entities/security-guard.entity';
+import { PatrolDelayNotification } from './site/entities/patrol-delay-notification.entity';
+import { ScheduleModule } from '@nestjs/schedule';
+import { StatsController } from './stats/stats.controller';
+import { StatsService } from './stats/stats.service';
+import { StatsModule } from './stats/stats.module';
 
 const entities = [
   Company,
@@ -36,6 +41,7 @@ const entities = [
   CompanyAdmin,
   SiteAdmin,
   SecurityGuard,
+  PatrolDelayNotification,
 ];
 @Module({
   imports: [
@@ -50,22 +56,24 @@ const entities = [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        const isDevEnv = configService.get<string>('DEBUG') === 'on';
         return {
-          type: isDevEnv ? 'sqlite' : 'mysql',
+          type: 'sqlite',
           host: configService.get<string>('DB_HOST'),
           port: +configService.get('DB_PORT'),
           username: configService.get<string>('DB_USERNAME'),
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
           entities: [...entities],
-          synchronize: isDevEnv,
+          synchronize: configService.get<boolean>('DB_SYNC'),
+          cache: true,
         };
       },
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
+    StatsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, StatsController],
   providers: [
     AppService,
     {
@@ -80,6 +88,7 @@ const entities = [
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    StatsService,
   ],
 })
 export class AppModule {}

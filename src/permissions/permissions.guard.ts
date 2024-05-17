@@ -36,7 +36,7 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
       [context.getHandler(), context.getClass()],
     );
     if (!permission) {
-      const errorMsg = `Access denied because permissions for this route(${this.request.url}) aren't defined. If the route is public, then it should be accessed without authentication(access token) otherwise you have to specify permissions for this route in the controller`;
+      const errorMsg = `Access denied because permissions for this route(${this.request.url}) aren't defined and yet it is being accessed with authentication. If the route is public, then it should be accessed without authentication(access token) otherwise you have to specify permissions for this route in the controller`;
       this.logger.warn(errorMsg);
       return false;
     }
@@ -85,7 +85,7 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
     const resourcesIds = parentResourcesIds
       ? { [resource]: resourceId, ...parentResourcesIds }
       : { [resource]: resourceId };
-    return this.canUserReadResource(user, resources, resourcesIds);
+    return this.canUserReadResources(user, resources, resourcesIds);
   }
   /**
    * Verifies if a user can read a resource. The REST API supports nesting resources
@@ -99,27 +99,25 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
    * site ID
    *
    */
-  async canUserReadResource(
+  async canUserReadResources(
     user: User,
     resources: Resource[],
     resourcesIds: ResourcesParams,
   ): Promise<boolean> {
-    async function canUserReadResources(
+    async function _canUserReadResources(
       user: User,
       resources: Resource[],
       resourcesIds: ResourcesParams,
       _this: PermissionsGuard,
     ): Promise<boolean> {
       if (resources.length === 0) return true;
-
       const resource = resources[0];
-      const resourceId = resourcesIds[resource];
-      if (resourceId === undefined) return true;
+      let resourceId = resourcesIds[resource] as any;
+      // Cast resourceId from string|undefined to number|undefined as expected by the permissionsService
+      resourceId = resourceId !== undefined ? +resourceId : undefined;
       return (
-        (await _this.permissionsService
-          .can(user)
-          .read(resource, +resourceId)) &&
-        (await canUserReadResources(
+        (await _this.permissionsService.can(user).read(resource, resourceId)) &&
+        (await _canUserReadResources(
           user,
           resources.slice(1),
           resourcesIds,
@@ -128,7 +126,7 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
       );
     }
 
-    return await canUserReadResources(
+    return await _canUserReadResources(
       user,
       resources as Resource[],
       resourcesIds as ResourcesParams,

@@ -7,8 +7,11 @@ import { MAX_ITEMS_PER_PAGE } from '../core/core.constants';
 import { Patrol } from './entities/patrol.entity';
 
 export const PATROL_PAGINATION_CONFIG: PaginateConfig<Patrol> = {
-  sortableColumns: ['date'],
-  defaultSortBy: [['date', 'DESC']],
+  sortableColumns: ['date', 'startTime'],
+  defaultSortBy: [
+    ['date', 'DESC'],
+    ['startTime', 'DESC'],
+  ],
   filterableColumns: {
     date: [
       FilterOperator.EQ,

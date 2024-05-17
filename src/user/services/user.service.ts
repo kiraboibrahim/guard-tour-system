@@ -12,7 +12,11 @@ import { Role } from '../../roles/roles';
 import { UpdateCompanyAdminDto } from '../dto/update-company-admin.dto';
 import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
-import { isEmptyObjet, removeEmptyObjects } from '../../core/core.utils';
+import {
+  hashPassword,
+  isEmptyObjet,
+  removeEmptyObjects,
+} from '../../core/core.utils';
 import { SuperAdmin } from '../entities/super-admin.entity';
 import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
@@ -85,6 +89,9 @@ export class UserService {
     const userSpecificDataExists = !isEmptyObjet(userSpecificData);
     const isAuthUser = role != Role.SECURITY_GUARD;
     if (commonUserDataExists && isAuthUser) {
+      if (commonUserData.password) {
+        commonUserData.password = await hashPassword(commonUserData.password);
+      }
       await this.authUserRepository.update({ id }, commonUserData);
     } else if (commonUserDataExists && !isAuthUser) {
       await this.userRepository.update({ id }, commonUserData);
@@ -206,6 +213,7 @@ export class UserService {
         const { email, password } = userSpecificData;
         user.user = { ...user.user, password, username: email };
         delete user['email'];
+        delete user['password'];
         return user;
       }
       return user;
