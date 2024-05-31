@@ -6,7 +6,7 @@ import { UpdateTagUIDDto } from './dto/update-tag-uid.dto';
 import { Tag } from './entities/tag.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { TAG_PAGINATION_CONFIG } from './tag-pagination.config';
-import { BaseService } from '../core/core.base';
+import { BaseService } from '../core/services/base.service';
 import { Company } from '../company/entities/company.entity';
 import { Site } from '../site/entities/site.entity';
 import { PermissionsService } from '../permissions/permissions.service';

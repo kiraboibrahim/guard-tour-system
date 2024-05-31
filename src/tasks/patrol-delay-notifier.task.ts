@@ -8,7 +8,8 @@ import { EntityManager, Repository } from 'typeorm';
 import { Patrol } from '../patrol/entities/patrol.entity';
 import { SMSService } from '../core/services/sms.service';
 import { PatrolDelayNotification } from '../site/entities/patrol-delay-notification.entity';
-import { getHoursDiff } from '../core/core.utils';
+import { removeDuplicates } from '../core/core.utils';
+
 /**
  * The following task is supposed to run every 1.5 hours starting from midnight(00:00)
  * However, due to cron not supporting fractional units, we declared two cron jobs
@@ -18,8 +19,7 @@ import { getHoursDiff } from '../core/core.utils';
  */
 
 const MIDNIGHT_SHARP_CRON = 'midnightSharpNotifications';
-const THIRTY_MIN_PAST_ONE_CRON = '30MinPastOne';
-
+const THIRTY_MIN_PAST_ONE_CRON = '30MinPastOneNotifications';
 @Injectable()
 export class PatrolDelayedNotificationService {
   private readonly SINGLE_DAY = 24 * 3600 * 1000; // A DAY
@@ -44,7 +44,7 @@ export class PatrolDelayedNotificationService {
   }
 
   @Cron('0 0,3,6,9,12,15,18,21 * * *', {
-    timeZone: 'Africa/Kampala',
+    timeZone: process.env.TZ,
     name: MIDNIGHT_SHARP_CRON,
   })
   async fromMidnightSharp() {
@@ -52,7 +52,7 @@ export class PatrolDelayedNotificationService {
   }
 
   @Cron('30 1,4,7,10,13,16,19,22 * * *', {
-    timeZone: 'Africa/Kampala',
+    timeZone: process.env.TZ,
     name: THIRTY_MIN_PAST_ONE_CRON,
   })
   async from30MinPastOne() {
@@ -60,7 +60,7 @@ export class PatrolDelayedNotificationService {
   }
 
   async triggerNotifications() {
-    for await (const site of this.generateDelayedSites()) {
+    for await (const site of this.getOverDueSites()) {
       const companyAdmins = await this.companyAdminRepository.find({
         where: { companyId: site.companyId },
         cache: this.SINGLE_DAY,
@@ -77,43 +77,65 @@ export class PatrolDelayedNotificationService {
       await this.notify(companyAdmins, site);
     }
   }
-  async *generateDelayedSites() {
-    // Cache the sites whose notifications are turned on because these don't change frequently
-    const notificationEnabledSites = await this.siteRepository.find({
-      where: [{ notificationsEnabled: true }],
-      cache: this.SINGLE_DAY,
-    });
+
+  async *getOverDueSites() {
+    const notificationEnabledSites = await this.getNotificationEnabledSites();
     for (const site of notificationEnabledSites) {
-      const latestSitePatrol = await this.patrolRepository.findOne({
-        where: { siteId: site.id },
-        order: {
-          date: 'DESC',
-          startTime: 'DESC',
-        },
-      });
-      const patrolStartDateTime = `${latestSitePatrol?.date} ${latestSitePatrol?.startTime}`;
-      if (latestSitePatrol !== null) {
-        const hourDiff = getHoursDiff(patrolStartDateTime);
-        if (hourDiff > site.notificationCycle) {
-          yield site;
-        }
+      const latestSitePatrol = await this.getLatestSitePatrol(site);
+      const latestSiteNotification = await this.getLatestSiteNotification(site);
+      const isSitePatrolOverDue =
+        !!latestSitePatrol && latestSitePatrol.isNextPatrolOverDue();
+      /* Site Notifications are overdue when latest site notification isn't with in the expected next creation time
+       * or when the site has never generated any notifications-- The site has no notifications.
+       * */
+      const isSiteNotificationOverDue =
+        (!!latestSiteNotification &&
+          latestSiteNotification.isNextNotificationOverDue()) ||
+        latestSiteNotification === null;
+
+      if (isSitePatrolOverDue && isSiteNotificationOverDue) {
+        yield site;
       }
     }
   }
+  async getNotificationEnabledSites() {
+    // Cache the sites whose notifications are turned on because these don't change frequently
+    return await this.siteRepository.find({
+      where: [{ notificationsEnabled: true }],
+      cache: this.SINGLE_DAY,
+    });
+  }
+  async getLatestSitePatrol(site: Site) {
+    return await this.patrolRepository.findOne({
+      where: { siteId: site.id },
+      order: {
+        date: 'DESC',
+        startTime: 'DESC',
+      },
+    });
+  }
+
+  async getLatestSiteNotification(site: Site) {
+    return await this.patrolDelayedNotificationRepository.findOne({
+      where: { siteId: site.id },
+      order: {
+        dateCreatedAt: 'DESC',
+        timeCreatedAt: 'DESC',
+      },
+    });
+  }
+
   async saveNotification(site: Site) {
-    const now = new Date();
-    const timeCreatedAt = `${now.getHours()}:${now.getMinutes()}`;
     const notification = this.patrolDelayedNotificationRepository.create({
       site,
       siteId: site.id,
-      timeCreatedAt,
     });
     await this.patrolDelayedNotificationRepository.save(notification);
   }
 
   async notify(companyAdmins: CompanyAdmin[], site: Site) {
-    const companyAdminsPhoneNumbers = companyAdmins.map(
-      (companyAdmin) => companyAdmin.user.phoneNumber,
+    const companyAdminsPhoneNumbers = removeDuplicates(
+      companyAdmins.map((companyAdmin) => companyAdmin.user.phoneNumber),
     );
     const message = `The site, ${site.name} has been idle for at-least ${site.notificationCycle} hours without being patrolled`;
     await this.smsService.send(companyAdminsPhoneNumbers, message);

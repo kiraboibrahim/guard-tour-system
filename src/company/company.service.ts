@@ -6,7 +6,7 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company } from './entities/company.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { COMPANY_PAGINATION_CONFIG } from './company-pagination.config';
-import { BaseService } from '../core/core.base';
+import { BaseService } from '../core/services/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import { Resource } from '../permissions/permissions';
 import { SecurityGuard } from '../user/entities/security-guard.entity';

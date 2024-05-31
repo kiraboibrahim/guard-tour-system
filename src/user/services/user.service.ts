@@ -12,11 +12,7 @@ import { Role } from '../../roles/roles';
 import { UpdateCompanyAdminDto } from '../dto/update-company-admin.dto';
 import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
 import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
-import {
-  hashPassword,
-  isEmptyObjet,
-  removeEmptyObjects,
-} from '../../core/core.utils';
+import { isEmptyObject } from '../../core/core.utils';
 import { SuperAdmin } from '../entities/super-admin.entity';
 import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
@@ -36,7 +32,43 @@ export class UserService {
     @InjectRepository(SecurityGuard)
     private securityGuardRepository: Repository<SecurityGuard>,
   ) {}
+  async createSuperAdmin(createSuperAdminDto: CreateSuperAdminDto) {
+    return await this.createUser(createSuperAdminDto, Role.SUPER_ADMIN);
+  }
 
+  async createCompanyAdmin(createCompanyAdminDto: CreateCompanyAdminDto) {
+    return await this.createUser(createCompanyAdminDto, Role.COMPANY_ADMIN);
+  }
+
+  async createSiteAdmin(createSiteAdminDto: CreateSiteAdminDto) {
+    return await this.createUser(createSiteAdminDto, Role.SITE_ADMIN);
+  }
+
+  async createSecurityGuard(createSecurityGuardDto: CreateSecurityGuardDto) {
+    return await this.createUser(createSecurityGuardDto, Role.SECURITY_GUARD);
+  }
+
+  private async createUser(
+    createUserDto: any,
+    role: Role,
+  ): Promise<SuperAdmin | CompanyAdmin | SiteAdmin | SecurityGuard> {
+    const userEntity: any = this.dtoToUserEntity(createUserDto, role);
+    // Password hashing is based on a signal and signals are only executed for entity objects(instantiated thru constructors)
+    // and not from literal objects- {}. The preceding code uses the repository create() method to create entities so that
+    // signals will be executed
+    switch (role) {
+      case Role.SUPER_ADMIN:
+        return await this.superAdminRepository.save(userEntity);
+      case Role.COMPANY_ADMIN:
+        return await this.companyAdminRepository.save(userEntity);
+      case Role.SITE_ADMIN:
+        return await this.siteAdminRepository.save(userEntity);
+      case Role.SECURITY_GUARD:
+        return await this.securityGuardRepository.save(userEntity);
+      default:
+        throw new Error('Invalid Role');
+    }
+  }
   async findOneById(id: number) {
     return await this.authUserRepository.findOneBy({ id });
   }
@@ -58,6 +90,7 @@ export class UserService {
         return null;
     }
   }
+
   async updateSuperAdmin(id: number, updateSuperAdminDto: UpdateSuperAdminDto) {
     return await this.updateUser(id, updateSuperAdminDto, Role.SUPER_ADMIN);
   }
@@ -82,55 +115,41 @@ export class UserService {
     );
   }
   private async updateUser(id: number, updateUserDto: any, role: Role) {
-    let updateResult = null;
-    const userLikeEntity = this.dtoToUserLikeEntity(updateUserDto, role);
-    const { user: commonUserData, ...userSpecificData } = userLikeEntity;
-    const commonUserDataExists = !isEmptyObjet(commonUserData);
-    const userSpecificDataExists = !isEmptyObjet(userSpecificData);
-    const isAuthUser = role != Role.SECURITY_GUARD;
-    if (commonUserDataExists && isAuthUser) {
-      if (commonUserData.password) {
-        commonUserData.password = await hashPassword(commonUserData.password);
-      }
-      await this.authUserRepository.update({ id }, commonUserData);
-    } else if (commonUserDataExists && !isAuthUser) {
-      await this.userRepository.update({ id }, commonUserData);
+    const userEntity = this.dtoToUserEntity(updateUserDto, role);
+    const { user: baseUser, ...derivedUser } = userEntity;
+
+    if (!isEmptyObject(baseUser) && baseUser instanceof AuthUser) {
+      await this.authUserRepository.update({ id }, baseUser);
+    } else if (!isEmptyObject(baseUser) && baseUser instanceof User) {
+      await this.userRepository.update({ id }, baseUser);
     }
+
+    if (isEmptyObject(derivedUser)) return;
 
     switch (role) {
       case Role.SUPER_ADMIN:
-        if (userSpecificDataExists) {
-          updateResult = await this.superAdminRepository.update(
-            { userId: id },
-            userSpecificData,
-          );
-        }
-        break;
+        return await this.superAdminRepository.update(
+          { userId: id },
+          derivedUser,
+        );
       case Role.COMPANY_ADMIN:
-        if (userSpecificDataExists)
-          updateResult = await this.companyAdminRepository.update(
-            { userId: id },
-            userSpecificData,
-          );
-        break;
+        return await this.companyAdminRepository.update(
+          { userId: id },
+          derivedUser,
+        );
       case Role.SITE_ADMIN:
-        if (userSpecificDataExists)
-          updateResult = await this.siteAdminRepository.update(
-            { userId: id },
-            userSpecificData,
-          );
-        break;
+        return await this.siteAdminRepository.update(
+          { userId: id },
+          derivedUser,
+        );
       case Role.SECURITY_GUARD:
-        if (userSpecificDataExists)
-          updateResult = await this.securityGuardRepository.update(
-            { userId: id },
-            userSpecificData,
-          );
-        break;
+        return await this.securityGuardRepository.update(
+          { userId: id },
+          derivedUser,
+        );
       default:
-        throw new NotFoundException('Role not found');
+        throw new NotFoundException('Invalid Role');
     }
-    return updateResult;
   }
 
   async remove(id: number) {
@@ -143,81 +162,32 @@ export class UserService {
     return deleteResult;
   }
 
-  async createSuperAdmin(createSuperAdminDto: CreateSuperAdminDto) {
-    return await this.createUser(createSuperAdminDto, Role.SUPER_ADMIN);
-  }
-
-  async createCompanyAdmin(createCompanyAdminDto: CreateCompanyAdminDto) {
-    return await this.createUser(createCompanyAdminDto, Role.COMPANY_ADMIN);
-  }
-
-  async createSiteAdmin(createSiteAdminDto: CreateSiteAdminDto) {
-    return await this.createUser(createSiteAdminDto, Role.SITE_ADMIN);
-  }
-
-  async createSecurityGuard(createSecurityGuardDto: CreateSecurityGuardDto) {
-    return await this.createUser(createSecurityGuardDto, Role.SECURITY_GUARD);
-  }
-
-  private async createUser(
-    createUserDto: any,
-    role: Role,
-  ): Promise<SuperAdmin | CompanyAdmin | SiteAdmin | SecurityGuard> {
-    const userLikeEntity = this.dtoToUserLikeEntity(createUserDto, role);
-    // Password hashing is based on a signal and signals are only executed for entity objects(instantiated thru constructors)
-    // and not from literal objects- {}. The preceding code uses the repository create() method to create entities so that
-    // signals will be executed
+  private dtoToUserEntity(dto: any, role: Role) {
+    // userSpecificData contains fields that are specific to each type of user. In other words, it contains
+    // fields that aren't shared amongst the different users
+    const { firstName, lastName, phoneNumber, password, ...derivedUser } = dto;
+    const user = {
+      ...derivedUser,
+      user: {
+        firstName,
+        lastName,
+        phoneNumber,
+        password,
+        role,
+        username: derivedUser.email,
+      },
+    };
     switch (role) {
       case Role.SUPER_ADMIN:
-        const superAdmin = this.superAdminRepository.create(
-          userLikeEntity,
-        ) as any;
-        return await this.superAdminRepository.save(superAdmin);
+        return this.superAdminRepository.create(user) as any;
       case Role.COMPANY_ADMIN:
-        const companyAdmin = this.companyAdminRepository.create(
-          userLikeEntity,
-        ) as any;
-        return await this.companyAdminRepository.save(companyAdmin);
+        return this.companyAdminRepository.create(user) as any;
       case Role.SITE_ADMIN:
-        const siteAdmin = this.siteAdminRepository.create(
-          userLikeEntity,
-        ) as any;
-        return await this.siteAdminRepository.save(siteAdmin);
+        return this.siteAdminRepository.create(user) as any;
       case Role.SECURITY_GUARD:
-        const securityGuard = this.securityGuardRepository.create(
-          userLikeEntity,
-        ) as any;
-        return await this.securityGuardRepository.save(securityGuard);
+        return this.securityGuardRepository.create(user) as any;
       default:
-        throw new NotFoundException('Role not found');
+        throw new Error('Invalid Role');
     }
-  }
-  private dtoToUserLikeEntity(dto: any, role: Role) {
-    const convert = (obj: any) => {
-      // userSpecificData contains fields that are specific to each type of user. In other words, it contains
-      // fields that aren't shared amongst the different users
-      const { firstName, lastName, phoneNumber, ...userSpecificData } = obj;
-      const user = {
-        ...userSpecificData,
-        user: {
-          firstName,
-          lastName,
-          phoneNumber,
-          role,
-        },
-      };
-      const isAuthUser = role !== Role.SECURITY_GUARD;
-      if (isAuthUser) {
-        // We are creating a DTO of an AuthUser. An AuthUser is one who will authenticate with the system
-        // This kind of user requires a password and username
-        const { email, password } = userSpecificData;
-        user.user = { ...user.user, password, username: email };
-        delete user['email'];
-        delete user['password'];
-        return user;
-      }
-      return user;
-    };
-    return removeEmptyObjects(convert(dto));
   }
 }

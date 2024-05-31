@@ -29,14 +29,20 @@ import { CreatePatrolDto } from '../patrol/dto/create-patrol.dto';
 import { TagsActionDto } from '../tag/dto/tags-action.dto';
 import { INSTALL_TAGS_ACTION } from '../tag/tag.constants';
 import { UpdateSiteDto } from '../site/dto/update-site.dto';
+import { LOCALHOST_REGEX } from '../core/core.constants';
 
 // TODO: Modify methods to throw exceptions instead of returning boolean values for permission checks
 @Injectable()
 export class PermissionsService {
   private user: User;
+  private request: any;
   private resource: Resource;
 
   constructor(@InjectEntityManager() private entityManager: EntityManager) {}
+
+  setRequest(request: any) {
+    this.request = request;
+  }
 
   can(user: User): PermissionsService {
     this.user = user;
@@ -88,7 +94,8 @@ export class PermissionsService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserCreateSuperAdmin(CreateSuperAdminDto: CreateSuperAdminDto) {
-    return this.user.isSuperAdmin();
+    const host = this.request?.get('host');
+    return this.user.isSuperAdmin() && LOCALHOST_REGEX.test(host);
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserCreateCompany(createCompanyDto: CreateCompanyDto) {
@@ -149,7 +156,7 @@ export class PermissionsService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserCreatePatrol(createPatrolDto: CreatePatrolDto) {
-    return this.user.isSecurityGuard();
+    return true;
   }
 
   //Determine if a user can read a given resource / collection
@@ -183,7 +190,7 @@ export class PermissionsService {
         return this.canUserReadSite(resourceId);
       case Resource.NOTIFICATION:
         // For notifications, these are only accessed through a site and are read as a collection
-        // So if one has site access, then they can read site notifications
+        // So if one can read a site, then they can read site notifications
         return true;
       case Resource.TAG:
         return this.canUserReadTag(resourceId);
@@ -201,10 +208,7 @@ export class PermissionsService {
   }
   private async canUserReadCompany(companyId?: number) {
     const isSuperAdminAllowed = this.user.isSuperAdmin();
-    let isOthersAllowed =
-      this.user.isCompanyAdmin() ||
-      this.user.isSiteAdmin() ||
-      this.user.isSecurityGuard();
+    let isOthersAllowed = this.user.isCompanyAdmin() || this.user.isSiteAdmin();
     if (isOthersAllowed && companyId) {
       isOthersAllowed =
         isOthersAllowed &&
@@ -237,10 +241,7 @@ export class PermissionsService {
 
   private async canUserReadSecurityGuard(securityGuardId?: number) {
     const isSuperAdminAllowed = this.user.isSuperAdmin();
-    let isOthersAllowed =
-      this.user.isCompanyAdmin() ||
-      this.user.isSiteAdmin() ||
-      this.user.isSecurityGuard();
+    let isOthersAllowed = this.user.isCompanyAdmin() || this.user.isSiteAdmin();
     if (isOthersAllowed && securityGuardId) {
       isOthersAllowed =
         isOthersAllowed &&
@@ -251,10 +252,7 @@ export class PermissionsService {
 
   private async canUserReadSite(siteId?: number) {
     const isSuperAdminAllowed = this.user.isSuperAdmin();
-    let isOthersAllowed =
-      this.user.isCompanyAdmin() ||
-      this.user.isSiteAdmin() ||
-      this.user.isSecurityGuard();
+    let isOthersAllowed = this.user.isCompanyAdmin() || this.user.isSiteAdmin();
     if (isOthersAllowed && siteId) {
       isOthersAllowed =
         isOthersAllowed && (await this.hasReadPerms(Resource.SITE, siteId));
@@ -264,10 +262,7 @@ export class PermissionsService {
 
   private async canUserReadTag(tagId?: number) {
     const isSuperAdminAllowed = this.user.isSuperAdmin();
-    let isOthersAllowed =
-      this.user.isCompanyAdmin() ||
-      this.user.isSiteAdmin() ||
-      this.user.isSecurityGuard();
+    let isOthersAllowed = this.user.isCompanyAdmin() || this.user.isSiteAdmin();
     if (isOthersAllowed && tagId) {
       isOthersAllowed =
         isOthersAllowed && (await this.hasReadPerms(Resource.TAG, tagId));
@@ -281,10 +276,7 @@ export class PermissionsService {
 
   private async canUserReadPatrol(patrolId?: number) {
     const isSuperAdminAllowed = this.user.isSuperAdmin();
-    let isOthersAllowed =
-      this.user.isCompanyAdmin() ||
-      this.user.isSiteAdmin() ||
-      this.user.isSecurityGuard();
+    let isOthersAllowed = this.user.isCompanyAdmin() || this.user.isSiteAdmin();
     if (isOthersAllowed && patrolId) {
       isOthersAllowed =
         isOthersAllowed && (await this.hasReadPerms(Resource.PATROL, patrolId));
@@ -368,7 +360,8 @@ export class PermissionsService {
     updateSuperAdminDto: UpdateSuperAdminDto,
   ) {
     const { id: userId } = this.user;
-    return this.user.isSuperAdmin() && superAdminId === userId;
+    const isMySelf = userId === superAdminId;
+    return this.user.isSuperAdmin() && isMySelf;
   }
   private canUserUpdateCompany(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -394,25 +387,22 @@ export class PermissionsService {
   ) {
     const { companyId: userCompanyId } = this.user;
     const { site }: { site: Site } = updateSiteAdminDto as any;
-    const canUpdateAnySiteAdmin = this.user.isSuperAdmin();
-    let canUpdateOwnSiteAdmin = this.user.isCompanyAdmin();
-    if (canUpdateOwnSiteAdmin) {
-      const siteAdminBelongsToCompany = await this.userBelongsToCompany(
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    let isCompanyAdminAllowed =
+      this.user.isCompanyAdmin() &&
+      (await this.userBelongsToCompany(
         siteAdminId,
         userCompanyId,
         Role.SITE_ADMIN,
-      );
-      canUpdateOwnSiteAdmin =
-        canUpdateOwnSiteAdmin && siteAdminBelongsToCompany;
-    }
+      ));
 
-    // If the user is assigning the site admin another site, then the new site should
-    // belong to the user's company
-    if (!!site && canUpdateOwnSiteAdmin) {
-      canUpdateOwnSiteAdmin =
-        canUpdateOwnSiteAdmin && site.belongsToCompany(userCompanyId);
+    // If the company admin is assigning the site admin to another site, then the new site should also
+    // belong to the company admin's company
+    if (!!site && isCompanyAdminAllowed) {
+      isCompanyAdminAllowed =
+        isCompanyAdminAllowed && site.belongsToCompany(userCompanyId);
     }
-    return canUpdateAnySiteAdmin || canUpdateOwnSiteAdmin;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   private async canUserUpdateSecurityGuard(
@@ -421,70 +411,66 @@ export class PermissionsService {
     updateDto: UpdateSecurityGuardDto,
   ) {
     const { companyId: userCompanyId } = this.user;
-    const canUpdateAnySecurityGuard = this.user.isSuperAdmin();
-    const canUpdateOwnSecurityGuards = this.user.isCompanyAdmin();
-    if (canUpdateOwnSecurityGuards) {
-      canUpdateOwnSecurityGuards &&
-        (await this.userBelongsToCompany(
-          securityGuardId as number,
-          userCompanyId,
-          Role.SECURITY_GUARD,
-        ));
-    }
-    return canUpdateAnySecurityGuard || canUpdateOwnSecurityGuards;
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    const isCompanyAdminAllowed =
+      this.user.isCompanyAdmin() &&
+      (await this.userBelongsToCompany(
+        securityGuardId as number,
+        userCompanyId,
+        Role.SECURITY_GUARD,
+      ));
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   private async canUserUpdateSite(
     siteId: number,
     updateSiteDto: UpdateSiteDto,
   ) {
+    const { companyId: userCompanyId } = this.user;
     const { notificationsEnabled } = updateSiteDto;
-    const canUpdateAnySite = this.user.isSuperAdmin();
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
     // Company admins aren't allowed to toggle site notifications
-    let canUpdateOwnSite =
-      this.user.isCompanyAdmin() && notificationsEnabled === undefined;
-    if (canUpdateOwnSite) {
-      const { companyId: userCompanyId } = this.user;
-      canUpdateOwnSite =
-        canUpdateOwnSite &&
-        (await this.siteBelongsToCompany(siteId, userCompanyId));
-    }
-    return canUpdateAnySite || canUpdateOwnSite;
+    const isCompanyAdminAllowed =
+      this.user.isCompanyAdmin() &&
+      notificationsEnabled === undefined &&
+      (await this.siteBelongsToCompany(siteId, userCompanyId));
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   private async canUserUpdateTags(
     tagId: number | undefined,
     updateDto: UpdateTagUIDDto | TagsActionDto,
   ) {
-    // TagsActionDto doesn't require a tagId, the tag Ids are embedded in the
-    // updateDto
-    const updateTagUID = updateDto instanceof UpdateTagUIDDto;
-    if (updateTagUID && !tagId) return false;
+    // TagsActionDto doesn't require a tagId(DB Primary Key), the tag Ids are embedded in the
+    // updateDto, on the other hand, UpdateTagUIDDto requires a tagId.
+    const isUpdatingTagUID = updateDto instanceof UpdateTagUIDDto;
+    if (isUpdatingTagUID && !tagId) return false;
 
-    const canUpdateAnyTags = this.user.isSuperAdmin();
-    let canUpdateOwnTags = this.user.isCompanyAdmin();
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    let isCompanyAdminAllowed = this.user.isCompanyAdmin();
 
     const { companyId: userCompanyId } = this.user;
-    if (updateTagUID && canUpdateOwnTags) {
+    if (isUpdatingTagUID && isCompanyAdminAllowed) {
       const tagBelongsToUserCompany = await this.tagBelongsToCompany(
         tagId as number,
         userCompanyId,
       );
-      canUpdateOwnTags = canUpdateOwnTags && tagBelongsToUserCompany;
-    } else if (updateDto instanceof TagsActionDto && canUpdateOwnTags) {
+      isCompanyAdminAllowed = isCompanyAdminAllowed && tagBelongsToUserCompany;
+    } else if (updateDto instanceof TagsActionDto && isCompanyAdminAllowed) {
       const { tags }: { tags: Tag[] } = updateDto as any;
       const tagsBelongToUserCompany = tags.every((tag) =>
         tag.belongsToCompany(userCompanyId),
       );
-      canUpdateOwnTags = canUpdateOwnTags && tagsBelongToUserCompany;
+      isCompanyAdminAllowed = isCompanyAdminAllowed && tagsBelongToUserCompany;
       const { type } = updateDto;
       if (type === INSTALL_TAGS_ACTION) {
         const { site }: { site: Site } = updateDto as any;
         const siteBelongsToUserCompany = site.belongsToCompany(userCompanyId);
-        canUpdateOwnTags = canUpdateOwnTags && siteBelongsToUserCompany;
+        isCompanyAdminAllowed =
+          isCompanyAdminAllowed && siteBelongsToUserCompany;
       }
     }
-    return canUpdateAnyTags || canUpdateOwnTags;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   // Determine if a user can delete a resource
@@ -529,7 +515,12 @@ export class PermissionsService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserDeleteSuperAdmin(superAdminId: number) {
-    return false;
+    const host = this.request?.get('host');
+    const { id: userId } = this.user;
+    const isNotMySelf = userId !== superAdminId;
+    return (
+      this.user.isSuperAdmin() && isNotMySelf && LOCALHOST_REGEX.test(host)
+    );
   }
   private canUserDeleteCompany() {
     return this.user.isSuperAdmin();
@@ -540,60 +531,60 @@ export class PermissionsService {
   }
 
   private async canUserDeleteSiteAdmin(...siteAdminIds: number[]) {
-    const canDeleteAnySiteAdmin = this.user.isSuperAdmin();
-    let canDeleteOwnSiteAdmin = this.user.isCompanyAdmin();
-    if (canDeleteOwnSiteAdmin) {
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    let isCompanyAdminAllowed = this.user.isCompanyAdmin();
+    if (isCompanyAdminAllowed) {
       const { companyId: userCompanyId } = this.user;
       const siteAdminBelongsToCompany = await this.usersBelongToCompany(
         siteAdminIds,
         userCompanyId,
         Role.SITE_ADMIN,
       );
-      canDeleteOwnSiteAdmin =
-        canDeleteOwnSiteAdmin && siteAdminBelongsToCompany;
+      isCompanyAdminAllowed =
+        isCompanyAdminAllowed && siteAdminBelongsToCompany;
     }
 
-    return canDeleteAnySiteAdmin || canDeleteOwnSiteAdmin;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   private async canUserDeleteSecurityGuard(...securityGuardIds: number[]) {
-    const canDeleteAnySecurityGuard = this.user.isSuperAdmin();
-    let canDeleteOwnSecurityGuard = this.user.isCompanyAdmin();
-    if (canDeleteOwnSecurityGuard) {
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    let isCompanyAdminAllowed = this.user.isCompanyAdmin();
+    if (isCompanyAdminAllowed) {
       const { companyId: userCompanyId } = this.user;
-      canDeleteOwnSecurityGuard =
-        canDeleteOwnSecurityGuard &&
+      isCompanyAdminAllowed =
+        isCompanyAdminAllowed &&
         (await this.usersBelongToCompany(
           securityGuardIds,
           userCompanyId,
           Role.SECURITY_GUARD,
         ));
     }
-    return canDeleteAnySecurityGuard || canDeleteOwnSecurityGuard;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   private async canUserDeleteSite(...siteIds: number[]) {
-    const canDeleteAnySite = this.user.isSuperAdmin();
-    let canDeleteOwnSite = this.user.isCompanyAdmin();
-    if (canDeleteOwnSite) {
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    let isCompanyAdminAllowed = this.user.isCompanyAdmin();
+    if (isCompanyAdminAllowed) {
       const { companyId: userCompanyId } = this.user;
-      canDeleteOwnSite =
-        canDeleteOwnSite &&
+      isCompanyAdminAllowed =
+        isCompanyAdminAllowed &&
         (await this.sitesBelongToCompany(siteIds, userCompanyId));
     }
-    return canDeleteAnySite || canDeleteOwnSite;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   private async canUserDeleteTag(...tagIds: number[]) {
-    const canDeleteAnyTag = this.user.isSuperAdmin();
-    let canDeleteOwnTag = this.user.isCompanyAdmin();
-    if (canDeleteOwnTag) {
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    let isCompanyAdminAllowed = this.user.isCompanyAdmin();
+    if (isCompanyAdminAllowed) {
       const { companyId: userCompanyId } = this.user;
-      canDeleteOwnTag =
-        canDeleteOwnTag &&
+      isCompanyAdminAllowed =
+        isCompanyAdminAllowed &&
         (await this.tagsBelongToCompany(tagIds, userCompanyId));
     }
-    return canDeleteAnyTag || canDeleteOwnTag;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -617,10 +608,6 @@ export class PermissionsService {
     if (!filter) return true;
 
     switch (this.resource) {
-      case Resource.SUPER_ADMIN:
-        return true;
-      case Resource.COMPANY:
-        return true;
       case Resource.COMPANY_ADMIN:
         return this.canUserFilterOnCompany(filter);
       case Resource.SITE_ADMIN:
@@ -629,35 +616,29 @@ export class PermissionsService {
           (await this.canUserFilterOnSite(filter))
         );
       case Resource.SECURITY_GUARD:
-        return (
-          (await this.canUserFilterOnCompany(filter)) &&
-          (await this.canUserFilterOnSite(filter))
-        );
-      case Resource.SITE:
-        return true;
+        return await this.canUserFilterOnCompany(filter);
       case Resource.TAG:
         return (
           (await this.canUserFilterOnCompany(filter)) &&
           (await this.canUserFilterOnSite(filter))
         );
-      case Resource.SHIFT:
-        return await this.canUserFilterOnSite(filter);
       case Resource.PATROL:
         return await this.canUserFilterOnSite(filter);
       default:
         return false;
     }
   }
+
   private async canUserFilterOnCompany(filter: any) {
     let canFilterOnCompanies = true;
-    const companyIds = this.extractIdsFromFilter(filter);
-    const noCompaniesProvided = companyIds.length === 0;
-    if (noCompaniesProvided) return true;
+    const companyIds = this.extractIdsFromFilter(filter, Resource.COMPANY);
+    const filterHasNoCompanies = companyIds.length === 0;
+    if (filterHasNoCompanies) return true;
 
-    const manyCompaniesProvided = companyIds.length > 1;
-    if (manyCompaniesProvided) {
-      // Only super admins can filter on more than one company because they aren't attached to any company while
-      // the rest of the users can only belong to a single company
+    const filterHasMultipleCompanies = companyIds.length > 1;
+    if (filterHasMultipleCompanies) {
+      /* Only super admins can filter on more than one company while the rest of the
+      users can only filter on a single company and that's the company to which they belong */
       canFilterOnCompanies = this.user.isSuperAdmin();
     } else {
       canFilterOnCompanies = await this.hasReadPerms(
@@ -675,15 +656,15 @@ export class PermissionsService {
 
   private async canUserFilterOnSite(filter: any) {
     let canFilterOnSites = true;
-    const siteIds = this.extractIdsFromFilter(filter);
-    const noSitesProvided = siteIds.length === 0;
-    if (noSitesProvided) return true;
+    const siteIds = this.extractIdsFromFilter(filter, Resource.SITE);
+    const filterHasNoSites = siteIds.length === 0;
+    if (filterHasNoSites) return true;
 
     // Filtering on many sites is allowed for every user for as long as the sites belong to the user's
     // company except for super admins who don't have any restrictions on the sites they can filter on
-    const singleSiteProvided = siteIds.length === 1;
+    const filterHasSingleSite = siteIds.length === 1;
     const { companyId: userCompanyId } = this.user;
-    if (singleSiteProvided) {
+    if (filterHasSingleSite) {
       canFilterOnSites =
         this.user.isSuperAdmin() ||
         (!this.user.isSuperAdmin() &&
@@ -703,30 +684,36 @@ export class PermissionsService {
     return canFilterOnSites;
   }
 
-  private extractIdsFromFilter(filter: any) {
-    const {
-      siteId,
-      companyId,
-    }: { siteId: string | string[]; companyId: string | string[] } = filter;
-    const filterValue = siteId || companyId;
-
-    let ids: number[] = [];
-    const idsRegex = /^.*\$in:(?<ids>[0-9,]+)$/i;
+  private extractIdsFromFilter(filter: any, resource: Resource) {
+    let filterValue: string | string[] | undefined;
     const nullIdRegex = /^\$null$/i;
+    const idsRegex = /^\$in:(?<ids>[0-9,]+)$/i;
+
+    switch (resource) {
+      case Resource.COMPANY:
+        filterValue = filter.companyId;
+        break;
+      case Resource.SITE:
+        filterValue = filter.siteId;
+        break;
+      default:
+        return [];
+    }
+    const isUndefinedValue = !filterValue;
+    const isNullId = isString(filterValue) && nullIdRegex.test(filterValue);
+    if (isUndefinedValue || isNullId) {
+      return [];
+    }
+    let ids: number[] = [];
 
     if (isArray(filterValue)) {
       ids = filterValue.map((id) => +id);
-    } else if (isString(siteId) && siteId.trim() != '') {
+    } else if (isString(filterValue) && filterValue.trim() != '') {
       ids = filterValue
         .match(idsRegex)
-        ?.groups?.siteIds.split(',')
+        ?.groups?.ids?.split(',')
         .map((id) => +id) || [+filterValue];
     }
-    if (
-      !filterValue ||
-      (isString(filterValue) && nullIdRegex.test(filterValue))
-    )
-      ids = [];
     return ids;
   }
 

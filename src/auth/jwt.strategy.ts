@@ -7,7 +7,6 @@ import {
   JWTPayload,
   SiteAdmin,
   SuperAdmin,
-  SecurityGuard,
   User,
   BaseUser,
 } from './auth.types';
@@ -37,9 +36,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         break;
       case Role.SITE_ADMIN:
         user = plainToInstance(SiteAdmin, userPayload);
-        break;
-      case Role.SECURITY_GUARD:
-        user = plainToInstance(SecurityGuard, userPayload);
         break;
       default:
         user = plainToInstance(BaseUser, userPayload);

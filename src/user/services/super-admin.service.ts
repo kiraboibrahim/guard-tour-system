@@ -5,7 +5,7 @@ import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
 import { SuperAdmin } from '../entities/super-admin.entity';
 import { UserService } from './user.service';
-import { BaseService } from '../../core/core.base';
+import { BaseService } from '../../core/services/base.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { Resource } from '../../permissions/permissions';
 

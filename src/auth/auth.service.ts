@@ -39,6 +39,7 @@ export class AuthService {
       role: _user.role as Role,
       username: _user.username,
       firstName: _user.firstName,
+      lastName: _user.lastName,
       companyId: user instanceof SuperAdmin ? undefined : user.companyId,
     };
 

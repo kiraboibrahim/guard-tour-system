@@ -9,14 +9,12 @@ import {
   JoinColumn,
   BeforeUpdate,
 } from 'typeorm';
-import * as argon2 from 'argon2';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { Company } from '../../company/entities/company.entity';
-import { IsStrongPassword } from '../user.validators';
 import { IsValidRole } from '../../roles/roles.validators';
 import { IsUGPhoneNumber } from '../../core/core.validators';
 import { Role } from '../../roles/roles';
-import { hashPassword } from '../../core/core.utils';
+import { hash } from '../../core/core.utils';
 
 // A basic user that contains fields shared by all users
 @Entity('users')
@@ -65,13 +63,14 @@ export class AuthUser extends User {
 
   @Column()
   @Exclude()
-  @IsStrongPassword()
   password: string;
 
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
-    this.password = await hashPassword(this.password);
+    if (!!this.password) {
+      this.password = await hash(this.password);
+    }
   }
 }
 

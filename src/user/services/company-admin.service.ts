@@ -7,7 +7,7 @@ import { CompanyAdmin } from '../entities/company-admin.entity';
 import { UserService } from './user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { COMPANY_ADMIN_PAGINATION_CONFIG } from '../pagination-config/company-admin-pagination.config';
-import { BaseService } from '../../core/core.base';
+import { BaseService } from '../../core/services/base.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { Resource } from '../../permissions/permissions';
 

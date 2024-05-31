@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { PaginateQuery } from 'nestjs-paginate';
-import { User } from '../auth/auth.types';
+import { User } from '../../auth/auth.types';
 
 export class BaseService {
   private _user: User;

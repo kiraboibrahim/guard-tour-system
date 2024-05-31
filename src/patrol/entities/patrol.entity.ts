@@ -3,6 +3,7 @@ import { IsISO8601, IsMilitaryTime } from 'class-validator';
 import { SecurityGuard } from '../../user/entities/security-guard.entity';
 import { Site } from '../../site/entities/site.entity';
 import { Exclude } from 'class-transformer';
+import { LocalDateTime, ZoneId } from '@js-joda/core';
 
 @Entity('patrols')
 export class Patrol {
@@ -39,7 +40,21 @@ export class Patrol {
   })
   securityGuard: SecurityGuard;
 
-  belongsToCompany(companyId: number) {
-    return this.site.belongsToCompany(companyId);
+  isNextPatrolOverDue() {
+    const timezone = process.env.TZ as string;
+    let submittedAt;
+    try {
+      submittedAt = LocalDateTime.parse(
+        `${this.date}T${this.startTime}`,
+      ).atZone(ZoneId.of(timezone));
+    } catch (err) {
+      return true;
+    }
+
+    const nextSubmissionDateTime = submittedAt.plusHours(
+      this.site.notificationCycle,
+    );
+    const now = LocalDateTime.now().atZone(ZoneId.of(timezone));
+    return now.isAfter(nextSubmissionDateTime);
   }
 }

@@ -35,13 +35,39 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
       REQUIRED_PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],
     );
-    if (!permission) {
-      const errorMsg = `Access denied because permissions for this route(${this.request.url}) aren't defined and yet it is being accessed with authentication. If the route is public, then it should be accessed without authentication(access token) otherwise you have to specify permissions for this route in the controller`;
-      this.logger.warn(errorMsg);
+    this.permissionsService.setRequest(this.request);
+    const user = this.request.user as User;
+    const routeHasNoPermissions = !permission;
+    if (routeHasNoPermissions) {
+      this.logPermissionErrors(user, 'UNDEFINED_ROUTE_PERMISSIONS');
       return false;
     }
-    const user = this.request.user as User;
-    return this.userHasPermission(user, permission);
+    const permissionGranted = this.userHasPermission(user, permission);
+    if (!permissionGranted) {
+      this.logPermissionErrors(user, 'FORBIDDEN_ACTION');
+    }
+    return permissionGranted;
+  }
+
+  private logPermissionErrors(
+    user: User,
+    type: 'UNDEFINED_ROUTE_PERMISSIONS' | 'FORBIDDEN_ACTION',
+  ) {
+    switch (type) {
+      case 'UNDEFINED_ROUTE_PERMISSIONS':
+        const errorMsg = `Access to route(${this.request.url}) has been denied because of the absence of permissions on the route and yet it's being accessed with authentication(access token). If it is a public route, mark it with the @IsPublic() decorator`;
+        this.logger.warn(errorMsg);
+        break;
+      case 'FORBIDDEN_ACTION':
+        this.logger.fatal(
+          `Access denied to user, User ID: ${
+            user.id
+          }(${user.getFullName()}) when accessing ${this.request.method} ${
+            this.request.url
+          }`,
+        );
+        break;
+    }
   }
 
   async userHasPermission(user: User, permission: Permission) {

@@ -8,7 +8,7 @@ import { Patrol } from '../patrol/entities/patrol.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol-pagination.config';
 import { SITE_PAGINATION_CONFIG } from './pagination-configs/site-pagination.config';
-import { BaseService } from '../core/core.base';
+import { BaseService } from '../core/services/base.service';
 import { Resource } from '../permissions/permissions';
 import { PermissionsService } from '../permissions/permissions.service';
 import { PatrolDelayNotification } from './entities/patrol-delay-notification.entity';

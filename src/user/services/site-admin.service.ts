@@ -7,7 +7,7 @@ import { SiteAdmin } from '../entities/site-admin.entity';
 import { UserService } from './user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SITE_ADMIN_PAGINATION_CONFIG } from '../pagination-config/site-admin-pagination.config';
-import { BaseService } from '../../core/core.base';
+import { BaseService } from '../../core/services/base.service';
 import { PermissionsService } from '../../permissions/permissions.service';
 import { Resource } from '../../permissions/permissions';
 
