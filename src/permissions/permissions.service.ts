@@ -373,12 +373,18 @@ export class PermissionsService {
   }
 
   private canUserUpdateCompanyAdmin(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     companyAdminId: number,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     updateCompanyAdminDto: UpdateCompanyAdminDto,
   ) {
-    return this.user.isSuperAdmin();
+    const { email } = updateCompanyAdminDto;
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    /* A company admin is allowed to update HIS/HER data only if they aren't
+    trying to update their email */
+    const isCompanyAdminAllowed =
+      this.user.isCompanyAdmin() &&
+      this.user.id === companyAdminId &&
+      email === undefined;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
   private async canUserUpdateSiteAdmin(
@@ -396,9 +402,10 @@ export class PermissionsService {
         Role.SITE_ADMIN,
       ));
 
-    // If the company admin is assigning the site admin to another site, then the new site should also
-    // belong to the company admin's company
-    if (!!site && isCompanyAdminAllowed) {
+    /* If the company admin is assigning the site admin to another site, then
+     the new site should also belong to the company admin's company */
+    const isSwitchingSite = !!site;
+    if (isCompanyAdminAllowed && isSwitchingSite) {
       isCompanyAdminAllowed =
         isCompanyAdminAllowed && site.belongsToCompany(userCompanyId);
     }

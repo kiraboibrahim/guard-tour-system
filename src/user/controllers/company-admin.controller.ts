@@ -62,6 +62,7 @@ export class CompanyAdminController {
   }
 
   @Patch(':id')
+  @AlsoAllow(Role.COMPANY_ADMIN)
   @CanUpdate(Resource.COMPANY_ADMIN)
   async update(
     @Param('id') id: string,

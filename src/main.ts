@@ -13,6 +13,7 @@ async function bootstrap() {
   app.enableCors({ origin: true });
   await app.listen(port, host);
 }
+
 function useNestDIContainerForClassValidator(app: INestApplication) {
   //See https://github.com/nestjs/nest/issues/528 on how to use nestjs DI container
   // with class-validator. Credit goes to Julianomqs (https://github.com/julianomqs)
@@ -39,4 +40,5 @@ function setupAPIVersioning(app: INestApplication) {
     type: VersioningType.URI,
   });
 }
+
 bootstrap();
