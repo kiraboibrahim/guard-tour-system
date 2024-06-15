@@ -71,4 +71,8 @@ export class Site {
 
   @Column({ default: PATROL_TYPE.INDIVIDUAL })
   patrolType: string;
+
+  hasIndividualPatrolType() {
+    return this.patrolType === PATROL_TYPE.INDIVIDUAL;
+  }
 }
