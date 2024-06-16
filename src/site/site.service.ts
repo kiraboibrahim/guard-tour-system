@@ -6,21 +6,21 @@ import { UpdateSiteDto } from './dto/update-site.dto';
 import { Site } from './entities/site.entity';
 import { Patrol } from '../patrol/entities/patrol.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
-import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol-pagination.config';
-import { SITE_PAGINATION_CONFIG } from './pagination-configs/site-pagination.config';
+import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol.pagination';
+import { SITE_PAGINATION_CONFIG } from './pagination/site.pagination';
 import { BaseService } from '../core/services/base.service';
 import { Resource } from '../permissions/permissions';
 import { PermissionsService } from '../permissions/permissions.service';
-import { PatrolDelayNotification } from './entities/patrol-delay-notification.entity';
-import { PATROL_DELAY_NOTIFICATION_PAGINATION_CONFIG } from './pagination-configs/patrol-delay-notification.pagination.config';
+import { DelayedPatrolNotification } from './entities/delayed-patrol-notification.entity';
+import { DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG } from './pagination/delayed-patrol-notification.pagination';
 
 @Injectable()
 export class SiteService extends BaseService {
   constructor(
     @InjectRepository(Site) private siteRepository: Repository<Site>,
     @InjectRepository(Patrol) private patrolRepository: Repository<Patrol>,
-    @InjectRepository(PatrolDelayNotification)
-    private patrolDelayNotificationRepository: Repository<PatrolDelayNotification>,
+    @InjectRepository(DelayedPatrolNotification)
+    private patrolDelayNotificationRepository: Repository<DelayedPatrolNotification>,
     private permissionsService: PermissionsService,
   ) {
     super();
@@ -76,7 +76,7 @@ export class SiteService extends BaseService {
     return await paginate(
       query,
       this.patrolDelayNotificationRepository,
-      PATROL_DELAY_NOTIFICATION_PAGINATION_CONFIG,
+      DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG,
     );
   }
 }

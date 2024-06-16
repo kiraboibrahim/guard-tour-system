@@ -4,7 +4,7 @@ import { IsStrongPassword } from '../user.validators';
 import { IsUGPhoneNumber } from '../../core/core.validators';
 import { ApiProperty } from '@nestjs/swagger';
 
-// The user DTO that contains common fields for non-authenticated users
+// This DTO is used for creating non auth users, users that don't authenticate with the application
 export class CreateNonAuthUserDto {
   @ApiProperty()
   @IsAlpha()
@@ -21,7 +21,7 @@ export class CreateNonAuthUserDto {
   phoneNumber: string;
 }
 
-// A DTO that holds common fields for authenticated users
+// This DTO is used for creating auth users, users that authenticate with the application
 export class CreateAuthUserDto extends CreateNonAuthUserDto {
   @ApiProperty()
   @IsStrongPassword()

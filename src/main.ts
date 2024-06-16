@@ -8,13 +8,13 @@ async function bootstrap() {
   const [host, port] = ['localhost', 3000];
   const app = await NestFactory.create(AppModule);
   setupAPIVersioning(app);
-  useNestDIContainerForClassValidator(app);
+  setUpClassValidatorDIContainer(app);
   setupSwaggerDocs(app);
   app.enableCors({ origin: true });
   await app.listen(port, host);
 }
 
-function useNestDIContainerForClassValidator(app: INestApplication) {
+function setUpClassValidatorDIContainer(app: INestApplication) {
   //See https://github.com/nestjs/nest/issues/528 on how to use nestjs DI container
   // with class-validator. Credit goes to Julianomqs (https://github.com/julianomqs)
   // Use NestJst Container to inject dependencies into validators

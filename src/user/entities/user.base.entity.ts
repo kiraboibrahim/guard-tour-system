@@ -103,7 +103,8 @@ export class CompanyUser extends UserSerializer {
   }
 }
 
-/* An AuthCompanyUser is one who will be authenticated by the system and he/she will also be affiliated to a company */
+/* An AuthCompanyUser is one who will be authenticated by the system and he/she
+is affiliated to a company */
 export class AuthCompanyUser extends AuthUserSerializer {
   @Expose({ name: 'id' })
   @PrimaryColumn()

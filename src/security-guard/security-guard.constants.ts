@@ -1,0 +1,4 @@
+export enum SECURITY_GUARD_TYPE {
+  SUPERVISOR = 'SUPERVISOR',
+  FIELD = 'FIELD',
+}

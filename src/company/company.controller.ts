@@ -12,7 +12,7 @@ import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { COMPANY_PAGINATION_CONFIG } from './company-pagination.config';
+import { COMPANY_PAGINATION_CONFIG } from './company.pagination';
 import { Role } from '../roles/roles';
 import { Auth } from '../auth/auth.decorators';
 import {

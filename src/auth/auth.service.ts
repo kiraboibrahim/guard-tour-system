@@ -2,11 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UserService } from '../user/services/user.service';
-import { SiteAdmin } from '../user/entities/site-admin.entity';
-import { CompanyAdmin } from '../user/entities/company-admin.entity';
+import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
+import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
 import { Role } from '../roles/roles';
 import { JWTPayload } from './auth.types';
-import { SuperAdmin } from '../user/entities/super-admin.entity';
+import { SuperAdmin } from '../super-admin/entities/super-admin.entity';
 
 @Injectable()
 export class AuthService {

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { PatrolDelayedNotificationService } from './patrol-delay-notifier.task';
+import { DelayedPatrolNotificationService } from './delayed-patrol-notifier.task';
 
 @Module({
-  providers: [PatrolDelayedNotificationService],
+  providers: [DelayedPatrolNotificationService],
 })
 export class TasksModule {}

@@ -5,11 +5,11 @@ import { SiteController } from './site.controller';
 import { Site } from './entities/site.entity';
 import { TagModule } from '../tag/tag.module';
 import { PatrolModule } from '../patrol/patrol.module';
-import { PatrolDelayNotification } from './entities/patrol-delay-notification.entity';
+import { DelayedPatrolNotification } from './entities/delayed-patrol-notification.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Site, PatrolDelayNotification]),
+    TypeOrmModule.forFeature([Site, DelayedPatrolNotification]),
     TagModule,
     PatrolModule,
   ],

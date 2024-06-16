@@ -9,9 +9,9 @@ import { TagModule } from '../tag/tag.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Company]),
     SiteModule,
     TagModule,
+    TypeOrmModule.forFeature([Company]),
     forwardRef(() => UserModule),
   ],
   controllers: [CompanyController],

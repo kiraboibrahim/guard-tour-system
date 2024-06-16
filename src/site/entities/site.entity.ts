@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
-import { SiteAdmin } from '../../user/entities/site-admin.entity';
+import { SiteAdmin } from '../../site-admin/entities/site-admin.entity';
 import { Tag } from '../../tag/entities/tag.entity';
 import { Exclude } from 'class-transformer';
 import { PATROL_TYPE } from '../site.constants';

@@ -1,24 +1,21 @@
 import { Module } from '@nestjs/common';
 import { StatsService } from './stats.service';
 import { StatsController } from './stats.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { CompanyAdmin } from '../user/entities/company-admin.entity';
-import { SiteAdmin } from '../user/entities/site-admin.entity';
-import { SecurityGuard } from '../user/entities/security-guard.entity';
-import { Tag } from '../tag/entities/tag.entity';
-import { Site } from '../site/entities/site.entity';
-import { Company } from '../company/entities/company.entity';
+import { CompanyModule } from '../company/company.module';
+import { CompanyAdminModule } from '../company-admin/company-admin.module';
+import { SiteAdminModule } from '../site-admin/site-admin.module';
+import { SecurityGuardModule } from '../security-guard/security-guard.module';
+import { SiteModule } from '../site/site.module';
+import { TagModule } from '../tag/tag.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Company,
-      CompanyAdmin,
-      SiteAdmin,
-      SecurityGuard,
-      Site,
-      Tag,
-    ]),
+    CompanyModule,
+    CompanyAdminModule,
+    SiteAdminModule,
+    SecurityGuardModule,
+    SiteModule,
+    TagModule,
   ],
   controllers: [StatsController],
   providers: [StatsService],

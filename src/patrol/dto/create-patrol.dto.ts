@@ -3,7 +3,7 @@ import {
   LoadEntitiesIfExist,
   LoadEntityIfExists,
 } from '../../core/core.validators';
-import { SecurityGuard } from '../../user/entities/security-guard.entity';
+import { SecurityGuard } from '../../security-guard/entities/security-guard.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Site } from '../../site/entities/site.entity';
 

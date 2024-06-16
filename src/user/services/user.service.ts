@@ -2,20 +2,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthUser, User } from '../entities/user.base.entity';
-import { CreateCompanyAdminDto } from '../dto/create-company-admin.dto';
-import { CreateSiteAdminDto } from '../dto/create-site-admin.dto';
-import { CreateSecurityGuardDto } from '../dto/create-security-guard.dto';
-import { CompanyAdmin } from '../entities/company-admin.entity';
-import { SiteAdmin } from '../entities/site-admin.entity';
-import { SecurityGuard } from '../entities/security-guard.entity';
+import { CreateCompanyAdminDto } from '../../company-admin/dto/create-company-admin.dto';
+import { CreateSiteAdminDto } from '../../site-admin/dto/create-site-admin.dto';
+import { CreateSecurityGuardDto } from '../../security-guard/dto/create-security-guard.dto';
+import { CompanyAdmin } from '../../company-admin/entities/company-admin.entity';
+import { SiteAdmin } from '../../site-admin/entities/site-admin.entity';
+import { SecurityGuard } from '../../security-guard/entities/security-guard.entity';
 import { Role } from '../../roles/roles';
-import { UpdateCompanyAdminDto } from '../dto/update-company-admin.dto';
-import { UpdateSiteAdminDto } from '../dto/update-site-admin.dto';
-import { UpdateSecurityGuardDto } from '../dto/update-security-guard.dto';
+import { UpdateCompanyAdminDto } from '../../company-admin/dto/update-company-admin.dto';
+import { UpdateSiteAdminDto } from '../../site-admin/dto/update-site-admin.dto';
+import { UpdateSecurityGuardDto } from '../../security-guard/dto/update-security-guard.dto';
 import { isEmptyObject } from '../../core/core.utils';
-import { SuperAdmin } from '../entities/super-admin.entity';
-import { CreateSuperAdminDto } from '../dto/create-super-admin.dto';
-import { UpdateSuperAdminDto } from '../dto/update-super-admin.dto';
+import { SuperAdmin } from '../../super-admin/entities/super-admin.entity';
+import { CreateSuperAdminDto } from '../../super-admin/dto/create-super-admin.dto';
+import { UpdateSuperAdminDto } from '../../super-admin/dto/update-super-admin.dto';
 
 @Injectable()
 export class UserService {
@@ -52,10 +52,11 @@ export class UserService {
     createUserDto: any,
     role: Role,
   ): Promise<SuperAdmin | CompanyAdmin | SiteAdmin | SecurityGuard> {
+    /* Password hashing is based on a signal and signals are only executed for
+    entity objects(instantiated thru constructors) and not from literal objects -- {}.
+    The dtoToUserEntity() function creates entities thru their respective constructors so
+    that signals will be executed */
     const userEntity: any = this.dtoToUserEntity(createUserDto, role);
-    // Password hashing is based on a signal and signals are only executed for entity objects(instantiated thru constructors)
-    // and not from literal objects- {}. The preceding code uses the repository create() method to create entities so that
-    // signals will be executed
     switch (role) {
       case Role.SUPER_ADMIN:
         return await this.superAdminRepository.save(userEntity);
@@ -163,8 +164,10 @@ export class UserService {
   }
 
   private dtoToUserEntity(dto: any, role: Role) {
-    // userSpecificData contains fields that are specific to each type of user. In other words, it contains
-    // fields that aren't shared amongst the different users
+    /* deriveUser contains fields that are specific to each type of user depending
+     * on the role. On the other hand, the 'user' has the common fields shared
+     * amongst all users of any type
+     */
     const { firstName, lastName, phoneNumber, password, ...derivedUser } = dto;
     const user = {
       ...derivedUser,

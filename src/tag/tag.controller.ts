@@ -12,7 +12,7 @@ import { CreateTagsDto } from './dto/create-tags.dto';
 import { UpdateTagUIDDto } from './dto/update-tag-uid.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
-import { TAG_PAGINATION_CONFIG } from './tag-pagination.config';
+import { TAG_PAGINATION_CONFIG } from './tag.pagination';
 import { Role } from '../roles/roles';
 import {
   CanCreate,
