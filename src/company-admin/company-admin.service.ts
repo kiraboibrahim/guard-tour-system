@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateCompanyAdminDto } from './dto/create-company-admin.dto';
 import { UpdateCompanyAdminDto } from './dto/update-company-admin.dto';
 import { CompanyAdmin } from './entities/company-admin.entity';
-import { UserService } from '../user/services/user.service';
+import { UserService } from '../user/user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { COMPANY_ADMIN_PAGINATION_CONFIG } from './company-admin.pagination';
 import { BaseService } from '../core/services/base.service';

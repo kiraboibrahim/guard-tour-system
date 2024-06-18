@@ -1,8 +1,14 @@
-import { IsAlpha, MaxLength } from 'class-validator';
+import { IsAlpha, IsEmail, MaxLength } from 'class-validator';
 import { MAX_NAME_LENGTH } from '../user.constants';
 import { IsStrongPassword } from '../user.validators';
-import { IsUGPhoneNumber } from '../../core/core.validators';
+import {
+  IsUGPhoneNumber,
+  IsUnique,
+  LoadEntityIfExists,
+} from '../../core/core.validators';
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthUser } from '../entities/user.base.entity';
+import { Company } from '../../company/entities/company.entity';
 
 // This DTO is used for creating non auth users, users that don't authenticate with the application
 export class CreateNonAuthUserDto {
@@ -24,6 +30,19 @@ export class CreateNonAuthUserDto {
 // This DTO is used for creating auth users, users that authenticate with the application
 export class CreateAuthUserDto extends CreateNonAuthUserDto {
   @ApiProperty()
+  @IsUnique<AuthUser>(AuthUser, 'email')
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
   @IsStrongPassword()
   password: string;
+}
+
+/* This DTO is used for creating auth users(users that authenticate with the application)
+but also associated with a company */
+export class CreateAuthCompanyUserDto extends CreateAuthUserDto {
+  @ApiProperty()
+  @LoadEntityIfExists<Company>(Company, 'company')
+  companyId: number;
 }

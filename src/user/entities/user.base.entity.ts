@@ -12,7 +12,6 @@ import {
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { Company } from '../../company/entities/company.entity';
 import { IsValidRole } from '../../roles/roles.validators';
-import { IsUGPhoneNumber } from '../../core/core.validators';
 import { Role } from '../../roles/roles';
 import { hash } from '../../core/core.utils';
 
@@ -29,7 +28,6 @@ export class User {
   lastName: string;
 
   @Column()
-  @IsUGPhoneNumber()
   phoneNumber: string;
 
   @Column()
@@ -37,33 +35,21 @@ export class User {
   role: string;
 }
 
-export class UserSerializer {
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  firstName: string;
-
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  lastName: string;
-
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  role: Role;
-
-  @Expose()
-  @Transform(({ obj, key }) => obj.user[key])
-  phoneNumber: string;
-}
-
 /* An AuthUser is one who will be authenticated by the system using a username and password */
 @Entity('authUsers')
 export class AuthUser extends User {
+  static USERNAME_FIELD = 'email' as const;
+
   @Column({ unique: true })
-  username: string;
+  email: string;
 
   @Column()
   @Exclude()
   password: string;
+
+  get username() {
+    return this[`${AuthUser.USERNAME_FIELD}`];
+  }
 
   @BeforeInsert()
   @BeforeUpdate()
@@ -74,14 +60,43 @@ export class AuthUser extends User {
   }
 }
 
+export class UserSerializer {
+  @Expose()
+  @Transform(({ obj, key }) => obj?.user[key])
+  firstName: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj?.user[key])
+  lastName: string;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj?.user[key])
+  role: Role;
+
+  @Expose()
+  @Transform(({ obj, key }) => obj?.user[key])
+  phoneNumber: string;
+}
+
 export class AuthUserSerializer extends UserSerializer {
   @Expose()
-  @Transform(({ obj }) => obj.user['username'])
+  @Transform(({ obj, key }) => obj?.user[key])
   email: string;
 }
 
+export class BaseAuthUser extends AuthUserSerializer {
+  @Expose({ name: 'id' })
+  @PrimaryColumn()
+  userId: number;
+
+  @Exclude()
+  @OneToOne(() => AuthUser, { eager: true, cascade: true, onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: AuthUser;
+}
+
 // A user who is affiliated to a company
-export class CompanyUser extends UserSerializer {
+export class BaseCompanyUser extends UserSerializer {
   @Expose({ name: 'id' })
   @PrimaryColumn()
   userId: number;
@@ -97,15 +112,11 @@ export class CompanyUser extends UserSerializer {
 
   @ManyToOne(() => Company, { onDelete: 'CASCADE', eager: true })
   company: Company;
-
-  belongsToCompany(companyId: number) {
-    return this.companyId === companyId;
-  }
 }
 
-/* An AuthCompanyUser is one who will be authenticated by the system and he/she
+/* An BaseAuthCompanyUser is one who will be authenticated by the system and he/she
 is affiliated to a company */
-export class AuthCompanyUser extends AuthUserSerializer {
+export class BaseAuthCompanyUser extends AuthUserSerializer {
   @Expose({ name: 'id' })
   @PrimaryColumn()
   userId: number;
@@ -121,8 +132,4 @@ export class AuthCompanyUser extends AuthUserSerializer {
   @Exclude()
   @ManyToOne(() => Company, { onDelete: 'CASCADE' })
   company: Company;
-
-  belongsToCompany(companyId: number) {
-    return this.companyId === companyId;
-  }
 }

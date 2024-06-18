@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateSiteAdminDto } from './dto/create-site-admin.dto';
 import { UpdateSiteAdminDto } from './dto/update-site-admin.dto';
 import { SiteAdmin } from './entities/site-admin.entity';
-import { UserService } from '../user/services/user.service';
+import { UserService } from '../user/user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SITE_ADMIN_PAGINATION_CONFIG } from './site-admin.pagination';
 import { BaseService } from '../core/services/base.service';

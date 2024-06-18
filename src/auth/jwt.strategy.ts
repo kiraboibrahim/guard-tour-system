@@ -7,6 +7,7 @@ import {
   JWTPayload,
   SiteAdmin,
   SuperAdmin,
+  SiteOwner,
   User,
   BaseUser,
 } from './auth.types';
@@ -24,8 +25,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: JWTPayload): User {
-    const { sub: id, ...rest } = payload;
-    const userPayload = { id, ...rest };
+    const { sub: id, ...otherFields } = payload;
+    const userPayload = { id, ...otherFields };
     let user;
     switch (userPayload.role) {
       case Role.SUPER_ADMIN:
@@ -36,6 +37,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         break;
       case Role.SITE_ADMIN:
         user = plainToInstance(SiteAdmin, userPayload);
+        break;
+      case Role.SITE_OWNER:
+        user = plainToInstance(SiteOwner, userPayload);
         break;
       default:
         user = plainToInstance(BaseUser, userPayload);

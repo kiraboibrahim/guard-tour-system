@@ -11,6 +11,7 @@ import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
 import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
 import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
 import { DelayedPatrolNotification } from '../site/entities/delayed-patrol-notification.entity';
+import { SiteOwner } from '../site-owner/entities/site-owner.entity';
 
 const ENTITIES = [
   Company,
@@ -23,6 +24,7 @@ const ENTITIES = [
   CompanyAdmin,
   SiteAdmin,
   SecurityGuard,
+  SiteOwner,
   DelayedPatrolNotification,
 ];
 @Module({
@@ -30,6 +32,7 @@ const ENTITIES = [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
+        const DB_SYNC = configService.get<boolean>('DB_SYNC');
         return {
           type: 'sqlite',
           host: configService.get<string>('DB_HOST'),
@@ -38,7 +41,7 @@ const ENTITIES = [
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
           entities: [...ENTITIES],
-          synchronize: configService.get<boolean>('DB_SYNC'),
+          synchronize: DB_SYNC,
           cache: true,
         };
       },

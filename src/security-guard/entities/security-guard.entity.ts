@@ -1,10 +1,10 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { Patrol } from '../../patrol/entities/patrol.entity';
-import { CompanyUser } from '../../user/entities/user.base.entity';
+import { BaseCompanyUser } from '../../user/entities/user.base.entity';
 import { SECURITY_GUARD_TYPE } from '../security-guard.constants';
 
 @Entity('securityGuards')
-export class SecurityGuard extends CompanyUser {
+export class SecurityGuard extends BaseCompanyUser {
   @Column()
   gender: string;
 

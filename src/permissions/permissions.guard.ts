@@ -55,16 +55,12 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
   ) {
     switch (type) {
       case 'UNDEFINED_ROUTE_PERMISSIONS':
-        const errorMsg = `Access to route(${this.request.url}) has been denied because of the absence of permissions on the route and yet it's being accessed with authentication(access token). If it is a public route, mark it with the @IsPublic() decorator`;
+        const errorMsg = `Access to route(${this.request.method} ${this.request.url}) has been denied because of the absence of permissions on the route and yet it's being accessed with authentication(access token). If it is a public route, mark it with the @IsPublic() decorator`;
         this.logger.warn(errorMsg);
         break;
       case 'FORBIDDEN_ACTION':
         this.logger.fatal(
-          `Access denied to user, User ID: ${
-            user.id
-          }(${user.getFullName()}) when accessing ${this.request.method} ${
-            this.request.url
-          }`,
+          `Access denied to user, User ID: ${user.id}(${user.fullName}) when accessing ${this.request.method} ${this.request.url}`,
         );
         break;
     }
@@ -185,9 +181,7 @@ export class PermissionsGuard implements CanActivate, IsPublicMixin {
     resource: Resource,
     resourceId: number,
   ) {
-    return await this.permissionsService
-      .can(user)
-      .delete(resource, [resourceId]);
+    return await this.permissionsService.can(user).delete(resource, resourceId);
   }
 
   private getResourcesIds(

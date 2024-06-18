@@ -11,6 +11,7 @@ import { SiteAdmin } from '../../site-admin/entities/site-admin.entity';
 import { Tag } from '../../tag/entities/tag.entity';
 import { Exclude } from 'class-transformer';
 import { PATROL_TYPE } from '../site.constants';
+import { SiteOwner } from '../../site-owner/entities/site-owner.entity';
 
 @Entity('sites')
 export class Site {
@@ -31,12 +32,6 @@ export class Site {
 
   @Column()
   phoneNumber: string;
-
-  @Column()
-  supervisorName: string;
-
-  @Column()
-  supervisorPhoneNumber: string;
 
   @Exclude()
   @Column()
@@ -62,15 +57,21 @@ export class Site {
   })
   admin: SiteAdmin;
 
+  @Column({ nullable: true })
+  ownerId: number;
+
+  @ManyToOne(() => SiteOwner, { nullable: true })
+  owner: SiteOwner;
+
   @OneToMany(() => Tag, (tag) => tag.site)
   tags: Tag[];
+
+  @Column({ default: PATROL_TYPE.INDIVIDUAL })
+  patrolType: string;
 
   belongsToCompany(companyId: number) {
     return this.companyId === companyId;
   }
-
-  @Column({ default: PATROL_TYPE.INDIVIDUAL })
-  patrolType: string;
 
   hasIndividualPatrolType() {
     return this.patrolType === PATROL_TYPE.INDIVIDUAL;

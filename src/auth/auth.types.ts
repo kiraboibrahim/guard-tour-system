@@ -3,12 +3,12 @@ import { Role } from '../roles/roles';
 export type JWTPayload = {
   sub: number;
   role: Role;
-  username: string;
+  email: string;
   firstName: string;
   lastName: string;
-  // companyId is undefined for superAdmins because superAdmins aren't affiliated to any company
+  // companyId is undefined for super admins because superAdmins aren't affiliated to any company
   companyId?: number;
-  // managedSiteId is only defined for super admins
+  // managedSiteId is only defined for site admins
   managedSiteId?: number;
 };
 
@@ -17,12 +17,13 @@ export class BaseUser {
   role: Role;
   firstName: string;
   lastName: string;
-  username: string;
+  email: string;
   companyId: number;
 
-  getFullName() {
+  get fullName() {
     return `${this.firstName} ${this.lastName}`;
   }
+
   isSuperAdmin() {
     return this.role === Role.SUPER_ADMIN;
   }
@@ -31,6 +32,10 @@ export class BaseUser {
   }
   isSiteAdmin() {
     return this.role === Role.SITE_ADMIN;
+  }
+
+  isSiteOwner() {
+    return this.role === Role.SITE_OWNER;
   }
 
   belongsToCompany(companyId: number) {
@@ -43,5 +48,5 @@ export class CompanyAdmin extends BaseUser {}
 export class SiteAdmin extends BaseUser {
   managedSiteId: number;
 }
-
-export type User = SuperAdmin | CompanyAdmin | SiteAdmin;
+export class SiteOwner extends BaseUser {}
+export type User = SuperAdmin | CompanyAdmin | SiteAdmin | SiteOwner;

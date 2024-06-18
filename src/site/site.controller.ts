@@ -41,6 +41,7 @@ export class SiteController {
   }
 
   @Get()
+  @AlsoAllow(Role.SITE_OWNER)
   @CanRead(Resource.SITE)
   find(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
     this.siteService.setUser(user);
@@ -54,8 +55,6 @@ export class SiteController {
   }
 
   @Get(':id/patrols')
-  @AlsoAllow(Role.SITE_ADMIN)
-  @CanRead(Resource.PATROL, [Resource.SITE], { [Resource.SITE]: 'id' })
   @IsPublic()
   async findSitePatrols(
     @Param('id') id: string,
@@ -65,11 +64,14 @@ export class SiteController {
   }
 
   @Get(':id/notifications')
+  @AlsoAllow(Role.SITE_OWNER)
   @CanRead(Resource.NOTIFICATION, [Resource.SITE], { [Resource.SITE]: 'id' })
   async findSiteNotifications(
     @Param('id') id: string,
     @Paginate() query: PaginateQuery,
+    @User() user: AuthenticatedUser,
   ) {
+    this.siteService.setUser(user);
     return this.siteService.findSiteNotifications(+id, query);
   }
 

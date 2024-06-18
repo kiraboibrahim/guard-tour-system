@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateSuperAdminDto } from './dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from './dto/update-super-admin.dto';
 import { SuperAdmin } from './entities/super-admin.entity';
-import { UserService } from '../user/services/user.service';
+import { UserService } from '../user/user.service';
 import { BaseService } from '../core/services/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import { Resource } from '../permissions/permissions';

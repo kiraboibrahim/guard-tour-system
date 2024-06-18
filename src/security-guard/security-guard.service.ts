@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSecurityGuardDto } from './dto/create-security-guard.dto';
 import { UpdateSecurityGuardDto } from './dto/update-security-guard.dto';
 import { SecurityGuard } from './entities/security-guard.entity';
-import { UserService } from '../user/services/user.service';
+import { UserService } from '../user/user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SECURITY_GUARD_PAGINATION_CONFIG } from './security-guard.pagination';
 import { Patrol } from '../patrol/entities/patrol.entity';

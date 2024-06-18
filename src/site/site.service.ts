@@ -13,6 +13,7 @@ import { Resource } from '../permissions/permissions';
 import { PermissionsService } from '../permissions/permissions.service';
 import { DelayedPatrolNotification } from './entities/delayed-patrol-notification.entity';
 import { DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG } from './pagination/delayed-patrol-notification.pagination';
+import { SiteOwner } from '../site-owner/entities/site-owner.entity';
 
 @Injectable()
 export class SiteService extends BaseService {
@@ -30,7 +31,11 @@ export class SiteService extends BaseService {
       .can(this.user)
       .create(Resource.SITE, createSiteDto, { throwError: true });
 
-    const site = this.siteRepository.create(createSiteDto);
+    const { siteOwner }: { siteOwner: SiteOwner } = createSiteDto as any;
+    const site = this.siteRepository.create({
+      ...createSiteDto,
+      owner: siteOwner,
+    });
     return await this.siteRepository.save(site);
   }
 
@@ -55,7 +60,11 @@ export class SiteService extends BaseService {
       .can(this.user)
       .update(Resource.SITE, id, updateSiteDto, { throwError: true });
 
-    return await this.siteRepository.update({ id }, updateSiteDto);
+    const { siteOwner }: { siteOwner: SiteOwner } = updateSiteDto as any;
+    return await this.siteRepository.update(
+      { id },
+      { ...updateSiteDto, owner: siteOwner },
+    );
   }
 
   async remove(id: number) {
@@ -72,7 +81,10 @@ export class SiteService extends BaseService {
   }
   async findSiteNotifications(id: number, query: PaginateQuery) {
     query.filter = { ...query.filter, siteId: [`${id}`] };
-    // There is no need to check if the user can filter on the siteId because this check has already been done by the permissionService
+    await this.permissionsService
+      .can(this.user)
+      .filter(Resource.NOTIFICATION)
+      .with(query);
     return await paginate(
       query,
       this.patrolDelayNotificationRepository,

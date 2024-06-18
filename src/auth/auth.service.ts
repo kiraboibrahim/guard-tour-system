@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { UserService } from '../user/services/user.service';
+import { UserService } from '../user/user.service';
 import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
 import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
 import { Role } from '../roles/roles';
@@ -37,7 +37,7 @@ export class AuthService {
     let payload: JWTPayload = {
       sub: _user.id,
       role: _user.role as Role,
-      username: _user.username,
+      email: _user.email,
       firstName: _user.firstName,
       lastName: _user.lastName,
       companyId: user instanceof SuperAdmin ? undefined : user.companyId,

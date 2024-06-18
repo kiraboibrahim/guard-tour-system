@@ -17,6 +17,7 @@ import { Company } from '../../company/entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Site } from '../entities/site.entity';
 import { MAX_PATROL_DELAY_DURATIONS, PATROL_TYPE } from '../site.constants';
+import { SiteOwner } from '../../site-owner/entities/site-owner.entity';
 
 export class CreateSiteDto {
   @ApiProperty()
@@ -61,12 +62,9 @@ export class CreateSiteDto {
   phoneNumber: string;
 
   @ApiProperty()
-  @IsString()
-  supervisorName: string;
-
-  @ApiProperty()
-  @IsUGPhoneNumber()
-  supervisorPhoneNumber: string;
+  @LoadEntityIfExists<SiteOwner>(SiteOwner, 'siteOwner', 'userId')
+  @IsOptional()
+  ownerId: number;
 
   @ApiProperty()
   @LoadEntityIfExists<Company>(Company, 'company')

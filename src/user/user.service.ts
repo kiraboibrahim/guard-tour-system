@@ -1,21 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthUser, User } from '../entities/user.base.entity';
-import { CreateCompanyAdminDto } from '../../company-admin/dto/create-company-admin.dto';
-import { CreateSiteAdminDto } from '../../site-admin/dto/create-site-admin.dto';
-import { CreateSecurityGuardDto } from '../../security-guard/dto/create-security-guard.dto';
-import { CompanyAdmin } from '../../company-admin/entities/company-admin.entity';
-import { SiteAdmin } from '../../site-admin/entities/site-admin.entity';
-import { SecurityGuard } from '../../security-guard/entities/security-guard.entity';
-import { Role } from '../../roles/roles';
-import { UpdateCompanyAdminDto } from '../../company-admin/dto/update-company-admin.dto';
-import { UpdateSiteAdminDto } from '../../site-admin/dto/update-site-admin.dto';
-import { UpdateSecurityGuardDto } from '../../security-guard/dto/update-security-guard.dto';
-import { isEmptyObject } from '../../core/core.utils';
-import { SuperAdmin } from '../../super-admin/entities/super-admin.entity';
-import { CreateSuperAdminDto } from '../../super-admin/dto/create-super-admin.dto';
-import { UpdateSuperAdminDto } from '../../super-admin/dto/update-super-admin.dto';
+import { AuthUser, User } from './entities/user.base.entity';
+import { CreateCompanyAdminDto } from '../company-admin/dto/create-company-admin.dto';
+import { CreateSiteAdminDto } from '../site-admin/dto/create-site-admin.dto';
+import { CreateSecurityGuardDto } from '../security-guard/dto/create-security-guard.dto';
+import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
+import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
+import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
+import { Role } from '../roles/roles';
+import { UpdateCompanyAdminDto } from '../company-admin/dto/update-company-admin.dto';
+import { UpdateSiteAdminDto } from '../site-admin/dto/update-site-admin.dto';
+import { UpdateSecurityGuardDto } from '../security-guard/dto/update-security-guard.dto';
+import { isEmptyObject } from '../core/core.utils';
+import { SuperAdmin } from '../super-admin/entities/super-admin.entity';
+import { CreateSuperAdminDto } from '../super-admin/dto/create-super-admin.dto';
+import { UpdateSuperAdminDto } from '../super-admin/dto/update-super-admin.dto';
+import { CreateSiteOwnerDto } from '../site-owner/dto/create-site-owner.dto';
+import { SiteOwner } from '../site-owner/entities/site-owner.entity';
+import { UpdateSiteOwnerDto } from '../site-owner/dto/update-site-owner.dto';
 
 @Injectable()
 export class UserService {
@@ -31,6 +38,8 @@ export class UserService {
     private siteAdminRepository: Repository<SiteAdmin>,
     @InjectRepository(SecurityGuard)
     private securityGuardRepository: Repository<SecurityGuard>,
+    @InjectRepository(SiteOwner)
+    private siteOwnerRepository: Repository<SiteOwner>,
   ) {}
   async createSuperAdmin(createSuperAdminDto: CreateSuperAdminDto) {
     return await this.createUser(createSuperAdminDto, Role.SUPER_ADMIN);
@@ -46,6 +55,10 @@ export class UserService {
 
   async createSecurityGuard(createSecurityGuardDto: CreateSecurityGuardDto) {
     return await this.createUser(createSecurityGuardDto, Role.SECURITY_GUARD);
+  }
+
+  async createSiteOwner(createSiteOwnerDto: CreateSiteOwnerDto) {
+    return await this.createUser(createSiteOwnerDto, Role.SITE_OWNER);
   }
 
   private async createUser(
@@ -66,8 +79,10 @@ export class UserService {
         return await this.siteAdminRepository.save(userEntity);
       case Role.SECURITY_GUARD:
         return await this.securityGuardRepository.save(userEntity);
+      case Role.SITE_OWNER:
+        return await this.siteOwnerRepository.save(userEntity);
       default:
-        throw new Error('Invalid Role');
+        throw new BadRequestException('Invalid Role');
     }
   }
   async findOneById(id: number) {
@@ -76,11 +91,10 @@ export class UserService {
 
   async findOneByUsername(username: string) {
     const user = await this.authUserRepository.findOneBy({
-      username,
+      [AuthUser.USERNAME_FIELD]: username,
     });
-    if (user === null) return null;
-    const whereOptions = { userId: user.id };
-    switch (user.role) {
+    const whereOptions = { userId: user?.id };
+    switch (user?.role) {
       case Role.SUPER_ADMIN:
         return await this.superAdminRepository.findOneBy(whereOptions);
       case Role.COMPANY_ADMIN:
@@ -95,6 +109,7 @@ export class UserService {
   async updateSuperAdmin(id: number, updateSuperAdminDto: UpdateSuperAdminDto) {
     return await this.updateUser(id, updateSuperAdminDto, Role.SUPER_ADMIN);
   }
+
   async updateCompanyAdmin(
     id: number,
     updateCompanyAdminDto: UpdateCompanyAdminDto,
@@ -115,6 +130,11 @@ export class UserService {
       Role.SECURITY_GUARD,
     );
   }
+
+  async updateSiteOwner(id: number, updateSiteOwnerDto: UpdateSiteOwnerDto) {
+    return await this.updateUser(id, updateSiteOwnerDto, Role.SITE_OWNER);
+  }
+
   private async updateUser(id: number, updateUserDto: any, role: Role) {
     const userEntity = this.dtoToUserEntity(updateUserDto, role);
     const { user: baseUser, ...derivedUser } = userEntity;
@@ -148,6 +168,11 @@ export class UserService {
           { userId: id },
           derivedUser,
         );
+      case Role.SITE_OWNER:
+        return await this.siteOwnerRepository.update(
+          { userId: id },
+          derivedUser,
+        );
       default:
         throw new NotFoundException('Invalid Role');
     }
@@ -168,7 +193,14 @@ export class UserService {
      * on the role. On the other hand, the 'user' has the common fields shared
      * amongst all users of any type
      */
-    const { firstName, lastName, phoneNumber, password, ...derivedUser } = dto;
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      password,
+      email,
+      ...derivedUser
+    } = dto;
     const user = {
       ...derivedUser,
       user: {
@@ -177,7 +209,7 @@ export class UserService {
         phoneNumber,
         password,
         role,
-        username: derivedUser.email,
+        email,
       },
     };
     switch (role) {
@@ -189,8 +221,10 @@ export class UserService {
         return this.siteAdminRepository.create(user) as any;
       case Role.SECURITY_GUARD:
         return this.securityGuardRepository.create(user) as any;
+      case Role.SITE_OWNER:
+        return this.siteOwnerRepository.create(user) as any;
       default:
-        throw new Error('Invalid Role');
+        throw new BadRequestException('Invalid Role');
     }
   }
 }

@@ -1,4 +1,9 @@
-import { IsISO8601, IsMilitaryTime, IsString } from 'class-validator';
+import {
+  IsISO8601,
+  IsMilitaryTime,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import {
   LoadEntitiesIfExist,
   LoadEntityIfExists,
@@ -16,6 +21,18 @@ export class CreatePatrolDto {
   @IsMilitaryTime()
   startTime: string;
 
+  // TODO: Remove this field when the app has been updated. It's only there to support individual patrols
+  @ApiProperty()
+  @LoadEntityIfExists<SecurityGuard>(
+    SecurityGuard,
+    'securityGuard',
+    'uniqueId',
+    { user: true },
+  )
+  @IsOptional()
+  @IsString()
+  securityGuardUniqueId: string;
+
   @ApiProperty()
   @LoadEntitiesIfExist<SecurityGuard>(
     SecurityGuard,
@@ -26,6 +43,7 @@ export class CreatePatrolDto {
     },
     true,
   )
+  @IsOptional()
   @IsString({ each: true })
   securityGuardsUniqueIds: string[];
 
