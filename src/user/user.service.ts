@@ -101,6 +101,8 @@ export class UserService {
         return await this.companyAdminRepository.findOneBy(whereOptions);
       case Role.SITE_ADMIN:
         return await this.siteAdminRepository.findOneBy(whereOptions);
+      case Role.SITE_OWNER:
+        return await this.siteOwnerRepository.findOneBy(whereOptions);
       default:
         return null;
     }

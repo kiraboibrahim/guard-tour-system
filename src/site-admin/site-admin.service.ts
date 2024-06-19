@@ -34,7 +34,7 @@ export class SiteAdminService extends BaseService {
       .can(this.user)
       .filter(Resource.SITE_ADMIN)
       .with(query);
-    this.filterOnUserCompany(query);
+    this.applyFilters(query);
     return await paginate(
       query,
       this.siteAdminRepository,

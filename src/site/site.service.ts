@@ -44,7 +44,7 @@ export class SiteService extends BaseService {
       .can(this.user)
       .filter(Resource.SITE)
       .with(query);
-    this.filterOnUserCompany(query);
+    this.applyFilters(query);
     return await paginate(query, this.siteRepository, SITE_PAGINATION_CONFIG);
   }
 

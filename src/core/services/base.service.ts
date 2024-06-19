@@ -19,13 +19,29 @@ export class BaseService {
     return this._user;
   }
 
-  filterOnUserCompany(query: PaginateQuery) {
+  applyFilters(query: PaginateQuery) {
+    this.applyUserCompanyFilter(query);
+    this.applySiteOwnerFilter(query);
+  }
+
+  private applyUserCompanyFilter(query: PaginateQuery) {
     if (!this.user.isSuperAdmin()) {
       const { filter } = query;
       // Mutate the original query instead or creating or returning a new one
       query.filter = {
         ...filter,
         companyId: [`${this.user.companyId}`],
+      };
+    }
+  }
+
+  private applySiteOwnerFilter(query: PaginateQuery) {
+    if (this.user.isSiteOwner()) {
+      const { filter } = query;
+      // Mutate the original query instead or creating or returning a new one
+      query.filter = {
+        ...filter,
+        ownerId: [`${this.user.id}`],
       };
     }
   }

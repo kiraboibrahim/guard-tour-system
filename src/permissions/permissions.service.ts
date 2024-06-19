@@ -535,9 +535,8 @@ export class PermissionsService {
     tagId: number | undefined,
     updateDto: UpdateTagUIDDto | TagsActionDto,
   ) {
-    /* TagsActionDto doesn't use a tagId(DB Primary Key),
-    the tag Ids are embedded in the updateDto, on the other hand,
-    UpdateTagUIDDto requires a tagId. */
+    /* TagsActionDto doesn't use a tagId(DB Primary Key),the tag Ids are embedded
+    in the updateDto, on the other hand, UpdateTagUIDDto requires a tagId. */
     const isUpdatingTagUID = updateDto instanceof UpdateTagUIDDto && !!tagId;
 
     const isSuperAdminAllowed = this.user.isSuperAdmin();
@@ -707,7 +706,10 @@ export class PermissionsService {
           (await this.canUserFilterOnSite(filter))
         );
       case Resource.SITE_OWNER:
-        return await this.canUserFilterOnCompany(filter);
+        return (
+          (await this.canUserFilterOnCompany(filter)) &&
+          (await this.canUserFilterOnSiteOwner(filter))
+        );
       case Resource.SECURITY_GUARD:
         return await this.canUserFilterOnCompany(filter);
       case Resource.TAG:
@@ -730,8 +732,8 @@ export class PermissionsService {
 
     const filterHasMultipleCompanies = companyIds.length > 1;
     if (filterHasMultipleCompanies) {
-      /* Only super admins can filter on more than one company while the rest of the
-      users can only filter on a single company and that's the company to which they belong */
+      /* Only super admins can applyFilters on more than one company while the rest of the
+      users can only applyFilters on a single company and that's the company to which they belong */
       canFilterOnCompanies = this.user.isSuperAdmin();
     } else {
       canFilterOnCompanies = await this.verifyResourceItemOwnership(
@@ -741,7 +743,7 @@ export class PermissionsService {
     }
     if (!canFilterOnCompanies) {
       throw new ForbiddenException(
-        "You aren't allowed to filter on the given company",
+        "You aren't allowed to applyFilters on the given company",
       );
     }
     return canFilterOnCompanies;
@@ -754,7 +756,7 @@ export class PermissionsService {
     if (filterHasNoSites) return true;
 
     // Filtering on many sites is allowed for every user for as long as the sites belong to the user's
-    // company except for super admins who don't have any restrictions on the sites they can filter on
+    // company except for super admins who don't have any restrictions on the sites they can applyFilters on
     const filterHasSingleSite = siteIds.length === 1;
     const { companyId: userCompanyId } = this.user;
     if (filterHasSingleSite) {
@@ -770,11 +772,33 @@ export class PermissionsService {
     }
     if (!canFilterOnSites) {
       throw new ForbiddenException(
-        "You aren't allowed to filter on the given site(s)",
+        "You aren't allowed to applyFilters on the given site(s)",
       );
     }
 
     return canFilterOnSites;
+  }
+  private async canUserFilterOnSiteOwner(filter: any) {
+    let canFilterOnSiteOwner = true;
+    const ownerIds = this.extractIdsFromFilter(filter, Resource.SITE);
+    const filterHasNoOwners = ownerIds.length === 0;
+    if (filterHasNoOwners) return true;
+
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    const isOthersAllowed =
+      !this.user.isSuperAdmin() &&
+      (await this.verifyResourceItemOwnership(
+        Resource.SITE_OWNER,
+        ownerIds[0],
+      ));
+    canFilterOnSiteOwner = isSuperAdminAllowed || isOthersAllowed;
+    if (!canFilterOnSiteOwner) {
+      throw new ForbiddenException(
+        "You aren't allowed to applyFilters on the given owner(s)",
+      );
+    }
+
+    return canFilterOnSiteOwner;
   }
 
   private extractIdsFromFilter(filter: any, resource: Resource) {
@@ -788,6 +812,9 @@ export class PermissionsService {
         break;
       case Resource.SITE:
         filterValue = filter.siteId;
+        break;
+      case Resource.SITE_OWNER:
+        filterValue = filter.ownerId;
         break;
       default:
         return [];
@@ -813,7 +840,7 @@ export class PermissionsService {
   private handleUndefinedResource() {
     if (!this.resource) {
       const undefinedResourceErrMsg =
-        'Invoke filter() method before invoking with()';
+        'Invoke applyFilters() method before invoking with()';
       throw new Error(undefinedResourceErrMsg);
     }
   }
@@ -821,7 +848,7 @@ export class PermissionsService {
   private handleUndefinedUser() {
     if (!this.user) {
       const undefinedUserErrMsg =
-        'Invoke can() method before invoking create() or read() or update() or delete() or filter() methods';
+        'Invoke can() method before invoking create() or read() or update() or delete() or applyFilters() methods';
       throw new Error(undefinedUserErrMsg);
     }
   }

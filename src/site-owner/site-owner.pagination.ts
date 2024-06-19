@@ -9,7 +9,9 @@ import { SiteOwner } from './entities/site-owner.entity';
 export const SITE_OWNER_PAGINATION_CONFIG: PaginateConfig<SiteOwner> = {
   sortableColumns: ['userId', 'user.(firstName)', 'user.(lastName)'],
   defaultSortBy: [['userId', 'ASC']],
-  filterableColumns: { companyId: [FilterOperator.EQ] },
+  filterableColumns: {
+    companyId: [FilterOperator.EQ],
+  },
   searchableColumns: ['user.(firstName)', 'user.(lastName)'],
   maxLimit: 0,
   defaultLimit: MAX_ITEMS_PER_PAGE,

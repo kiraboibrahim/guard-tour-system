@@ -67,7 +67,7 @@ export class SecurityGuardService extends BaseService {
       .can(this.user)
       .filter(Resource.SECURITY_GUARD)
       .with(query);
-    this.filterOnUserCompany(query);
+    this.applyFilters(query);
     return await paginate(
       query,
       this.securityGuardRepository,

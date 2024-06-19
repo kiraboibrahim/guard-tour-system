@@ -33,7 +33,7 @@ export class SiteOwnerService extends BaseService {
       .can(this.user)
       .filter(Resource.SITE_OWNER)
       .with(query);
-    this.filterOnUserCompany(query);
+    this.applyFilters(query);
     return await paginate(
       query,
       this.siteOwnerRepository,
