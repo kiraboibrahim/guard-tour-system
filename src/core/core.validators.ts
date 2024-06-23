@@ -69,13 +69,13 @@ export class _LoadEntityIfExists implements ValidatorConstraintInterface {
       property = validationArguments.property,
       findByColumnName,
       relations,
-      allow_null,
+      allowNull,
     ] = validationArguments.constraints;
     const whereOptions = { [findByColumnName]: value };
     const entity = await this.entityManager
       .getRepository(entityClass)
       .findOne({ where: whereOptions, relations });
-    const entityExists = !!entity || allow_null;
+    const entityExists = !!entity || allowNull;
     if (entityExists) {
       const { object } = validationArguments;
       Object.defineProperty(object, property, {
@@ -101,14 +101,14 @@ export class _LoadEntitiesIfExist implements ValidatorConstraintInterface {
       entitiesHolderProperty = validationArguments.property,
       findByColumnName,
       relations,
-      allow_empty,
+      allowNull,
     ] = validationArguments.constraints;
     if (!isArray(value)) return false;
     const whereOptions = { [findByColumnName]: In(value) };
     const entities = await this.entityManager
       .getRepository(entityClass)
       .find({ where: whereOptions, relations });
-    const entitiesExist = entities.length === value.length || allow_empty;
+    const entitiesExist = entities.length === value.length || allowNull;
     if (entitiesExist) {
       const { object } = validationArguments;
       Object.defineProperty(object, entitiesHolderProperty, {
@@ -175,14 +175,14 @@ export const LoadEntityIfExists = function <T>(
   accessEntityByProperty: string,
   findByColumnName: EntityColumnName<T> | 'id' = 'id',
   relations?: FindOptionsRelations<T>,
-  allow_null: boolean = false,
+  allowNull: boolean = false,
 ) {
   return Validate(_LoadEntityIfExists, [
     entityClass,
     accessEntityByProperty,
     findByColumnName,
     relations,
-    allow_null,
+    allowNull,
   ]);
 };
 
@@ -191,14 +191,14 @@ export const LoadEntitiesIfExist = function <T>(
   accessEntityByProperty: string,
   findByColumnName: EntityColumnName<T> | 'id' = 'id',
   relations?: FindOptionsRelations<T>,
-  allow_empty = false,
+  allowNull = false,
 ) {
   return Validate(_LoadEntitiesIfExist, [
     entityClass,
     accessEntityByProperty,
     findByColumnName,
     relations,
-    allow_empty,
+    allowNull,
   ]);
 };
 

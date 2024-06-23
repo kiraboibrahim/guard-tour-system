@@ -28,6 +28,7 @@ export class CreatePatrolDto {
     'securityGuard',
     'uniqueId',
     { user: true },
+    true,
   )
   @IsOptional()
   @IsString()
