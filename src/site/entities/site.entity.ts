@@ -60,7 +60,7 @@ export class Site {
   @Column({ nullable: true })
   ownerId: number;
 
-  @ManyToOne(() => SiteOwner, { nullable: true })
+  @ManyToOne(() => SiteOwner, { nullable: true, onDelete: 'SET NULL' })
   owner: SiteOwner;
 
   @OneToMany(() => Tag, (tag) => tag.site)
