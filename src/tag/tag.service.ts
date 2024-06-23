@@ -10,7 +10,7 @@ import { BaseService } from '../core/services/base.service';
 import { Company } from '../company/entities/company.entity';
 import { Site } from '../site/entities/site.entity';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 import { INSTALL_TAGS_ACTION, UNINSTALL_TAGS_ACTION } from './tag.constants';
 import { TagsActionDto } from './dto/tags-action.dto';
 import { MAX_TAGS_PER_SITE } from '../site/site.constants';

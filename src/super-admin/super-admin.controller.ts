@@ -19,7 +19,7 @@ import {
   CanUpdate,
   CanDelete,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 import { Role } from '../roles/roles';
 
 @ApiTags('Super Admins')

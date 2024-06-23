@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { REQUIRED_PERMISSIONS_KEY } from './permissions.decorators';
 import { PermissionsService } from './permissions.service';
-import { Action, Resource } from './permissions';
+import { Action, Resource } from './permissions.constants';
 import { User } from '../auth/auth.types';
 import { Permission, ResourcesParams } from './permissions.types';
 import { IsPublicMixin } from '../auth/auth.mixins';

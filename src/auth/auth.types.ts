@@ -38,6 +38,10 @@ export class BaseUser {
     return this.role === Role.SITE_OWNER;
   }
 
+  isMySelf(userId: number) {
+    return this.id === userId;
+  }
+
   belongsToCompany(companyId: number) {
     return !!this.companyId && this.companyId === companyId;
   }
@@ -47,6 +51,10 @@ export class SuperAdmin extends BaseUser {}
 export class CompanyAdmin extends BaseUser {}
 export class SiteAdmin extends BaseUser {
   managedSiteId: number;
+
+  isSiteAdminSite(siteId: number) {
+    return this.managedSiteId === siteId;
+  }
 }
 export class SiteOwner extends BaseUser {}
 export type User = SuperAdmin | CompanyAdmin | SiteAdmin | SiteOwner;

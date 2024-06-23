@@ -4,7 +4,7 @@ import { Role } from '../roles/roles';
 import { StatsService } from './stats.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CanRead } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 
 @ApiTags('stats')
 @Auth(Role.SUPER_ADMIN)

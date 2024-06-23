@@ -25,7 +25,7 @@ export class BaseService {
   }
 
   private applyUserCompanyFilter(query: PaginateQuery) {
-    if (!this.user.isSuperAdmin()) {
+    if (!this.user.isSuperAdmin() || !this.user.isSiteOwner()) {
       const { filter } = query;
       // Mutate the original query instead or creating or returning a new one
       query.filter = {

@@ -1,7 +1,7 @@
 import { SetMetadata } from '@nestjs/common';
-import { Action } from './permissions';
+import { Action } from './permissions.constants';
 import { ResourcesParams } from './permissions.types';
-import { Resource } from './permissions';
+import { Resource } from './permissions.constants';
 
 export const REQUIRED_PERMISSIONS_KEY = 'REQUIRED_PERMISSIONS';
 

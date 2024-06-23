@@ -22,7 +22,7 @@ import {
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 import { Role } from '../roles/roles';
 
 @ApiTags('Site Admins')

@@ -24,11 +24,11 @@ import {
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 
-@Controller('site-owners')
+@Controller('users/site-owners')
 @ApiTags('Site Owner')
-@Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
+@Auth(Role.SUPER_ADMIN)
 export class SiteOwnerController {
   constructor(private readonly siteOwnerService: SiteOwnerService) {}
 

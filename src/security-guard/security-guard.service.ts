@@ -11,7 +11,7 @@ import { Patrol } from '../patrol/entities/patrol.entity';
 import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol.pagination';
 import { BaseService } from '../core/services/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 
 @Injectable()
 export class SecurityGuardService extends BaseService {

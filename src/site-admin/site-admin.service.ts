@@ -9,7 +9,7 @@ import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SITE_ADMIN_PAGINATION_CONFIG } from './site-admin.pagination';
 import { BaseService } from '../core/services/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 
 @Injectable()
 export class SiteAdminService extends BaseService {

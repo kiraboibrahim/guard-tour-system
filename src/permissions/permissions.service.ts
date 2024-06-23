@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Resource } from './permissions';
+import { Resource } from './permissions.constants';
 import { User } from '../auth/auth.types';
 import { Role } from '../roles/roles';
 import { CreateSiteAdminDto } from '../site-admin/dto/create-site-admin.dto';
@@ -113,7 +113,7 @@ export class PermissionsService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserCreateSuperAdmin(CreateSuperAdminDto: CreateSuperAdminDto) {
     const host = this.request?.get('host');
-    return this.user.isSuperAdmin() && LOCALHOST_REGEX.test(host);
+    return LOCALHOST_REGEX.test(host);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -140,13 +140,9 @@ export class PermissionsService {
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserCreateSiteOwner(createSiteOwnerDto: CreateSiteOwnerDto) {
-    const { companyId: siteOwnerCompanyId } = createSiteOwnerDto;
-    const isSuperAdminAllowed = this.user.isSuperAdmin();
-    const isCompanyAdminAllowed =
-      this.user.isCompanyAdmin() &&
-      this.user.belongsToCompany(siteOwnerCompanyId);
-    return isSuperAdminAllowed || isCompanyAdminAllowed;
+    return this.user.isSuperAdmin();
   }
 
   private canUserCreateSecurityGuard(
@@ -234,7 +230,7 @@ export class PermissionsService {
   }
 
   private async canUserReadSuperAdmin(superAdminId?: number) {
-    return this.user.id === superAdminId; // super admin reading his own
+    return !!superAdminId && this.user.isMySelf(superAdminId);
   }
 
   private async canUserReadCompany(companyId?: number) {
@@ -275,14 +271,11 @@ export class PermissionsService {
 
   private async canUserReadSiteOwner(siteOwnerId?: number) {
     const isSuperAdminAllowed = this.user.isSuperAdmin();
-    let isCompanyAdminAllowed = this.user.isCompanyAdmin();
-    if (isCompanyAdminAllowed && siteOwnerId) {
-      isCompanyAdminAllowed &&= await this.verifyResourceItemOwnership(
-        Resource.SITE_OWNER,
-        siteOwnerId,
-      );
-    }
-    return isSuperAdminAllowed || isCompanyAdminAllowed;
+    const isSiteOwnerAllowed =
+      !!siteOwnerId &&
+      this.user.isSiteOwner() &&
+      this.user.isMySelf(siteOwnerId);
+    return isSuperAdminAllowed || isSiteOwnerAllowed;
   }
 
   private async canUserReadSecurityGuard(securityGuardId?: number) {
@@ -432,9 +425,7 @@ export class PermissionsService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     updateSuperAdminDto: UpdateSuperAdminDto,
   ) {
-    const { id: userId } = this.user;
-    const isMySelf = userId === superAdminId;
-    return this.user.isSuperAdmin() && isMySelf;
+    return this.user.isSuperAdmin() && this.user.isMySelf(superAdminId);
   }
 
   private canUserUpdateCompany(
@@ -457,7 +448,7 @@ export class PermissionsService {
     const isUpdatingEmail = email !== undefined;
     const isCompanyAdminAllowed =
       this.user.isCompanyAdmin() &&
-      this.user.id === companyAdminId &&
+      this.user.isMySelf(companyAdminId) &&
       !isUpdatingEmail;
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
@@ -488,18 +479,12 @@ export class PermissionsService {
   }
 
   private async canUserUpdateSiteOwner(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     siteOwnerId: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     updateSiteOwnerDto: UpdateSiteOwnerDto,
   ) {
-    const isSuperAdminAllowed = this.user.isSuperAdmin();
-    const isCompanyAdminAllowed =
-      this.user.isCompanyAdmin() &&
-      (await this.verifyResourceItemOwnership(
-        Resource.SITE_OWNER,
-        siteOwnerId,
-      ));
-    return isSuperAdminAllowed || isCompanyAdminAllowed;
+    return this.user.isSuperAdmin();
   }
 
   private async canUserUpdateSecurityGuard(
@@ -638,15 +623,9 @@ export class PermissionsService {
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async canUserDeleteSiteOwner(siteOwnerId: number) {
-    const isSuperAdminAllowed = this.user.isSuperAdmin();
-    const isCompanyAdminAllowed =
-      this.user.isCompanyAdmin() &&
-      (await this.verifyResourceItemOwnership(
-        Resource.SITE_OWNER,
-        siteOwnerId,
-      ));
-    return isSuperAdminAllowed || isCompanyAdminAllowed;
+    return this.user.isSuperAdmin();
   }
 
   private async canUserDeleteSecurityGuard(securityGuardId: number) {
@@ -923,16 +902,10 @@ export class PermissionsService {
   private async checkSiteOwnerOwnerShip(siteOwnerId: number) {
     if (this.verifyGlobalOwnership(Resource.SITE_OWNER)) return true;
 
-    const { role, id: userId, companyId: userCompanyId } = this.user;
+    const { role } = this.user;
     switch (role) {
-      case Role.COMPANY_ADMIN:
-        return await this.userBelongsToCompany(
-          siteOwnerId,
-          userCompanyId,
-          Role.SITE_OWNER,
-        );
       case Role.SITE_OWNER:
-        return userId === siteOwnerId;
+        return this.user.isMySelf(siteOwnerId);
       default:
         return false;
     }

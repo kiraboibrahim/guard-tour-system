@@ -21,7 +21,7 @@ import {
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 import { AlsoAllow } from '../roles/roles.decorators';
 import { User } from '../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';

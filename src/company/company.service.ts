@@ -8,7 +8,7 @@ import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { COMPANY_PAGINATION_CONFIG } from './company.pagination';
 import { BaseService } from '../core/services/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
 import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
 import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';

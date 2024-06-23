@@ -7,7 +7,7 @@ import { SuperAdmin } from './entities/super-admin.entity';
 import { UserService } from '../user/user.service';
 import { BaseService } from '../core/services/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 
 @Injectable()
 export class SuperAdminService extends BaseService {

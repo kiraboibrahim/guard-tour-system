@@ -1,3 +1,3 @@
-import { CreateAuthCompanyUserDto } from '../../user/dto/create-user.base.dto';
+import { CreateAuthUserDto } from '../../user/dto/create-user.base.dto';
 
-export class CreateSiteOwnerDto extends CreateAuthCompanyUserDto {}
+export class CreateSiteOwnerDto extends CreateAuthUserDto {}

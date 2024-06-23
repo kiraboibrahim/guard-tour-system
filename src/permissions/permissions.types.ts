@@ -1,5 +1,5 @@
 import { CreateSuperAdminDto } from '../super-admin/dto/create-super-admin.dto';
-import { Resource, Action } from './permissions';
+import { Resource, Action } from './permissions.constants';
 import { CreateCompanyAdminDto } from '../company-admin/dto/create-company-admin.dto';
 import { CreateSiteAdminDto } from '../site-admin/dto/create-site-admin.dto';
 import { CreateSecurityGuardDto } from '../security-guard/dto/create-security-guard.dto';

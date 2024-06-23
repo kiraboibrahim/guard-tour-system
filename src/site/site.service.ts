@@ -9,7 +9,7 @@ import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol.pagination';
 import { SITE_PAGINATION_CONFIG } from './pagination/site.pagination';
 import { BaseService } from '../core/services/base.service';
-import { Resource } from '../permissions/permissions';
+import { Resource } from '../permissions/permissions.constants';
 import { PermissionsService } from '../permissions/permissions.service';
 import { DelayedPatrolNotification } from './entities/delayed-patrol-notification.entity';
 import { DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG } from './pagination/delayed-patrol-notification.pagination';
