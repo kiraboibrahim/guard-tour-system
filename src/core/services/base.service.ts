@@ -13,7 +13,7 @@ export class BaseService {
   get user() {
     if (!this._user) {
       const serviceClassName = this.constructor.name;
-      const errorMsg = `The 'user' is undefined(not authenticated). If the route isn't meant to be public, then you have to invoke ${serviceClassName}.setUser(user) in the controller in addition to changing the route from public to private`;
+      const errorMsg = `The 'user' is undefined(not authenticated). If the route is supposed to be private, then you have to invoke ${serviceClassName}.setUser(user) in the controller in addition to changing the route from public to private`;
       this.logger.error(errorMsg);
     }
     return this._user;
@@ -42,7 +42,7 @@ export class BaseService {
       // Mutate the original query instead or creating or returning a new one
       query.filter = {
         ...filter,
-        ownerId: [`${this.user.id}`],
+        ownerUserId: [`${this.user.id}`],
       };
     }
   }

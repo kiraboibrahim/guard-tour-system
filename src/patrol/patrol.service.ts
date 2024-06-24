@@ -33,7 +33,6 @@ export class PatrolService extends BaseService {
       securityGuard,
       site,
     }: { securityGuard: SecurityGuard; site: Site } = createPatrolDto as any;
-    const securityGuardId = securityGuard?.userId;
     if (!site.hasIndividualPatrolType() || !securityGuardUniqueId) {
       throw new BadRequestException(
         "Group patrol  isn't supported for this site",
@@ -41,10 +40,10 @@ export class PatrolService extends BaseService {
     }
     const patrol = this.patrolRepository.create({
       ...createPatrolDto,
-      securityGuardId,
       securityGuardUniqueId,
       site,
       siteId: site.id,
+      securityGuard,
     });
     return this.patrolRepository.save(patrol);
   }
@@ -65,13 +64,12 @@ export class PatrolService extends BaseService {
       const securityGuard = securityGuards.find(
         (securityGuard) => securityGuard.uniqueId === securityGuardUniqueId,
       );
-      const securityGuardId = securityGuard?.userId;
       return this.patrolRepository.create({
         ...createPatrolDto,
-        securityGuardId,
         securityGuardUniqueId,
         site,
         siteId: site.id,
+        securityGuard,
       });
     });
 

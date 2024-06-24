@@ -12,7 +12,7 @@ export const SITE_PAGINATION_CONFIG: PaginateConfig<Site> = {
   searchableColumns: ['name', 'tagId'],
   filterableColumns: {
     companyId: [FilterOperator.EQ],
-    ownerId: [FilterOperator.EQ, FilterOperator.NULL],
+    ownerUserId: [FilterOperator.EQ, FilterOperator.NULL],
     notificationCycle: [FilterOperator.EQ],
     requiredPatrolsPerGuard: [FilterOperator.NULL],
   },

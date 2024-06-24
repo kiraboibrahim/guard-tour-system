@@ -78,7 +78,7 @@ export class TagService extends BaseService {
     const toBeInstalledTags = tags
       .filter((tag) => tag.siteId === null)
       .map((tag) => {
-        tag.siteId = site.id;
+        tag.site = site;
         return tag;
       });
     const alreadyInstalled = toBeInstalledTags.length !== tagIds.length;
@@ -91,8 +91,7 @@ export class TagService extends BaseService {
   }
 
   private validateSite(site: Site) {
-    const maxSiteTagsReached = site.tags.length === MAX_TAGS_PER_SITE;
-    if (maxSiteTagsReached) {
+    if (site.hasReachedMaxTagLimit()) {
       throw new BadRequestException(
         `The site has a maximum number of tags: ${MAX_TAGS_PER_SITE}`,
       );
@@ -106,7 +105,7 @@ export class TagService extends BaseService {
 
     const { tags }: { tags: Tag[] } = uninstallTagsDto as any;
     const toBeUninstalledTags = tags.map((tag) => {
-      tag.siteId = null;
+      tag.site = null;
       return tag;
     });
     return await this.tagRepository.save(toBeUninstalledTags);

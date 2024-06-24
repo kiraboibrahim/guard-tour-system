@@ -10,7 +10,7 @@ import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../site-admin/entities/site-admin.entity';
 import { Tag } from '../../tag/entities/tag.entity';
 import { Exclude } from 'class-transformer';
-import { PATROL_TYPE } from '../site.constants';
+import { MAX_TAGS_PER_SITE, PATROL_TYPE } from '../site.constants';
 import { SiteOwner } from '../../site-owner/entities/site-owner.entity';
 
 @Entity('sites')
@@ -48,7 +48,7 @@ export class Site {
   @Column({ nullable: true, type: 'decimal' })
   notificationCycle: number;
 
-  @ManyToOne(() => Company, { eager: true })
+  @ManyToOne(() => Company, { eager: true, onDelete: 'CASCADE' })
   company: Company;
 
   @OneToOne(() => SiteAdmin, (siteAdmin) => siteAdmin.site, {
@@ -58,7 +58,7 @@ export class Site {
   admin: SiteAdmin;
 
   @Column({ nullable: true })
-  ownerId: number;
+  ownerUserId: number;
 
   @ManyToOne(() => SiteOwner, { nullable: true, onDelete: 'SET NULL' })
   owner: SiteOwner;
@@ -75,5 +75,9 @@ export class Site {
 
   hasIndividualPatrolType() {
     return this.patrolType === PATROL_TYPE.INDIVIDUAL;
+  }
+
+  hasReachedMaxTagLimit() {
+    return this?.tags.length >= MAX_TAGS_PER_SITE;
   }
 }

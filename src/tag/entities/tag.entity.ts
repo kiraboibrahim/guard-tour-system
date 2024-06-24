@@ -20,13 +20,13 @@ export class Tag {
   company: Company;
 
   @Column({ nullable: true })
-  siteId: number | null;
+  siteId: number;
 
   @Exclude()
-  @ManyToOne(() => Site, { onDelete: 'CASCADE' })
-  site: Site;
+  @ManyToOne(() => Site, { onDelete: 'SET NULL' })
+  site: Site | null;
 
   belongsToCompany(companyId: number) {
-    return (this.companyId = companyId);
+    return this.companyId === companyId;
   }
 }

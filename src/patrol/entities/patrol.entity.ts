@@ -31,7 +31,7 @@ export class Patrol {
 
   @Exclude()
   @Column({ nullable: true })
-  securityGuardId: number;
+  securityGuardUserId: number;
 
   @ManyToOne(() => SecurityGuard, (securityGuard) => securityGuard.patrols, {
     onDelete: 'CASCADE',

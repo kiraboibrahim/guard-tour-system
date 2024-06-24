@@ -45,6 +45,7 @@ export class PermissionsService {
   private siteOwnerRepository: Repository<SiteOwner>;
   private securityGuardRepository: Repository<SecurityGuard>;
   private siteRepository: Repository<Site>;
+  private tagRepository: Repository<Tag>;
 
   constructor(@InjectEntityManager() private entityManager: EntityManager) {
     this.companyAdminRepository =
@@ -54,6 +55,7 @@ export class PermissionsService {
     this.securityGuardRepository =
       this.entityManager.getRepository(SecurityGuard);
     this.siteRepository = this.entityManager.getRepository(Site);
+    this.tagRepository = this.entityManager.getRepository(Tag);
   }
 
   setRequest(request: any) {
@@ -509,9 +511,10 @@ export class PermissionsService {
     const { notificationsEnabled } = updateSiteDto;
     const isSuperAdminAllowed = this.user.isSuperAdmin();
     // Company admins aren't allowed to toggle site notifications
+    const isTogglingNotifications = notificationsEnabled !== undefined;
     const isCompanyAdminAllowed =
       this.user.isCompanyAdmin() &&
-      notificationsEnabled === undefined &&
+      !isTogglingNotifications &&
       (await this.verifyResourceItemOwnership(Resource.SITE, siteId));
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
@@ -523,18 +526,19 @@ export class PermissionsService {
     /* TagsActionDto doesn't use a tagId(DB Primary Key),the tag Ids are embedded
     in the updateDto, on the other hand, UpdateTagUIDDto requires a tagId. */
     const isUpdatingTagUID = updateDto instanceof UpdateTagUIDDto && !!tagId;
+    const isInstallingOrUninstallingTags = updateDto instanceof TagsActionDto;
 
     const isSuperAdminAllowed = this.user.isSuperAdmin();
     let isCompanyAdminAllowed = this.user.isCompanyAdmin();
 
     const { companyId: userCompanyId } = this.user;
-    if (isCompanyAdminAllowed && isUpdatingTagUID) {
+    if (isUpdatingTagUID) {
       const isTagOwner = await this.verifyResourceItemOwnership(
         Resource.TAG,
         tagId,
       );
       isCompanyAdminAllowed &&= isTagOwner;
-    } else if (isCompanyAdminAllowed && updateDto instanceof TagsActionDto) {
+    } else if (isInstallingOrUninstallingTags) {
       const { tags }: { tags: Tag[] } = updateDto as any;
       const isTagsOwner = tags.every((tag) =>
         tag.belongsToCompany(userCompanyId),
@@ -547,6 +551,8 @@ export class PermissionsService {
         const siteBelongsToUserCompany = site.belongsToCompany(userCompanyId);
         isCompanyAdminAllowed &&= siteBelongsToUserCompany;
       }
+    } else {
+      return false;
     }
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
@@ -793,7 +799,7 @@ export class PermissionsService {
         filterValue = filter.siteId;
         break;
       case Resource.SITE_OWNER:
-        filterValue = filter.ownerId;
+        filterValue = filter.ownerUserId;
         break;
       default:
         return [];
@@ -858,6 +864,8 @@ export class PermissionsService {
         return this.checkSecurityGuardOwnership(resourceId);
       case Resource.SITE:
         return await this.checkSiteOwnership(resourceId);
+      case Resource.TAG:
+        return await this.checkTagOwnership(resourceId);
       default:
         return false;
     }
@@ -949,6 +957,17 @@ export class PermissionsService {
     }
   }
 
+  private async checkTagOwnership(tagId: number) {
+    if (this.verifyGlobalOwnership(Resource.TAG)) return true;
+    const { companyId: userCompanyId, role } = this.user;
+    switch (role) {
+      case Role.COMPANY_ADMIN:
+        return await this.tagBelongsToCompany(tagId, userCompanyId);
+      default:
+        return false;
+    }
+  }
+
   private verifyGlobalOwnership(resource: Resource) {
     // Super Admins can read any resource except for other fellow super admins
     if (this.user.isSuperAdmin() && resource !== Resource.SUPER_ADMIN)
@@ -956,8 +975,7 @@ export class PermissionsService {
   }
 
   async siteBelongsToCompany(siteId: number, companyId: number) {
-    const site = await this.siteRepository.findOneBy({ id: siteId, companyId });
-    return !!site;
+    return this.sitesBelongToCompany([siteId], companyId);
   }
 
   async sitesBelongToCompany(siteIds: number[], companyId: number) {
@@ -965,6 +983,10 @@ export class PermissionsService {
       where: { id: In(siteIds), companyId },
     });
     return sites.length === siteIds.length;
+  }
+
+  async tagBelongsToCompany(tagId: number, companyId: number) {
+    return !!(await this.tagRepository.findOneBy({ id: tagId, companyId }));
   }
 
   // The user's role helps in determining the table in which to find the user(s)
@@ -989,7 +1011,7 @@ export class PermissionsService {
   private async isSiteOwnedByUser(siteId: number, userId: number) {
     return !!(await this.siteRepository.findOneBy({
       id: siteId,
-      ownerId: userId,
+      ownerUserId: userId,
     }));
   }
 }

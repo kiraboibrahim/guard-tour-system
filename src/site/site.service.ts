@@ -61,9 +61,11 @@ export class SiteService extends BaseService {
       .update(Resource.SITE, id, updateSiteDto, { throwError: true });
 
     const { siteOwner }: { siteOwner: SiteOwner } = updateSiteDto as any;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { ownerId, ...newSiteData } = updateSiteDto;
     return await this.siteRepository.update(
       { id },
-      { ...updateSiteDto, owner: siteOwner },
+      { ...newSiteData, owner: siteOwner },
     );
   }
 
@@ -79,6 +81,7 @@ export class SiteService extends BaseService {
       PATROL_PAGINATION_CONFIG,
     );
   }
+
   async findSiteNotifications(id: number, query: PaginateQuery) {
     query.filter = { ...query.filter, siteId: [`${id}`] };
     await this.permissionsService

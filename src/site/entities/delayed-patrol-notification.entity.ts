@@ -39,7 +39,7 @@ export class DelayedPatrolNotification {
   @Column()
   siteId: number;
 
-  @ManyToOne(() => Site, { eager: true })
+  @ManyToOne(() => Site, { eager: true, onDelete: 'CASCADE' })
   site: Site;
 
   isNextNotificationOverDue() {

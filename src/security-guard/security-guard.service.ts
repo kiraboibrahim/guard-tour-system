@@ -56,7 +56,6 @@ export class SecurityGuardService extends BaseService {
     });
     securityGuardPatrols = securityGuardPatrols.map((patrol) => {
       patrol.securityGuard = securityGuard;
-      patrol.securityGuardId = securityGuard.userId;
       return patrol;
     });
     return this.patrolRepository.save(securityGuardPatrols);
@@ -98,23 +97,14 @@ export class SecurityGuardService extends BaseService {
   }
 
   async findSecurityGuardPatrols(id: string, query: PaginateQuery) {
-    const isUserAuthenticated = !!this.user;
-    if (isUserAuthenticated) {
-      await this.permissionsService
-        .can(this.user)
-        .filter(Resource.PATROL)
-        .with(query);
-    } else {
-      query.filter = {}; // turn off filtering for unauthenticated users
-    }
     const patrolQueryBuilder = this.patrolRepository
       .createQueryBuilder('patrol')
       .leftJoin('patrol.site', 'site')
       .leftJoin('patrol.securityGuard', 'securityGuard')
       .where(
         new Brackets((qb) => {
-          qb.where('securityGuard.userId = :securityGuardId', {
-            securityGuardId: +id,
+          qb.where('securityGuard.userId = :securityGuardUserId', {
+            securityGuardUserId: +id,
           }).orWhere('patrol.securityGuardUniqueId = :uniqueId', {
             uniqueId: id,
           });

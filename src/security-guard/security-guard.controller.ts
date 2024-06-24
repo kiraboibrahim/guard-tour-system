@@ -72,20 +72,11 @@ export class SecurityGuardController {
   }
 
   @Get(':id/patrols')
-  @CanRead(Resource.PATROL, [Resource.SECURITY_GUARD], {
-    [Resource.SECURITY_GUARD]: 'id',
-  })
-  /* This route is public. However, it still verifies permissions when authentication
-  is provided by the user in order to verify if the user is authorized to access
-  privileged actions like filtering on site
-   */
   @IsPublic()
   async findSecurityGuardPatrols(
     @Param('id') id: string,
     @Paginate() query: PaginateQuery,
-    @User() user: AuthenticatedUser,
   ) {
-    this.securityGuardService.setUser(user);
     return await this.securityGuardService.findSecurityGuardPatrols(id, query);
   }
 }
