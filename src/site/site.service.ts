@@ -65,7 +65,7 @@ export class SiteService extends BaseService {
     const { ownerId, ...newSiteData } = updateSiteDto;
     return await this.siteRepository.update(
       { id },
-      { ...newSiteData, owner: siteOwner },
+      { ...newSiteData, owner: ownerId === null ? null : siteOwner },
     );
   }
 

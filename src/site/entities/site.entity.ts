@@ -61,7 +61,7 @@ export class Site {
   ownerUserId: number;
 
   @ManyToOne(() => SiteOwner, { nullable: true, onDelete: 'SET NULL' })
-  owner: SiteOwner;
+  owner: SiteOwner | null;
 
   @OneToMany(() => Tag, (tag) => tag.site)
   tags: Tag[];
