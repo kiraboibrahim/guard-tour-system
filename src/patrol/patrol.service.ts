@@ -17,62 +17,58 @@ export class PatrolService extends BaseService {
   async create(createPatrolDto: CreatePatrolDto) {
     /* Alert: No permission checks done here. This means anyone can create a patrol(even false patrols)
     TODO: Add another form of authentication to the function of creating patrols i.e biometric auth */
-    const { site }: { site: Site } = createPatrolDto as any;
-    if (site.hasIndividualPatrolType()) {
-      return await this.createIndividualPatrol(createPatrolDto);
-    }
-    return await this.createGroupPatrol(createPatrolDto);
+    return await this.createPatrol(createPatrolDto);
   }
 
-  /**
-   * TODO: Remove this method when the app has been updated
-   */
-  async createIndividualPatrol(createPatrolDto: CreatePatrolDto) {
-    const { securityGuardUniqueId } = createPatrolDto;
+  async createPatrol(createPatrolDto: CreatePatrolDto) {
+    const { securityGuardsUniqueIds, securityGuardUniqueId } = createPatrolDto;
     const {
       securityGuard,
-      site,
-    }: { securityGuard: SecurityGuard; site: Site } = createPatrolDto as any;
-    if (!site.hasIndividualPatrolType() || !securityGuardUniqueId) {
-      throw new BadRequestException(
-        "Group patrol  isn't supported for this site",
-      );
-    }
-    const patrol = this.patrolRepository.create({
-      ...createPatrolDto,
-      securityGuardUniqueId,
-      site,
-      siteId: site.id,
-      securityGuard,
-    });
-    return this.patrolRepository.save(patrol);
-  }
-
-  async createGroupPatrol(createPatrolDto: CreatePatrolDto) {
-    const { securityGuardsUniqueIds } = createPatrolDto;
-    const {
       securityGuards,
       site,
-    }: { securityGuards: SecurityGuard[]; site: Site } = createPatrolDto as any;
+    }: {
+      securityGuard: SecurityGuard;
+      securityGuards: SecurityGuard[];
+      site: Site;
+    } = createPatrolDto as any;
 
-    const isGroupPatrol = securityGuardsUniqueIds?.length > 1;
-    if (isGroupPatrol && site.hasIndividualPatrolType()) {
-      throw new BadRequestException("Group patrol isn't supported for site");
-    }
+    const patrols: Patrol[] = [];
+    const deprecatedDTOUsed = !!securityGuardUniqueId;
+    const updatedDTOUsed = !!securityGuardsUniqueIds;
+    if (updatedDTOUsed) {
+      const isGroupPatrol = securityGuardsUniqueIds?.length >= 2;
+      if (isGroupPatrol && site.hasIndividualPatrolType()) {
+        throw new BadRequestException("Group patrol isn't supported for site");
+      }
 
-    const patrols = securityGuardsUniqueIds.map((securityGuardUniqueId) => {
-      const securityGuard = securityGuards.find(
-        (securityGuard) => securityGuard.uniqueId === securityGuardUniqueId,
-      );
-      return this.patrolRepository.create({
-        ...createPatrolDto,
-        securityGuardUniqueId,
-        site,
-        siteId: site.id,
-        securityGuard,
+      const _patrols = securityGuardsUniqueIds.map((securityGuardUniqueId) => {
+        const securityGuard = securityGuards.find(
+          (securityGuard) => securityGuard.uniqueId === securityGuardUniqueId,
+        );
+        return this.patrolRepository.create({
+          ...createPatrolDto,
+          securityGuardUniqueId,
+          site,
+          siteId: site.id,
+          securityGuard,
+        });
       });
-    });
-
+      patrols.push(..._patrols);
+    } else if (deprecatedDTOUsed) {
+      patrols.push(
+        this.patrolRepository.create({
+          ...createPatrolDto,
+          securityGuardUniqueId,
+          site,
+          siteId: site.id,
+          securityGuard,
+        }),
+      );
+    } else {
+      throw new BadRequestException(
+        'You have to specify either securityGuardUniqueId or securityGuardsUniqueIds',
+      );
+    }
     return await this.patrolRepository.save(patrols);
   }
 }
