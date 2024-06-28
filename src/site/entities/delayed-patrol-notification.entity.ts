@@ -7,7 +7,13 @@ import {
 } from 'typeorm';
 import { Site } from './site.entity';
 import { Exclude } from 'class-transformer';
-import { LocalDate, LocalDateTime, LocalTime, ZoneId } from '@js-joda/core';
+import {
+  DateTimeFormatter,
+  LocalDate,
+  LocalDateTime,
+  LocalTime,
+  ZoneId,
+} from '@js-joda/core';
 import { IsISO8601, IsMilitaryTime } from 'class-validator';
 
 @Entity()
@@ -32,7 +38,7 @@ export class DelayedPatrolNotification {
   @BeforeInsert()
   setTime() {
     const now = LocalTime.now(ZoneId.of(process.env.TZ as string));
-    this.timeCreatedAt = now.toString();
+    this.timeCreatedAt = now.format(DateTimeFormatter.ofPattern('HH:mm'));
   }
 
   @Exclude()
