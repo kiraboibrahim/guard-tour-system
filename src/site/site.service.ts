@@ -14,6 +14,8 @@ import { PermissionsService } from '../permissions/permissions.service';
 import { DelayedPatrolNotification } from './entities/delayed-patrol-notification.entity';
 import { DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG } from './pagination/delayed-patrol-notification.pagination';
 import { SiteOwner } from '../site-owner/entities/site-owner.entity';
+import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
+import { SECURITY_GUARD_TYPE } from '../security-guard/security-guard.constants';
 
 @Injectable()
 export class SiteService extends BaseService {
@@ -22,6 +24,8 @@ export class SiteService extends BaseService {
     @InjectRepository(Patrol) private patrolRepository: Repository<Patrol>,
     @InjectRepository(DelayedPatrolNotification)
     private patrolDelayNotificationRepository: Repository<DelayedPatrolNotification>,
+    @InjectRepository(SecurityGuard)
+    private securityGuardRepository: Repository<SecurityGuard>,
     private permissionsService: PermissionsService,
   ) {
     super();
@@ -49,10 +53,17 @@ export class SiteService extends BaseService {
   }
 
   async findOneById(id: string) {
-    return await this.siteRepository.findOne({
+    const site = await this.siteRepository.findOne({
       where: [{ id: +id }, { tagId: id }],
       relations: { tags: true },
     });
+    if (!!site) {
+      const supervisors = await this.securityGuardRepository.findBy({
+        type: SECURITY_GUARD_TYPE.SUPERVISOR,
+        companyId: site.companyId,
+      });
+      return { ...site, supervisors };
+    }
   }
 
   async update(id: number, updateSiteDto: UpdateSiteDto) {

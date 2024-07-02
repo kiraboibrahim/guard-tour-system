@@ -1,4 +1,3 @@
-export const MAX_TAGS_PER_SITE = 6;
 export const MAX_PATROL_DELAY_DURATIONS = [
   1.5, // hours
   3, // hours

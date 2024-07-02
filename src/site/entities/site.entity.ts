@@ -10,7 +10,7 @@ import { Company } from '../../company/entities/company.entity';
 import { SiteAdmin } from '../../site-admin/entities/site-admin.entity';
 import { Tag } from '../../tag/entities/tag.entity';
 import { Exclude } from 'class-transformer';
-import { MAX_TAGS_PER_SITE, PATROL_TYPE } from '../site.constants';
+import { PATROL_TYPE } from '../site.constants';
 import { SiteOwner } from '../../site-owner/entities/site-owner.entity';
 
 @Entity('sites')
@@ -75,9 +75,5 @@ export class Site {
 
   hasIndividualPatrolType() {
     return this.patrolType === PATROL_TYPE.INDIVIDUAL;
-  }
-
-  hasReachedMaxTagLimit() {
-    return this?.tags.length >= MAX_TAGS_PER_SITE;
   }
 }

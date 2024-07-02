@@ -13,7 +13,6 @@ import { PermissionsService } from '../permissions/permissions.service';
 import { Resource } from '../permissions/permissions.constants';
 import { INSTALL_TAGS_ACTION, UNINSTALL_TAGS_ACTION } from './tag.constants';
 import { TagsActionDto } from './dto/tags-action.dto';
-import { MAX_TAGS_PER_SITE } from '../site/site.constants';
 
 @Injectable()
 export class TagService extends BaseService {
@@ -31,9 +30,6 @@ export class TagService extends BaseService {
     const { UIDs } = createTagsDto;
     const { company, site }: { company: Company; site: Site } =
       createTagsDto as any;
-    if (!!site) {
-      this.validateSite(site);
-    }
     const toBeCreatedTags = UIDs.map((uid) =>
       this.tagRepository.create({ uid, company, site }),
     );
@@ -66,6 +62,7 @@ export class TagService extends BaseService {
         return await this.uninstallTags(tagsActionDto);
     }
   }
+
   async installTags(installTagsDto: TagsActionDto) {
     await this.permissionsService
       .can(this.user)
@@ -73,7 +70,6 @@ export class TagService extends BaseService {
 
     const { tagIds } = installTagsDto;
     const { tags, site }: { tags: Tag[]; site: Site } = installTagsDto as any;
-    this.validateSite(site);
 
     const toBeInstalledTags = tags
       .filter((tag) => tag.siteId === null)
@@ -88,14 +84,6 @@ export class TagService extends BaseService {
       );
     }
     return await this.tagRepository.save(toBeInstalledTags);
-  }
-
-  private validateSite(site: Site) {
-    if (site.hasReachedMaxTagLimit()) {
-      throw new BadRequestException(
-        `The site has a maximum number of tags: ${MAX_TAGS_PER_SITE}`,
-      );
-    }
   }
 
   async uninstallTags(uninstallTagsDto: TagsActionDto) {
