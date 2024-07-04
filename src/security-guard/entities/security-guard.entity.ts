@@ -14,16 +14,9 @@ export class SecurityGuard extends BaseCompanyUser {
   @Column({ type: 'date' })
   dateOfBirth: string;
 
-  @Column()
-  armedStatus: boolean;
-
   @OneToMany(() => Patrol, (patrol) => patrol.securityGuard)
   patrols: Patrol;
 
   @Column({ default: SECURITY_GUARD_TYPE.FIELD })
   type: string;
-
-  isSupervisor() {
-    return this.type === SECURITY_GUARD_TYPE.SUPERVISOR;
-  }
 }
