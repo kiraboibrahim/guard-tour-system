@@ -30,10 +30,6 @@ export class CreateSecurityGuardDto extends CreateNonAuthUserDto {
   dateOfBirth: string;
 
   @ApiProperty()
-  @IsBoolean()
-  armedStatus: boolean;
-
-  @ApiProperty()
   @IsIn([SECURITY_GUARD_TYPE.SUPERVISOR, SECURITY_GUARD_TYPE.FIELD])
   type: string;
 }
