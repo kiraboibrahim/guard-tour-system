@@ -13,7 +13,7 @@ import { Exclude } from 'class-transformer';
 import { PATROL_TYPE } from '../site.constants';
 import { SiteOwner } from '../../site-owner/entities/site-owner.entity';
 
-@Entity('sites')
+@Entity()
 export class Site {
   @PrimaryGeneratedColumn()
   id: number;

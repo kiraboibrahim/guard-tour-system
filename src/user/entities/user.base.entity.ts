@@ -36,7 +36,7 @@ export class User {
 }
 
 /* An AuthUser is one who will be authenticated by the system using a username and password */
-@Entity('authUsers')
+@Entity()
 export class AuthUser extends User {
   static USERNAME_FIELD = 'email' as const;
 

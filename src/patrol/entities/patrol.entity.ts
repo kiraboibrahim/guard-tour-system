@@ -5,7 +5,7 @@ import { Site } from '../../site/entities/site.entity';
 import { Exclude } from 'class-transformer';
 import { LocalDateTime, ZoneId } from '@js-joda/core';
 
-@Entity('patrols')
+@Entity()
 export class Patrol {
   @PrimaryGeneratedColumn()
   id: number;

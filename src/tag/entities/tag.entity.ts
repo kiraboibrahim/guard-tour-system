@@ -3,7 +3,7 @@ import { Site } from '../../site/entities/site.entity';
 import { Exclude } from 'class-transformer';
 import { Company } from '../../company/entities/company.entity';
 
-@Entity('tags')
+@Entity()
 export class Tag {
   @PrimaryGeneratedColumn()
   id: number;

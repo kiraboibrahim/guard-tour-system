@@ -3,7 +3,7 @@ import { Patrol } from '../../patrol/entities/patrol.entity';
 import { BaseCompanyUser } from '../../user/entities/user.base.entity';
 import { SECURITY_GUARD_TYPE } from '../security-guard.constants';
 
-@Entity('securityGuards')
+@Entity()
 export class SecurityGuard extends BaseCompanyUser {
   @Column()
   gender: string;

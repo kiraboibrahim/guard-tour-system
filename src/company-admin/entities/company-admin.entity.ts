@@ -1,5 +1,5 @@
 import { Entity } from 'typeorm';
 import { BaseAuthCompanyUser } from '../../user/entities/user.base.entity';
 
-@Entity('companyAdmins')
+@Entity()
 export class CompanyAdmin extends BaseAuthCompanyUser {}

@@ -32,9 +32,10 @@ const ENTITIES = [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        const DB_SYNC = configService.get<boolean>('DB_SYNC');
+        const NODE_ENV = configService.get<string>('NODE_ENV');
+        const DB_SYNC = NODE_ENV !== 'production';
         return {
-          type: 'sqlite',
+          type: 'postgres',
           host: configService.get<string>('DB_HOST'),
           port: +configService.get('DB_PORT'),
           username: configService.get<string>('DB_USERNAME'),
