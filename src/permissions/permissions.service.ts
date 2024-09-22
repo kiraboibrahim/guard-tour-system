@@ -115,7 +115,7 @@ export class PermissionsService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserCreateSuperAdmin(CreateSuperAdminDto: CreateSuperAdminDto) {
     const host = this.request?.get('host');
-    return LOCALHOST_REGEX.test(host);
+    return LOCALHOST_REGEX.test(host) || this.user.isSuperAdmin();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
