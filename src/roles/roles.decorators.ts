@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { Role } from './roles';
+import { Role } from './roles.constants';
 
 // Primary roles are those that are specified at the controller level
 export const PRIMARY_ROLES_KEY = 'PRIMARY_ROLES';

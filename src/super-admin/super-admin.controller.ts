@@ -11,7 +11,7 @@ import { SuperAdminService } from './super-admin.service';
 import { CreateSuperAdminDto } from './dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from './dto/update-super-admin.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { Auth, User } from '../auth/auth.decorators';
+import { Auth, GetUser } from '../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
 import {
   CanCreate,
@@ -19,8 +19,8 @@ import {
   CanUpdate,
   CanDelete,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
+import { Resource } from '@core/core.constants';
 
 @ApiTags('Super Admins')
 @Auth(Role.SUPER_ADMIN)
@@ -32,7 +32,7 @@ export class SuperAdminController {
   @CanCreate(Resource.SUPER_ADMIN)
   create(
     @Body() createSuperAdminDto: CreateSuperAdminDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.superAdminService.setUser(user);
     return this.superAdminService.create(createSuperAdminDto);
@@ -55,7 +55,7 @@ export class SuperAdminController {
   async update(
     @Param('id') id: string,
     @Body() updateSuperAdminDto: UpdateSuperAdminDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.superAdminService.setUser(user);
     return await this.superAdminService.update(+id, updateSuperAdminDto);

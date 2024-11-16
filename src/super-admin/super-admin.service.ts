@@ -5,9 +5,10 @@ import { CreateSuperAdminDto } from './dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from './dto/update-super-admin.dto';
 import { SuperAdmin } from './entities/super-admin.entity';
 import { UserService } from '../user/user.service';
-import { BaseService } from '../core/services/base.service';
+import { BaseService } from '../core/base/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions.constants';
+
+import { Resource } from '@core/core.constants';
 
 @Injectable()
 export class SuperAdminService extends BaseService {

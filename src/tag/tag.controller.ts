@@ -13,17 +13,17 @@ import { UpdateTagUIDDto } from './dto/update-tag-uid.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
 import { TAG_PAGINATION_CONFIG } from './tag.pagination';
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
-import { Auth, User as User } from '../auth/auth.decorators';
+import { Auth, GetUser as User } from '../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
 import { TagsActionDto } from './dto/tags-action.dto';
+import { Resource } from '@core/core.constants';
 
 @ApiTags('Tags')
 @Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)

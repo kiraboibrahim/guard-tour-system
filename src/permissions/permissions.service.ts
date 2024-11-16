@@ -1,40 +1,41 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Resource } from './permissions.constants';
-import { User } from '../auth/auth.types';
-import { Role } from '../roles/roles';
-import { CreateSiteAdminDto } from '../site-admin/dto/create-site-admin.dto';
-import { Site } from '../site/entities/site.entity';
-import { CreateSecurityGuardDto } from '../security-guard/dto/create-security-guard.dto';
-import { CreateSiteDto } from '../site/dto/create-site.dto';
-import { CreateTagsDto } from '../tag/dto/create-tags.dto';
+import { User } from '@auth/auth.types';
+import { Role } from '@roles/roles.constants';
+import { CreateSiteAdminDto } from '@site-admin/dto/create-site-admin.dto';
+import { Site } from '@site/entities/site.entity';
+import { CreateSecurityGuardDto } from '@security-guard/dto/create-security-guard.dto';
+import { CreateSiteDto } from '@site/dto/create-site.dto';
+import { CreateTagsDto } from '@tag/dto/create-tags.dto';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
-import { Tag } from '../tag/entities/tag.entity';
-import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
-import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
-import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
-import { UpdateSiteAdminDto } from '../site-admin/dto/update-site-admin.dto';
-import { UpdateSecurityGuardDto } from '../security-guard/dto/update-security-guard.dto';
-import { UpdateTagUIDDto } from '../tag/dto/update-tag-uid.dto';
+import { Tag } from '@tag/entities/tag.entity';
+import { CompanyAdmin } from '@company-admin/entities/company-admin.entity';
+import { SiteAdmin } from '@site-admin/entities/site-admin.entity';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
+import { UpdateSiteAdminDto } from '@site-admin/dto/update-site-admin.dto';
+import { UpdateSecurityGuardDto } from '@security-guard/dto/update-security-guard.dto';
+import { UpdateTagUIDDto } from '@tag/dto/update-tag-uid.dto';
 import { CreateDto, UpdateDto } from './permissions.types';
-import { CreateCompanyDto } from '../company/dto/create-company.dto';
-import { CreateCompanyAdminDto } from '../company-admin/dto/create-company-admin.dto';
-import { UpdateCompanyDto } from '../company/dto/update-company.dto';
-import { UpdateCompanyAdminDto } from '../company-admin/dto/update-company-admin.dto';
-import { CreateSuperAdminDto } from '../super-admin/dto/create-super-admin.dto';
-import { UpdateSuperAdminDto } from '../super-admin/dto/update-super-admin.dto';
+import { CreateCompanyDto } from '@company/dto/create-company.dto';
+import { CreateCompanyAdminDto } from '@company-admin/dto/create-company-admin.dto';
+import { UpdateCompanyDto } from '@company/dto/update-company.dto';
+import { UpdateCompanyAdminDto } from '@company-admin/dto/update-company-admin.dto';
+import { CreateSuperAdminDto } from '@super-admin/dto/create-super-admin.dto';
+import { UpdateSuperAdminDto } from '@super-admin/dto/update-super-admin.dto';
 import { PaginateQuery } from 'nestjs-paginate';
 import { isArray, isString } from 'class-validator';
-import { CreatePatrolDto } from '../patrol/dto/create-patrol.dto';
-import { TagsActionDto } from '../tag/dto/tags-action.dto';
-import { INSTALL_TAGS_ACTION } from '../tag/tag.constants';
-import { UpdateSiteDto } from '../site/dto/update-site.dto';
-import { LOCALHOST_REGEX } from '../core/core.constants';
+import { CreatePatrolDto } from '@patrol/dto/create-patrol.dto';
+import { TagsActionDto } from '@tag/dto/tags-action.dto';
+import { INSTALL_TAGS_ACTION } from '@tag/tag.constants';
+import { UpdateSiteDto } from '@site/dto/update-site.dto';
+import { LOCALHOST_REGEX, Resource } from '@core/core.constants';
 import { CreateSiteOwnerDto } from '../site-owner/dto/create-site-owner.dto';
 import { UpdateSiteOwnerDto } from '../site-owner/dto/update-site-owner.dto';
 import { SiteOwner } from '../site-owner/entities/site-owner.entity';
+import { CreateShiftDto } from '@shift/dto/create-shift.dto';
+import { UpdateShiftDto } from '@shift/dto/update-shift.dto';
+import { Shift } from '@shift/entities/shift.entity';
 
-// TODO: Modify methods to throw exceptions instead of returning boolean values for permission checks
 @Injectable()
 export class PermissionsService {
   private user: User;
@@ -45,6 +46,7 @@ export class PermissionsService {
   private siteOwnerRepository: Repository<SiteOwner>;
   private securityGuardRepository: Repository<SecurityGuard>;
   private siteRepository: Repository<Site>;
+  private shiftRepository: Repository<Shift>;
   private tagRepository: Repository<Tag>;
 
   constructor(@InjectEntityManager() private entityManager: EntityManager) {
@@ -55,6 +57,7 @@ export class PermissionsService {
     this.securityGuardRepository =
       this.entityManager.getRepository(SecurityGuard);
     this.siteRepository = this.entityManager.getRepository(Site);
+    this.shiftRepository = this.entityManager.getRepository(Shift);
     this.tagRepository = this.entityManager.getRepository(Tag);
   }
 
@@ -103,6 +106,8 @@ export class PermissionsService {
         );
       case Resource.SITE:
         return this.canUserCreateSite(createDto as CreateSiteDto);
+      case Resource.SHIFT:
+        return this.canUserCreateShift(createDto as CreateShiftDto);
       case Resource.SITE_OWNER:
         return this.canUserCreateSiteOwner(createDto as CreateSiteOwnerDto);
       case Resource.TAG:
@@ -167,6 +172,28 @@ export class PermissionsService {
       this.user.isCompanyAdmin() &&
       this.user.belongsToCompany(siteCompanyId) &&
       !isTogglingNotifications;
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
+  }
+
+  private async canUserCreateShift(createShiftDto: CreateShiftDto) {
+    const {
+      securityGuards,
+      site,
+    }: { securityGuards: SecurityGuard[]; site: Site } = createShiftDto as any;
+
+    const isSuperAdminAllowed =
+      this.user.isSuperAdmin() &&
+      (await this.securityGuardsBelongToCompany(
+        securityGuards,
+        site.companyId,
+      ));
+    const isCompanyAdminAllowed =
+      this.user.isCompanyAdmin() &&
+      site.belongsToCompany(this.user.companyId) &&
+      (await this.securityGuardsBelongToCompany(
+        securityGuards,
+        this.user.companyId,
+      ));
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
@@ -415,6 +442,11 @@ export class PermissionsService {
           resourceId as number,
           updateDto as UpdateSiteDto,
         );
+      case Resource.SHIFT:
+        return await this.canUserUpdateShift(
+          resourceId as number,
+          updateDto as UpdateShiftDto,
+        );
       case Resource.TAG:
         return this.canUserUpdateTags(resourceId, updateDto as any);
       default:
@@ -519,6 +551,37 @@ export class PermissionsService {
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
+  private async canUserUpdateShift(
+    shiftId: number,
+    updateShiftDto: UpdateShiftDto,
+  ) {
+    const {
+      securityGuards,
+      site,
+    }: { securityGuards: SecurityGuard[]; site: Site } = updateShiftDto as any;
+
+    const isSuperAdminAllowed =
+      this.user.isSuperAdmin() &&
+      !!securityGuards &&
+      (await this.securityGuardsBelongToCompany(
+        securityGuards,
+        !!site ? site.companyId : securityGuards[0].companyId,
+      ));
+    const isCompanyAdminAllowed =
+      this.user.isCompanyAdmin() &&
+      (await this.shiftRepository.exist({
+        where: { id: shiftId, site: { companyId: this.user.companyId } },
+      })) &&
+      !!site &&
+      site.belongsToCompany(this.user.companyId) &&
+      !!securityGuards &&
+      (await this.securityGuardsBelongToCompany(
+        securityGuards,
+        this.user.companyId,
+      ));
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
+  }
+
   private async canUserUpdateTags(
     tagId: number | undefined,
     updateDto: UpdateTagUIDDto | TagsActionDto,
@@ -591,6 +654,8 @@ export class PermissionsService {
         return this.canUserDeleteSecurityGuard(resourceId);
       case Resource.SITE:
         return this.canUserDeleteSite(resourceId);
+      case Resource.SHIFT:
+        return await this.canUserDeleteShift(resourceId);
       case Resource.TAG:
         return this.canUserDeleteTag(resourceId);
       case Resource.PATROL:
@@ -650,6 +715,16 @@ export class PermissionsService {
     const isCompanyAdminAllowed =
       this.user.isCompanyAdmin() &&
       (await this.verifyResourceItemOwnership(Resource.SITE, siteId));
+    return isSuperAdminAllowed || isCompanyAdminAllowed;
+  }
+
+  private async canUserDeleteShift(shiftId: number) {
+    const isSuperAdminAllowed = this.user.isSuperAdmin();
+    const isCompanyAdminAllowed =
+      this.user.isCompanyAdmin() &&
+      (await this.shiftRepository.exist({
+        where: { id: shiftId, site: { companyId: this.user.companyId } },
+      }));
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
@@ -864,6 +939,8 @@ export class PermissionsService {
         return this.checkSecurityGuardOwnership(resourceId);
       case Resource.SITE:
         return await this.checkSiteOwnership(resourceId);
+      case Resource.SHIFT:
+        return await this.checkShiftOwnership(resourceId);
       case Resource.TAG:
         return await this.checkTagOwnership(resourceId);
       default:
@@ -957,6 +1034,18 @@ export class PermissionsService {
     }
   }
 
+  private async checkShiftOwnership(shiftId: number) {
+    if (this.verifyGlobalOwnership(Resource.SHIFT)) return true;
+
+    const { companyId: userCompanyId } = this.user;
+    return (
+      this.user.isCompanyAdmin() &&
+      (await this.shiftRepository.exist({
+        where: { site: { companyId: userCompanyId }, id: shiftId },
+      }))
+    );
+  }
+
   private async checkTagOwnership(tagId: number) {
     if (this.verifyGlobalOwnership(Resource.TAG)) return true;
     const { companyId: userCompanyId, role } = this.user;
@@ -1008,6 +1097,19 @@ export class PermissionsService {
     }
   }
 
+  private async securityGuardsBelongToCompany(
+    securityGuards: SecurityGuard[],
+    companyId: number,
+  ) {
+    {
+      return (
+        (await this.securityGuardRepository.countBy({
+          companyId: companyId,
+          userId: In(securityGuards.map(({ userId }) => userId)),
+        })) === securityGuards.length
+      );
+    }
+  }
   private async isSiteOwnedByUser(siteId: number, userId: number) {
     return !!(await this.siteRepository.findOneBy({
       id: siteId,

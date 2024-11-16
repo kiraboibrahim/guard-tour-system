@@ -7,8 +7,9 @@ import {
   LoadEntityIfExists,
 } from '../../core/core.validators';
 import { ApiProperty } from '@nestjs/swagger';
-import { AuthUser } from '../entities/user.base.entity';
 import { Company } from '../../company/entities/company.entity';
+
+import { AuthUser } from '@user/entities/auth-user.base.entity';
 
 // This DTO is used for creating non auth users, users that don't authenticate with the application
 export class CreateNonAuthUserDto {

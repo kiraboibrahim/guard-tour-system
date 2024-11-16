@@ -12,17 +12,17 @@ import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
-import { Auth, IsPublic, User } from '../auth/auth.decorators';
-import { Role } from '../roles/roles';
+import { Auth, IsPublic, GetUser } from '@auth/auth.decorators';
+import { Role } from '@roles/roles.constants';
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
-} from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
+} from '@permissions/permissions.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
-import { AlsoAllow } from '../roles/roles.decorators';
+import { AlsoAllow } from '@roles/roles.decorators';
+import { Resource } from '@core/core.constants';
 
 @ApiTags('Sites')
 @Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
@@ -34,7 +34,7 @@ export class SiteController {
   @CanCreate(Resource.SITE)
   create(
     @Body() createSiteDto: CreateSiteDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.siteService.setUser(user);
     return this.siteService.create(createSiteDto);
@@ -43,7 +43,7 @@ export class SiteController {
   @Get()
   @AlsoAllow(Role.SITE_OWNER)
   @CanRead(Resource.SITE)
-  find(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
+  find(@Paginate() query: PaginateQuery, @GetUser() user: AuthenticatedUser) {
     this.siteService.setUser(user);
     return this.siteService.find(query);
   }
@@ -63,13 +63,28 @@ export class SiteController {
     return await this.siteService.findSitePatrols(+id, query);
   }
 
+  @CanRead(Resource.SITE)
+  @Get(':id/shifts')
+  async findSiteShifts(@Param('id') id: string) {
+    return await this.siteService.findSiteShifts(+id);
+  }
+
+  @CanRead(Resource.SITE)
+  @Get(':id/call-logs')
+  async findSiteCallLogs(
+    @Param('id') id: string,
+    @Paginate() query: PaginateQuery,
+  ) {
+    return await this.siteService.findSiteCallLogs(+id, query);
+  }
+
   @Get(':id/notifications')
   @AlsoAllow(Role.SITE_OWNER)
   @CanRead(Resource.NOTIFICATION, [Resource.SITE], { [Resource.SITE]: 'id' })
   async findSiteNotifications(
     @Param('id') id: string,
     @Paginate() query: PaginateQuery,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.siteService.setUser(user);
     return this.siteService.findSiteNotifications(+id, query);
@@ -80,7 +95,7 @@ export class SiteController {
   async update(
     @Param('id') id: string,
     @Body() updateSiteDto: UpdateSiteDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.siteService.setUser(user);
     return await this.siteService.update(+id, updateSiteDto);

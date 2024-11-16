@@ -1,12 +1,12 @@
-import { IsBoolean, IsIn, IsInt } from 'class-validator';
-import { IsMaleOrFemale } from '../../user/user.validators';
-import { CreateNonAuthUserDto } from '../../user/dto/create-user.base.dto';
+import { IsIn, IsInt } from 'class-validator';
+import { IsMaleOrFemale } from '@user/user.validators';
+import { CreateNonAuthUserDto } from '@user/dto/create-user.base.dto';
 import {
   LoadEntityIfExists,
   IsConsentingAdult,
   IsUnique,
-} from '../../core/core.validators';
-import { Company } from '../../company/entities/company.entity';
+} from '@core/core.validators';
+import { Company } from '@company/entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { SecurityGuard } from '../entities/security-guard.entity';
 import { SECURITY_GUARD_TYPE } from '../security-guard.constants';

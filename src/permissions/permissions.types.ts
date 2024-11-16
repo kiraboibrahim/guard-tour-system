@@ -1,5 +1,5 @@
 import { CreateSuperAdminDto } from '../super-admin/dto/create-super-admin.dto';
-import { Resource, Action } from './permissions.constants';
+import { Action } from './permissions.constants';
 import { CreateCompanyAdminDto } from '../company-admin/dto/create-company-admin.dto';
 import { CreateSiteAdminDto } from '../site-admin/dto/create-site-admin.dto';
 import { CreateSecurityGuardDto } from '../security-guard/dto/create-security-guard.dto';
@@ -14,6 +14,8 @@ import { UpdateSiteAdminDto } from '../site-admin/dto/update-site-admin.dto';
 import { UpdateSecurityGuardDto } from '../security-guard/dto/update-security-guard.dto';
 import { UpdateSiteDto } from '../site/dto/update-site.dto';
 import { UpdateTagUIDDto } from '../tag/dto/update-tag-uid.dto';
+import { Resource } from '@core/core.constants';
+import { CreateShiftDto } from '@shift/dto/create-shift.dto';
 
 export type ResourcesParams = {
   [key in Resource]?: string;
@@ -33,6 +35,7 @@ export type CreateDto =
   | CreateSiteAdminDto
   | CreateSecurityGuardDto
   | CreateSiteDto
+  | CreateShiftDto
   | CreateTagsDto
   | CreatePatrolDto;
 

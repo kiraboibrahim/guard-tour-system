@@ -11,8 +11,8 @@ import { SiteOwnerService } from './site-owner.service';
 import { CreateSiteOwnerDto } from './dto/create-site-owner.dto';
 import { UpdateSiteOwnerDto } from './dto/update-site-owner.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
-import { Auth, User } from '../auth/auth.decorators';
-import { Role } from '../roles/roles';
+import { Auth, GetUser } from '../auth/auth.decorators';
+import { Role } from '../roles/roles.constants';
 import { AlsoAllow } from '../roles/roles.decorators';
 import { ApiTags } from '@nestjs/swagger';
 import { SITE_OWNER_PAGINATION_CONFIG } from './site-owner.pagination';
@@ -24,7 +24,8 @@ import {
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
+
+import { Resource } from '@core/core.constants';
 
 @Controller('users/site-owners')
 @ApiTags('Site Owner')
@@ -36,7 +37,7 @@ export class SiteOwnerController {
   @CanCreate(Resource.SITE_OWNER)
   create(
     @Body() createSiteOwnerDto: CreateSiteOwnerDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.siteOwnerService.setUser(user);
     return this.siteOwnerService.create(createSiteOwnerDto);
@@ -45,7 +46,10 @@ export class SiteOwnerController {
   @Get()
   @CanRead(Resource.SITE_OWNER)
   @ApiPaginationQuery(SITE_OWNER_PAGINATION_CONFIG)
-  findAll(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
+  findAll(
+    @Paginate() query: PaginateQuery,
+    @GetUser() user: AuthenticatedUser,
+  ) {
     this.siteOwnerService.setUser(user);
     return this.siteOwnerService.findAll(query);
   }
@@ -62,7 +66,7 @@ export class SiteOwnerController {
   update(
     @Param('id') id: string,
     @Body() updateSiteOwnerDto: UpdateSiteOwnerDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.siteOwnerService.setUser(user);
     return this.siteOwnerService.update(+id, updateSiteOwnerDto);

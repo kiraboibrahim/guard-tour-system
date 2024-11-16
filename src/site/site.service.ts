@@ -4,18 +4,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { Site } from './entities/site.entity';
-import { Patrol } from '../patrol/entities/patrol.entity';
+import { Patrol } from '@patrol/entities/patrol.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
-import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol.pagination';
+import { PATROL_PAGINATION_CONFIG } from '@patrol/patrol.pagination';
 import { SITE_PAGINATION_CONFIG } from './pagination/site.pagination';
-import { BaseService } from '../core/services/base.service';
-import { Resource } from '../permissions/permissions.constants';
-import { PermissionsService } from '../permissions/permissions.service';
+import { BaseService } from '@core/base/base.service';
+import { PermissionsService } from '@permissions/permissions.service';
 import { DelayedPatrolNotification } from './entities/delayed-patrol-notification.entity';
 import { DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG } from './pagination/delayed-patrol-notification.pagination';
 import { SiteOwner } from '../site-owner/entities/site-owner.entity';
-import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
-import { SECURITY_GUARD_TYPE } from '../security-guard/security-guard.constants';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
+import { SECURITY_GUARD_TYPE } from '@security-guard/security-guard.constants';
+import { Resource } from '@core/core.constants';
+import { Shift } from '@shift/entities/shift.entity';
+import { CallLog } from '../call-center/entities/call-log.entity';
+import { SITE_CALL_LOGS_PAGINATION_CONFIG } from '../call-center/call-center.pagination';
 
 @Injectable()
 export class SiteService extends BaseService {
@@ -26,6 +29,7 @@ export class SiteService extends BaseService {
     private patrolDelayNotificationRepository: Repository<DelayedPatrolNotification>,
     @InjectRepository(SecurityGuard)
     private securityGuardRepository: Repository<SecurityGuard>,
+    @InjectRepository(CallLog) private callLogRepository: Repository<CallLog>,
     private permissionsService: PermissionsService,
   ) {
     super();
@@ -93,6 +97,16 @@ export class SiteService extends BaseService {
     );
   }
 
+  async findSiteShifts(siteId: number) {
+    return await Shift.findBy({ site: { id: siteId } });
+  }
+  async findSiteCallLogs(siteId: number, query: PaginateQuery) {
+    return await paginate(
+      query,
+      this.callLogRepository,
+      SITE_CALL_LOGS_PAGINATION_CONFIG(siteId),
+    );
+  }
   async findSiteNotifications(id: number, query: PaginateQuery) {
     query.filter = { ...query.filter, siteId: [`${id}`] };
     await this.permissionsService

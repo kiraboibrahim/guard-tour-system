@@ -1,4 +1,4 @@
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
 
 export type JWTPayload = {
   sub: number;

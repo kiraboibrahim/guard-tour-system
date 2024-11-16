@@ -6,17 +6,20 @@ import { ValidationPipe } from '@nestjs/common';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-import { SiteModule } from './site/site.module';
-import { TagModule } from './tag/tag.module';
-import { CompanyModule } from './company/company.module';
-import { PatrolModule } from './patrol/patrol.module';
-import { CoreModule } from './core/core.module';
+import { UserModule } from '@user/user.module';
+import { SiteModule } from '@site/site.module';
+import { TagModule } from '@tag/tag.module';
+import { CompanyModule } from '@company/company.module';
+import { PatrolModule } from '@patrol/patrol.module';
+import { CoreModule } from '@core/core.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { StatsController } from './stats/stats.controller';
-import { StatsService } from './stats/stats.service';
-import { StatsModule } from './stats/stats.module';
-import { DatabaseModule } from './database/database.module';
+import { StatsController } from '@stats/stats.controller';
+import { StatsService } from '@stats/stats.service';
+import { StatsModule } from '@stats/stats.module';
+import { DatabaseModule } from '@database/database.module';
+import { ShiftModule } from '@shift/shift.module';
+import { CallCenterModule } from './call-center/call-center.module';
+import { TasksModule } from '@tasks/tasks.module';
 
 @Module({
   imports: [
@@ -30,12 +33,14 @@ import { DatabaseModule } from './database/database.module';
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     DatabaseModule,
+    ShiftModule,
+    CallCenterModule,
+    TasksModule,
   ],
   controllers: [AppController, StatsController],
   providers: [
     AppService,
     StatsService,
-
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({

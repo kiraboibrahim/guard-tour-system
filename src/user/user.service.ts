@@ -5,14 +5,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthUser, User } from './entities/user.base.entity';
+import { User } from './entities/user.base.entity';
 import { CreateCompanyAdminDto } from '../company-admin/dto/create-company-admin.dto';
 import { CreateSiteAdminDto } from '../site-admin/dto/create-site-admin.dto';
 import { CreateSecurityGuardDto } from '../security-guard/dto/create-security-guard.dto';
 import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
 import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
 import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
 import { UpdateCompanyAdminDto } from '../company-admin/dto/update-company-admin.dto';
 import { UpdateSiteAdminDto } from '../site-admin/dto/update-site-admin.dto';
 import { UpdateSecurityGuardDto } from '../security-guard/dto/update-security-guard.dto';
@@ -23,6 +23,8 @@ import { UpdateSuperAdminDto } from '../super-admin/dto/update-super-admin.dto';
 import { CreateSiteOwnerDto } from '../site-owner/dto/create-site-owner.dto';
 import { SiteOwner } from '../site-owner/entities/site-owner.entity';
 import { UpdateSiteOwnerDto } from '../site-owner/dto/update-site-owner.dto';
+
+import { AuthUser } from '@user/entities/auth-user.base.entity';
 
 @Injectable()
 export class UserService {

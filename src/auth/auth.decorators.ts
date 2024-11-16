@@ -1,4 +1,4 @@
-import { Role } from '../roles/roles';
+import { Role } from '@roles/roles.constants';
 import {
   applyDecorators,
   createParamDecorator,
@@ -6,10 +6,10 @@ import {
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
-import { AllowOnly } from '../roles/roles.decorators';
+import { AllowOnly } from '@roles/roles.decorators';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { RolesGuard } from '../roles/roles.guard';
-import { PermissionsGuard } from '../permissions/permissions.guard';
+import { RolesGuard } from '@roles/roles.guard';
+import { PermissionsGuard } from '@permissions/permissions.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 export const Auth = (...roles: Role[]) => {
@@ -20,7 +20,7 @@ export const Auth = (...roles: Role[]) => {
   );
 };
 
-export const User = createParamDecorator(
+export const GetUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
     return request.user;

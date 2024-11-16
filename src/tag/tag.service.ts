@@ -6,13 +6,13 @@ import { UpdateTagUIDDto } from './dto/update-tag-uid.dto';
 import { Tag } from './entities/tag.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { TAG_PAGINATION_CONFIG } from './tag.pagination';
-import { BaseService } from '../core/services/base.service';
+import { BaseService } from '../core/base/base.service';
 import { Company } from '../company/entities/company.entity';
 import { Site } from '../site/entities/site.entity';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions.constants';
 import { INSTALL_TAGS_ACTION, UNINSTALL_TAGS_ACTION } from './tag.constants';
 import { TagsActionDto } from './dto/tags-action.dto';
+import { Resource } from '@core/core.constants';
 
 @Injectable()
 export class TagService extends BaseService {

@@ -8,11 +8,12 @@ import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { REQUIRED_PERMISSIONS_KEY } from './permissions.decorators';
 import { PermissionsService } from './permissions.service';
-import { Action, Resource } from './permissions.constants';
+import { Action } from './permissions.constants';
 import { User } from '../auth/auth.types';
 import { Permission, ResourcesParams } from './permissions.types';
 import { IsPublicMixin } from '../auth/auth.mixins';
 import { applyMixins } from '../core/core.utils';
+import { Resource } from '@core/core.constants';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate, IsPublicMixin {

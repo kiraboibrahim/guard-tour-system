@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   BeforeInsert,
+  BaseEntity,
 } from 'typeorm';
 import { Site } from './site.entity';
 import { Exclude } from 'class-transformer';
@@ -17,7 +18,7 @@ import {
 import { IsISO8601, IsMilitaryTime } from 'class-validator';
 
 @Entity()
-export class DelayedPatrolNotification {
+export class DelayedPatrolNotification extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -47,6 +48,14 @@ export class DelayedPatrolNotification {
 
   @ManyToOne(() => Site, { eager: true, onDelete: 'CASCADE' })
   site: Site;
+
+  static async createForSite(site: Site) {
+    const { id: siteId } = site;
+    const notification = new DelayedPatrolNotification();
+    notification.siteId = siteId;
+    notification.site = site;
+    return await notification.save();
+  }
 
   isNextNotificationOverDue() {
     const timezone = process.env.TZ as string;

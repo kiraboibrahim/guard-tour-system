@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SMS_SENT, TRUE_AFRICAN_SMS_SEND_URL } from './trueafrican.constants';
-import { isUGPhoneNumber } from '../../core/core.utils';
+import { isUGPhoneNumber } from '@core/core.utils';
 
 export default class TrueAfricanSMS {
   private readonly proxyAgent: HttpsProxyAgent<any>;

@@ -1,6 +1,7 @@
-import { Logger } from '@nestjs/common';
+import { BadRequestException, Logger } from '@nestjs/common';
 import { PaginateQuery } from 'nestjs-paginate';
-import { User } from '../../auth/auth.types';
+import { User } from '@auth/auth.types';
+import { isEmpty } from 'lodash';
 
 export class BaseService {
   private _user: User;
@@ -17,6 +18,12 @@ export class BaseService {
       this.logger.error(errorMsg);
     }
     return this._user;
+  }
+
+  handleMissingUpdateValues(updateDto: any) {
+    if (isEmpty(updateDto)) {
+      throw new BadRequestException('Missing update values');
+    }
   }
 
   applyFilters(query: PaginateQuery) {

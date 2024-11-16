@@ -7,9 +7,10 @@ import { CompanyAdmin } from './entities/company-admin.entity';
 import { UserService } from '../user/user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { COMPANY_ADMIN_PAGINATION_CONFIG } from './company-admin.pagination';
-import { BaseService } from '../core/services/base.service';
+import { BaseService } from '../core/base/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions.constants';
+
+import { Resource } from '@core/core.constants';
 
 @Injectable()
 export class CompanyAdminService extends BaseService {

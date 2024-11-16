@@ -3,7 +3,7 @@ import {
   PaginateConfig,
   PaginationType,
 } from 'nestjs-paginate';
-import { MAX_ITEMS_PER_PAGE } from '../core/core.constants';
+import { MAX_ITEMS_PER_PAGE } from '@core/core.constants';
 import { CompanyAdmin } from './entities/company-admin.entity';
 
 export const COMPANY_ADMIN_PAGINATION_CONFIG: PaginateConfig<CompanyAdmin> = {

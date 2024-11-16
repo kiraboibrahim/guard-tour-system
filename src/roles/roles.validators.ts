@@ -1,4 +1,4 @@
-import { Role } from './roles';
+import { Role } from './roles.constants';
 import { IsIn } from 'class-validator';
 
 export const IsValidRole = () => {

@@ -37,6 +37,7 @@ FROM node:20.13.1-bookworm-slim
 USER node
 COPY --from=development /usr/bin/dumb-init /usr/bin/dumb-init
 WORKDIR /usr/src/app
+# Change ownership of the application folder to node user so that user(node) can CRUD files within this folder
 USER root
 RUN chown node:node /usr/src/app
 USER node

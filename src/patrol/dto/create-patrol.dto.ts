@@ -4,13 +4,10 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import {
-  LoadEntitiesIfExist,
-  LoadEntityIfExists,
-} from '../../core/core.validators';
-import { SecurityGuard } from '../../security-guard/entities/security-guard.entity';
+import { LoadEntitiesIfExist, LoadEntityIfExists } from '@core/core.validators';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { Site } from '../../site/entities/site.entity';
+import { Site } from '@site/entities/site.entity';
 
 export class CreatePatrolDto {
   @ApiProperty()
@@ -21,7 +18,6 @@ export class CreatePatrolDto {
   @IsMilitaryTime()
   startTime: string;
 
-  // TODO: Remove this field when the app has been updated. It's only there to support individual patrols
   @ApiProperty()
   @LoadEntityIfExists<SecurityGuard>(
     SecurityGuard,

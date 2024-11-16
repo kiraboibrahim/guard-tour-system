@@ -1,30 +1,39 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { COMPANY_PAGINATION_CONFIG } from './company.pagination';
-import { Role } from '../roles/roles';
-import { Auth } from '../auth/auth.decorators';
+import { Role } from '@roles/roles.constants';
+import { Auth, GetUser } from '@auth/auth.decorators';
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
-} from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
-import { AlsoAllow } from '../roles/roles.decorators';
-import { User } from '../auth/auth.decorators';
+} from '@permissions/permissions.decorators';
+import { AlsoAllow } from '@roles/roles.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
+import { UploadCompanyLogoDto } from './dto/upload-company-logo.dto';
+import { PhotoFieldInterceptor } from '@core/core.interceptors';
+import { Resource } from '@core/core.constants';
 
 @ApiTags('Companies')
 @Auth(Role.SUPER_ADMIN)
@@ -36,7 +45,7 @@ export class CompanyController {
   @CanCreate(Resource.COMPANY)
   async create(
     @Body() createCompanyDto: CreateCompanyDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.companyService.setUser(user);
     return await this.companyService.create(createCompanyDto);
@@ -47,7 +56,7 @@ export class CompanyController {
   @CanRead(Resource.COMPANY)
   async find(
     @Paginate() query: PaginateQuery,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.companyService.setUser(user);
     return await this.companyService.find(query);
@@ -65,10 +74,29 @@ export class CompanyController {
   async update(
     @Param('id') id: string,
     @Body() updateCompanyDto: UpdateCompanyDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.companyService.setUser(user);
     return await this.companyService.update(+id, updateCompanyDto);
+  }
+
+  @ApiBadRequestResponse({
+    description: 'Logo upload failed due to validation errors',
+  })
+  @ApiOkResponse({ description: 'Logo has been uploaded successfully' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UploadCompanyLogoDto })
+  @AlsoAllow(Role.COMPANY_ADMIN)
+  @CanUpdate(Resource.COMPANY)
+  @Patch(':id/logo')
+  @UseInterceptors(PhotoFieldInterceptor('logo'))
+  uploadPhotos(
+    @Param('id') id: string,
+    @UploadedFile() logo: Express.Multer.File,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    this.companyService.setUser(user);
+    return this.companyService.uploadCompanyLogo(+id, logo);
   }
 
   @Delete(':id')

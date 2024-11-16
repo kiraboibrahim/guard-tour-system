@@ -12,7 +12,7 @@ import {
   BaseUser,
 } from './auth.types';
 import { plainToInstance } from 'class-transformer';
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

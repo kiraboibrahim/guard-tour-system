@@ -3,7 +3,7 @@ import { PatrolService } from './patrol.service';
 import { CreatePatrolDto } from './dto/create-patrol.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Auth, IsPublic } from '../auth/auth.decorators';
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
 
 @ApiTags('Patrols')
 @Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)

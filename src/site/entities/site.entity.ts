@@ -1,20 +1,31 @@
 import {
-  Entity,
+  BaseEntity,
   Column,
-  PrimaryGeneratedColumn,
+  Entity,
   ManyToOne,
-  OneToOne,
   OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Company } from '../../company/entities/company.entity';
-import { SiteAdmin } from '../../site-admin/entities/site-admin.entity';
-import { Tag } from '../../tag/entities/tag.entity';
+import { Company } from '@company/entities/company.entity';
+import { SiteAdmin } from '@site-admin/entities/site-admin.entity';
+import { Tag } from '@tag/entities/tag.entity';
 import { Exclude } from 'class-transformer';
 import { PATROL_TYPE } from '../site.constants';
 import { SiteOwner } from '../../site-owner/entities/site-owner.entity';
+import { Patrol } from '@patrol/entities/patrol.entity';
+import { DelayedPatrolNotification } from '@site/entities/delayed-patrol-notification.entity';
+import { Shift } from '@shift/entities/shift.entity';
+import { LocalTime, ZoneId } from '@js-joda/core';
+import {
+  NIGHT_SHIFT_END_TIME,
+  DAY_SHIFT_END_TIME,
+  SHIFT_TYPE,
+  NIGHT_SHIFT_START_TIME,
+} from '@shift/shift.constants';
 
 @Entity()
-export class Site {
+export class Site extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -75,5 +86,82 @@ export class Site {
 
   hasIndividualPatrolType() {
     return this.patrolType === PATROL_TYPE.INDIVIDUAL;
+  }
+
+  static async findActiveSecurityGuards(site: Site) {
+    const isDayTime = () => {
+      const now = LocalTime.now(ZoneId.of(process.env.TZ as string));
+      const nightShiftEndTime = LocalTime.of(
+        ...NIGHT_SHIFT_END_TIME.split(':').map((v) => parseInt(v)),
+      );
+      const nightShiftStartTime = LocalTime.of(
+        ...NIGHT_SHIFT_START_TIME.split(':').map((v) => parseInt(v)),
+      );
+      return (
+        now.isAfter(nightShiftEndTime) && now.isBefore(nightShiftStartTime)
+      );
+    };
+    const activeShift = isDayTime() ? SHIFT_TYPE.DAY : SHIFT_TYPE.NIGHT;
+    const shifts = await Shift.find({
+      where: {
+        site: { id: site.id },
+        type: activeShift,
+      },
+    });
+
+    const securityGuards = [];
+    for (const shift of shifts) {
+      securityGuards.push(...shift.securityGuards);
+    }
+    return securityGuards;
+  }
+
+  static async *findOverDueSites() {
+    const notificationEnabledSites = await Site.findNotificationEnabledSites();
+    for (const site of notificationEnabledSites) {
+      const latestSitePatrol = await site.findLatestPatrol();
+      const latestSiteNotification = await site.findLatestNotification();
+      const isSitePatrolOverDue =
+        !!latestSitePatrol && latestSitePatrol.isNextPatrolOverDue();
+      /* Site Notifications are overdue when latest site notification isn't with in the expected next creation time
+       * or when the site has never generated any notifications-- The site has no notifications.
+       * */
+      const isSiteNotificationOverDue =
+        (!!latestSiteNotification &&
+          latestSiteNotification.isNextNotificationOverDue()) ||
+        latestSiteNotification === null;
+
+      if (isSitePatrolOverDue && isSiteNotificationOverDue) {
+        yield site;
+      }
+    }
+  }
+
+  async findLatestPatrol() {
+    return await Patrol.findOne({
+      where: { siteId: this.id },
+      order: {
+        date: 'DESC',
+        startTime: 'DESC',
+      },
+    });
+  }
+
+  async findLatestNotification() {
+    return await DelayedPatrolNotification.findOne({
+      where: { siteId: this.id },
+      order: {
+        dateCreatedAt: 'DESC',
+        timeCreatedAt: 'DESC',
+      },
+    });
+  }
+
+  static async findNotificationEnabledSites() {
+    const CACHE_DURATION = 24 * 3600 * 1000; // A DAY
+    return await this.find({
+      where: [{ notificationsEnabled: true }],
+      cache: CACHE_DURATION,
+    });
   }
 }

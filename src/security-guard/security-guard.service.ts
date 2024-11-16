@@ -9,9 +9,10 @@ import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SECURITY_GUARD_PAGINATION_CONFIG } from './security-guard.pagination';
 import { Patrol } from '../patrol/entities/patrol.entity';
 import { PATROL_PAGINATION_CONFIG } from '../patrol/patrol.pagination';
-import { BaseService } from '../core/services/base.service';
+import { BaseService } from '../core/base/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions.constants';
+
+import { Resource } from '@core/core.constants';
 
 @Injectable()
 export class SecurityGuardService extends BaseService {

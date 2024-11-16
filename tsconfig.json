@@ -10,6 +10,65 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@auth/*": [
+        "./src/auth/*"
+      ],
+      "@core/*": [
+        "./src/core/*"
+      ],
+      "@company/*": [
+        "./src/company/*"
+      ],
+      "@company-admin/*": [
+        "./src/company-admin/*"
+      ],
+      "@database/*": [
+        "./src/database/*"
+      ],
+      "@libs/*": [
+        "./src/libs/*"
+      ],
+      "@patrol/*": [
+        "./src/patrol/*"
+      ],
+      "@permissions/*": [
+        "./src/permissions/*"
+      ],
+      "@roles/*": [
+        "./src/roles/*"
+      ],
+      "@security-guard/*": [
+        "./src/security-guard/*"
+      ],
+      "@shift/*": [
+        "./src/shift/*"
+      ],
+      "@site/*": [
+        "./src/site/*"
+      ],
+      "@site-admin/*": [
+        "./src/site-admin/*"
+      ],
+      "@site-owner/*": [
+        "./src/core/*"
+      ],
+      "@stats/*": [
+        "./src/stats/*"
+      ],
+      "@super-admin/*": [
+        "./src/super-admin/*"
+      ],
+      "@tag/*": [
+        "./src/tag/*"
+      ],
+      "@tasks/*": [
+        "./src/tasks/*"
+      ],
+      "@user/*": [
+        "./src/user/*"
+      ]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,

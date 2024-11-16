@@ -1,12 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { UserService } from '../user/user.service';
-import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
-import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
-import { Role } from '../roles/roles';
+import { UserService } from '@user/user.service';
+import { SiteAdmin } from '@site-admin/entities/site-admin.entity';
+import { CompanyAdmin } from '@company-admin/entities/company-admin.entity';
+import { Role } from '@roles/roles.constants';
 import { JWTPayload } from './auth.types';
-import { SuperAdmin } from '../super-admin/entities/super-admin.entity';
+import { SuperAdmin } from '@super-admin/entities/super-admin.entity';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +31,7 @@ export class AuthService {
     };
   }
   async getUserAccessToken(user: SuperAdmin | CompanyAdmin | SiteAdmin) {
-    // _user refers to the instance of User class from which all other types of users derive
+    // _user refers to the instance of GetUser class from which all other types of users derive
     // and thus _user is the instance that holds attributes shared amongst all users
     const { user: _user } = user;
     let payload: JWTPayload = {

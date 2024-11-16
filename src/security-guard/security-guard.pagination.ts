@@ -3,7 +3,7 @@ import {
   PaginateConfig,
   PaginationType,
 } from 'nestjs-paginate';
-import { MAX_ITEMS_PER_PAGE } from '../core/core.constants';
+import { MAX_ITEMS_PER_PAGE } from '@core/core.constants';
 import { SecurityGuard } from './entities/security-guard.entity';
 
 export const SECURITY_GUARD_PAGINATION_CONFIG: PaginateConfig<SecurityGuard> = {

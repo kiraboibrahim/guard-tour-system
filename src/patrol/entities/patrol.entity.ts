@@ -1,12 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  BaseEntity,
+} from 'typeorm';
 import { IsISO8601, IsMilitaryTime } from 'class-validator';
-import { SecurityGuard } from '../../security-guard/entities/security-guard.entity';
-import { Site } from '../../site/entities/site.entity';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
+import { Site } from '@site/entities/site.entity';
 import { Exclude } from 'class-transformer';
 import { LocalDateTime, ZoneId } from '@js-joda/core';
 
 @Entity()
-export class Patrol {
+export class Patrol extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

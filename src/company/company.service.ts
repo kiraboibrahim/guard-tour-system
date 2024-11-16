@@ -6,15 +6,16 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company } from './entities/company.entity';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { COMPANY_PAGINATION_CONFIG } from './company.pagination';
-import { BaseService } from '../core/services/base.service';
-import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions.constants';
-import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
-import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
-import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
-import { Site } from '../site/entities/site.entity';
-import { Patrol } from '../patrol/entities/patrol.entity';
-import { Tag } from '../tag/entities/tag.entity';
+import { BaseService } from '@core/base/base.service';
+import { PermissionsService } from '@permissions/permissions.service';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
+import { SiteAdmin } from '@site-admin/entities/site-admin.entity';
+import { CompanyAdmin } from '@company-admin/entities/company-admin.entity';
+import { Site } from '@site/entities/site.entity';
+import { Patrol } from '@patrol/entities/patrol.entity';
+import { Tag } from '@tag/entities/tag.entity';
+import { Resource } from '@core/core.constants';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class CompanyService extends BaseService {
@@ -22,6 +23,7 @@ export class CompanyService extends BaseService {
     @InjectRepository(Company) private companyRepository: Repository<Company>,
     private permissionsService: PermissionsService,
     @InjectEntityManager() private entityManager: EntityManager,
+    private storageService: StorageService,
   ) {
     super();
   }
@@ -60,6 +62,15 @@ export class CompanyService extends BaseService {
       .can(this.user)
       .update(Resource.COMPANY, id, updateCompanyDto, { throwError: true });
     return await this.companyRepository.update({ id }, updateCompanyDto);
+  }
+
+  async uploadCompanyLogo(companyId: number, logo: Express.Multer.File) {
+    const [logoUrl] = await this.storageService.upload(
+      [logo],
+      Resource.COMPANY,
+      companyId,
+    );
+    return await Company.update({ id: companyId }, { logo: logoUrl });
   }
 
   async remove(id: number) {

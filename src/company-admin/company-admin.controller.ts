@@ -12,18 +12,18 @@ import { CreateCompanyAdminDto } from './dto/create-company-admin.dto';
 import { UpdateCompanyAdminDto } from './dto/update-company-admin.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
-import { COMPANY_PAGINATION_CONFIG } from '../company/company.pagination';
-import { Auth, User } from '../auth/auth.decorators';
-import { Role } from '../roles/roles';
+import { COMPANY_PAGINATION_CONFIG } from '@company/company.pagination';
+import { Auth, GetUser } from '@auth/auth.decorators';
+import { Role } from '@roles/roles.constants';
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
-} from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
-import { AlsoAllow } from '../roles/roles.decorators';
+} from '@permissions/permissions.decorators';
+import { AlsoAllow } from '@roles/roles.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
+import { Resource } from '@core/core.constants';
 
 @ApiTags('Company Admins')
 @Auth(Role.SUPER_ADMIN)
@@ -35,7 +35,7 @@ export class CompanyAdminController {
   @CanCreate(Resource.COMPANY_ADMIN)
   async create(
     @Body() createCompanyAdminDto: CreateCompanyAdminDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.companyAdminService.setUser(user);
     return await this.companyAdminService.create(createCompanyAdminDto);
@@ -46,7 +46,7 @@ export class CompanyAdminController {
   @CanRead(Resource.COMPANY_ADMIN)
   async find(
     @Paginate() query: PaginateQuery,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.companyAdminService.setUser(user);
     return await this.companyAdminService.find(query);
@@ -67,7 +67,7 @@ export class CompanyAdminController {
   async update(
     @Param('id') id: string,
     @Body() updateCompanyAdminDto: UpdateCompanyAdminDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.companyAdminService.setUser(user);
     return await this.companyAdminService.update(+id, updateCompanyAdminDto);

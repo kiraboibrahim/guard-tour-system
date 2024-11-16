@@ -1,5 +1,5 @@
 import { IsNotEmpty } from 'class-validator';
-import { IsUnique } from '../../core/core.validators';
+import { IsUnique } from '@core/core.validators';
 import { Company } from '../entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
 

@@ -13,7 +13,7 @@ import { UpdateSiteAdminDto } from './dto/update-site-admin.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
 import { SITE_ADMIN_PAGINATION_CONFIG } from './site-admin.pagination';
-import { Auth, User } from '../auth/auth.decorators';
+import { Auth, GetUser } from '../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
 
 import {
@@ -22,8 +22,8 @@ import {
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
+import { Resource } from '@core/core.constants';
 
 @ApiTags('Site Admins')
 @Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
@@ -35,7 +35,7 @@ export class SiteAdminController {
   @CanCreate(Resource.SITE_ADMIN)
   create(
     @Body() createSiteAdminDto: CreateSiteAdminDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.siteAdminService.setUser(user);
     return this.siteAdminService.create(createSiteAdminDto);
@@ -44,7 +44,7 @@ export class SiteAdminController {
   @ApiPaginationQuery(SITE_ADMIN_PAGINATION_CONFIG)
   @Get()
   @CanRead(Resource.SITE_ADMIN)
-  find(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
+  find(@Paginate() query: PaginateQuery, @GetUser() user: AuthenticatedUser) {
     this.siteAdminService.setUser(user);
     return this.siteAdminService.find(query);
   }
@@ -60,7 +60,7 @@ export class SiteAdminController {
   async update(
     @Param('id') id: string,
     @Body() updateSiteAdminDto: UpdateSiteAdminDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.siteAdminService.setUser(user);
     return await this.siteAdminService.update(+id, updateSiteAdminDto);

@@ -2,21 +2,22 @@ services:
   backend:
     image: harmless138/dojohub:0.1.0-askaripatrol
     restart: always
+    volumes:
+      - app-uploads:$UPLOAD_DIR
     ports:
       - ${LISTEN_PORT:?error}:${LISTEN_PORT:?error}
     env_file: .env
     environment:
-      - DB_HOST=db
+      - DB_HOST=${DB_HOST:-db}
+      - QUEUE_HOST=${QUEUE_HOST:-redis}
 
     depends_on:
       db:
         condition: service_healthy
-    develop:
-      watch:
-        - action: rebuild
-          path: ./src
-        - action: rebuild
-          path: package.json
+      http:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
   db:
     image: postgres:16.3-bookworm
     shm_size: 128mb
@@ -41,5 +42,36 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
+  http:
+    image: nginx:1.27.0-bookworm
+    restart: always
+    volumes:
+      - app-uploads:/usr/share/nginx/html$UPLOAD_URL
+    ports:
+      - '8081:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -so /dev/null http://localhost || exit 1']
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+  redis:
+    image: redis:7.4.0-bookworm
+    ports:
+      - :${QUEUE_PORT:-6379}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'redis-cli PING',
+        ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 volumes:
   db-data:
+  redis-data:
+  app-uploads:

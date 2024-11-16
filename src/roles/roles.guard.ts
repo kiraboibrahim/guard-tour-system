@@ -11,7 +11,7 @@ import {
   PRIMARY_ROLES_KEY,
   SECONDARY_ROLES_KEY,
 } from './roles.decorators';
-import { Role } from './roles';
+import { Role } from './roles.constants';
 import { User } from '../auth/auth.types';
 import { IsPublicMixin } from '../auth/auth.mixins';
 import { applyMixins } from '../core/core.utils';

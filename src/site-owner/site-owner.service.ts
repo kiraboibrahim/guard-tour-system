@@ -7,9 +7,10 @@ import { Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 import { paginate, PaginateQuery } from 'nestjs-paginate';
 import { SITE_OWNER_PAGINATION_CONFIG } from './site-owner.pagination';
-import { BaseService } from '../core/services/base.service';
+import { BaseService } from '../core/base/base.service';
 import { PermissionsService } from '../permissions/permissions.service';
-import { Resource } from '../permissions/permissions.constants';
+
+import { Resource } from '@core/core.constants';
 
 @Injectable()
 export class SiteOwnerService extends BaseService {

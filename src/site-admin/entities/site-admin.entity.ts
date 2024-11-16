@@ -1,9 +1,10 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { BaseAuthCompanyUser } from '../../user/entities/user.base.entity';
 import { Site } from '../../site/entities/site.entity';
 
+import { AuthCompanyUser } from '@user/entities/company-user.base.entity';
+
 @Entity()
-export class SiteAdmin extends BaseAuthCompanyUser {
+export class SiteAdmin extends AuthCompanyUser {
   @Column()
   siteId: number;
 

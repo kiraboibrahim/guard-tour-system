@@ -13,16 +13,17 @@ import { UpdateSecurityGuardDto } from './dto/update-security-guard.dto';
 import { ApiPaginationQuery, Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
 import { SECURITY_GUARD_PAGINATION_CONFIG } from './security-guard.pagination';
-import { Auth, IsPublic, User } from '../auth/auth.decorators';
+import { Auth, IsPublic, GetUser } from '../auth/auth.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
-import { Role } from '../roles/roles';
+import { Role } from '../roles/roles.constants';
 import {
   CanCreate,
   CanDelete,
   CanRead,
   CanUpdate,
 } from '../permissions/permissions.decorators';
-import { Resource } from '../permissions/permissions.constants';
+
+import { Resource } from '@core/core.constants';
 
 @ApiTags('Security Guards')
 @Auth(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
@@ -34,7 +35,7 @@ export class SecurityGuardController {
   @CanCreate(Resource.SECURITY_GUARD)
   create(
     @Body() createSecurityGuardDto: CreateSecurityGuardDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.securityGuardService.setUser(user);
     return this.securityGuardService.create(createSecurityGuardDto);
@@ -43,7 +44,7 @@ export class SecurityGuardController {
   @ApiPaginationQuery(SECURITY_GUARD_PAGINATION_CONFIG)
   @Get()
   @CanRead(Resource.SECURITY_GUARD)
-  find(@Paginate() query: PaginateQuery, @User() user: AuthenticatedUser) {
+  find(@Paginate() query: PaginateQuery, @GetUser() user: AuthenticatedUser) {
     this.securityGuardService.setUser(user);
     return this.securityGuardService.find(query);
   }
@@ -59,7 +60,7 @@ export class SecurityGuardController {
   async update(
     @Param('id') id: string,
     @Body() updateSecurityGuardDto: UpdateSecurityGuardDto,
-    @User() user: AuthenticatedUser,
+    @GetUser() user: AuthenticatedUser,
   ) {
     this.securityGuardService.setUser(user);
     return await this.securityGuardService.update(+id, updateSecurityGuardDto);
