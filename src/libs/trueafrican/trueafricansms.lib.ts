@@ -16,10 +16,10 @@ export default class TrueAfricanSMS {
   }
 
   async send(recipientPhoneNumbers: string[], message: string) {
-    const _recipientPhoneNumbers = recipientPhoneNumbers.map(
-      (recipientPhoneNumber) =>
-        this.isUGPhoneNumber(this.removeLeadingPluses(recipientPhoneNumber)),
+    const _recipientPhoneNumbers = recipientPhoneNumbers.map((v) =>
+      this.removeLeadingPluses(this.isUGPhoneNumber(v)),
     );
+    if (!_recipientPhoneNumbers.length) return;
     return Promise.any(
       _recipientPhoneNumbers.map((recipientPhoneNumber) =>
         this.sendToOneRecipient(recipientPhoneNumber, message),
@@ -58,7 +58,9 @@ export default class TrueAfricanSMS {
   private isUGPhoneNumber(phoneNumber: string) {
     const isValid = isUGPhoneNumber(phoneNumber);
     if (!isValid) {
-      throw new Error('Invalid phone number');
+      throw new Error(
+        'Invalid phone number. Phone number should be in this format: +2567XXXXXXXX',
+      );
     }
     return phoneNumber;
   }

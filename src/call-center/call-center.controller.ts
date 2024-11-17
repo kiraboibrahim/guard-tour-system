@@ -1,19 +1,14 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Controller, Param, Post } from '@nestjs/common';
 import { CallCenterService } from './call-center.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Call Center')
 @Controller('call-center')
 export class CallCenterController {
   constructor(private callCenterService: CallCenterService) {}
-  @Post('test')
-  async testCall() {
-    await this.callCenterService.testCallCenter();
-  }
 
-  @Post('gather/:callLogId')
-  async gather(@Body() body: any, @Param('callLogId') callLogId: string) {
-    return await this.callCenterService.handleCallResponse(
-      +callLogId,
-      body.Digits,
-    );
+  @Post(':siteId/test')
+  async testCall(@Param('siteId') siteId: string) {
+    await this.callCenterService.testCallCenter(+siteId);
   }
 }

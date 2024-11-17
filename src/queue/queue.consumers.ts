@@ -42,8 +42,6 @@ export class DelayedPatrolSMSConsumer extends WorkerHost {
     // Save notification before sending sms
     await DelayedPatrolNotification.createForSite(site);
     const message = `The site, ${site.name} hasn't been patrolled for over ${site.notificationCycle} hours`;
-    return companyAdmins.length
-      ? await this.smsService.send(companyAdminPhoneNumbers, message)
-      : null;
+    return await this.smsService.send(companyAdminPhoneNumbers, message);
   }
 }

@@ -11,8 +11,10 @@ import { Queue } from 'bullmq';
 import { CallService } from './call.service';
 import { CallLog } from './entities/call-log.entity';
 import { ConfigService } from '@nestjs/config';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const VoiceResponse = require('twilio').twiml.VoiceResponse;
+import {
+  getOnCallAnsweredResponse,
+  getOnCallEndedResponse,
+} from './call-center.response';
 
 @Injectable()
 export class CallCenterService {
@@ -44,51 +46,23 @@ export class CallCenterService {
   }
 
   private getCallResponse(callLog: CallLog) {
-    const SPEAKING_RATE = '65%';
-    const PAUSE_DURATION = 1; // Seconds
-    const twiml = new VoiceResponse();
-
-    const action = (
+    const actionBaseUrl = (
       this.configService.get<string>('TWILIO_GATHER_ACTION') as string
     )?.replace(/\/+$/g, '');
-    if (action === undefined) {
+    if (actionBaseUrl === undefined) {
       throw new Error("TWILIO_GATHER_ACTION variable isn't set");
     }
-    const gather = twiml.gather({
-      numDigits: 1,
-      action: `${action}/${callLog.id}`,
-    });
-    const introduction =
-      'Patrols have been delayed on this site.' +
-      'Please listen to the instructions carefully.';
-    const firstInstruction = 'Press 1 for lack of a data bundle on the device';
-    const secondInstruction =
-      'Press 2 for any other issue with the patrol device or system';
-    const thirdInstruction =
-      'Hang up if there are no issues with submitting patrols';
-
-    gather.pause({ length: PAUSE_DURATION });
-    gather.say({ rate: SPEAKING_RATE }, introduction);
-    gather.pause({ length: PAUSE_DURATION });
-    gather.say({ rate: SPEAKING_RATE }, firstInstruction);
-    gather.pause({ length: PAUSE_DURATION });
-    gather.say({ rate: SPEAKING_RATE }, secondInstruction);
-    gather.pause({ length: PAUSE_DURATION });
-    gather.say({ rate: SPEAKING_RATE }, thirdInstruction);
-    return twiml.toString();
+    const action = `${actionBaseUrl}/${callLog.id}`;
+    return getOnCallAnsweredResponse(action);
   }
 
-  async handleCallResponse(callLogId: number, response: string) {
+  async handleOnCallAnsweredResponse(callLogId: number, response: string) {
     await CallLog.updateResponse(callLogId, response);
-    const twiml = new VoiceResponse();
-    twiml.say('Your response has been recorded, Thank you');
-    twiml.pause({ length: 2 });
-    twiml.hangup();
-    return twiml.toString();
+    return getOnCallEndedResponse();
   }
 
-  async testCallCenter() {
-    const site = await Site.findOneOrFail({ where: { id: 2 } });
+  async testCallCenter(siteId: number) {
+    const site = await Site.findOneOrFail({ where: { id: siteId } });
     await this.delayedPatrolCallQueue.add(DELAYED_PATROL_CALL_QUEUE_TASK, {
       site,
     });
