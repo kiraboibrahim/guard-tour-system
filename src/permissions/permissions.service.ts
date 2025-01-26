@@ -114,6 +114,10 @@ export class PermissionsService {
         return this.canUserCreateTags(createDto as CreateTagsDto);
       case Resource.PATROL:
         return this.canUserCreatePatrol(createDto as CreatePatrolDto);
+      case Resource.THEME:
+        return this.canUserCreateTheme();
+      default:
+        return false;
     }
   }
 
@@ -212,6 +216,10 @@ export class PermissionsService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private canUserCreatePatrol(createPatrolDto: CreatePatrolDto) {
     return true;
+  }
+
+  private canUserCreateTheme() {
+    this.user.isCompanyAdmin();
   }
 
   //Determine if a user can read a given resource / collection
@@ -449,6 +457,8 @@ export class PermissionsService {
         );
       case Resource.TAG:
         return this.canUserUpdateTags(resourceId, updateDto as any);
+      case Resource.THEME:
+        return this.canUserUpdateTheme();
       default:
         return false;
     }
@@ -620,6 +630,10 @@ export class PermissionsService {
     return isSuperAdminAllowed || isCompanyAdminAllowed;
   }
 
+  private canUserUpdateTheme() {
+    return this.user.isCompanyAdmin();
+  }
+
   // Determine if a user can delete a resource
   async delete(
     resource: Resource,
@@ -660,6 +674,8 @@ export class PermissionsService {
         return this.canUserDeleteTag(resourceId);
       case Resource.PATROL:
         return this.canUserDeletePatrol(resourceId);
+      case Resource.THEME:
+        return this.canUserDeleteTheme();
       default:
         return false;
     }
@@ -741,6 +757,9 @@ export class PermissionsService {
     return false;
   }
 
+  private canUserDeleteTheme() {
+    return this.user.isCompanyAdmin();
+  }
   filter(resource: Resource) {
     this.handleUndefinedUser();
     this.resource = resource;

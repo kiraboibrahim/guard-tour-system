@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BaseEntity,
+  OneToOne,
+} from 'typeorm';
+import { Theme } from '@company/entities/theme.entity';
 
 @Entity()
 export class Company extends BaseEntity {
@@ -16,4 +23,9 @@ export class Company extends BaseEntity {
 
   @Column({ nullable: true })
   logo: string;
+
+  @OneToOne(() => Theme, (theme) => theme.company, {
+    eager: true,
+  })
+  theme: Theme;
 }

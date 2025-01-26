@@ -20,7 +20,7 @@ export class User extends BaseEntity {
 
   @Column()
   @IsValidRole()
-  role: string;
+  role: Role;
 }
 
 /* Due to no support for multiple inheritance in typescript, this class is inheriting

@@ -16,6 +16,7 @@ import { Shift } from '@shift/entities/shift.entity';
 import { CallLog } from '../call-center/entities/call-log.entity';
 
 import { AuthUser } from '@user/entities/auth-user.base.entity';
+import { Theme } from '@company/entities/theme.entity';
 
 const ENTITIES = [
   Company,
@@ -32,6 +33,7 @@ const ENTITIES = [
   DelayedPatrolNotification,
   Shift,
   CallLog,
+  Theme,
 ];
 @Module({
   imports: [

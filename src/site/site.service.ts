@@ -119,4 +119,8 @@ export class SiteService extends BaseService {
       DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG,
     );
   }
+
+  async findSitePerformance(siteId: number, year: string, month: string) {
+    return Math.random();
+  }
 }

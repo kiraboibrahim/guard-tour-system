@@ -7,6 +7,7 @@ import { CompanyAdmin } from '@company-admin/entities/company-admin.entity';
 import { Role } from '@roles/roles.constants';
 import { JWTPayload } from './auth.types';
 import { SuperAdmin } from '@super-admin/entities/super-admin.entity';
+import { Company } from '@company/entities/company.entity';
 
 @Injectable()
 export class AuthService {
@@ -31,25 +32,30 @@ export class AuthService {
     };
   }
   async getUserAccessToken(user: SuperAdmin | CompanyAdmin | SiteAdmin) {
-    // _user refers to the instance of GetUser class from which all other types of users derive
-    // and thus _user is the instance that holds attributes shared amongst all users
-    const { user: _user } = user;
+    const {
+      user: { id, role, email, firstName, lastName },
+    } = user;
     let payload: JWTPayload = {
-      sub: _user.id,
-      role: _user.role as Role,
-      email: _user.email,
-      firstName: _user.firstName,
-      lastName: _user.lastName,
+      sub: id,
+      role,
+      email,
+      firstName,
+      lastName,
       companyId: user instanceof SuperAdmin ? undefined : user.companyId,
     };
 
     // Add a managedSiteId to the payload for a site admin user
-    if (_user.role === Role.SITE_ADMIN) {
-      const siteAdmin = user as SiteAdmin;
+    if (role === Role.SITE_ADMIN) {
+      const { siteId } = user as SiteAdmin;
       payload = {
         ...payload,
-        managedSiteId: siteAdmin.siteId,
+        managedSiteId: siteId,
       };
+    }
+    // Add a company object to the JWT payload of the company admin
+    if (role === Role.COMPANY_ADMIN) {
+      const { company } = user as CompanyAdmin;
+      payload = { ...payload, company };
     }
     return await this.jwtService.signAsync(payload);
   }

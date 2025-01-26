@@ -100,7 +100,10 @@ export class UserService {
       case Role.SUPER_ADMIN:
         return await this.superAdminRepository.findOneBy(whereOptions);
       case Role.COMPANY_ADMIN:
-        return await this.companyAdminRepository.findOneBy(whereOptions);
+        return await this.companyAdminRepository.findOne({
+          where: whereOptions,
+          relations: { company: { theme: true } },
+        });
       case Role.SITE_ADMIN:
         return await this.siteAdminRepository.findOneBy(whereOptions);
       case Role.SITE_OWNER:

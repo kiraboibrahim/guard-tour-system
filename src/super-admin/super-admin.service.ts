@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { CreateSuperAdminDto } from './dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from './dto/update-super-admin.dto';
 import { SuperAdmin } from './entities/super-admin.entity';
-import { UserService } from '../user/user.service';
-import { BaseService } from '../core/base/base.service';
-import { PermissionsService } from '../permissions/permissions.service';
+import { UserService } from '@user/user.service';
+import { BaseService } from '@core/base/base.service';
+import { PermissionsService } from '@permissions/permissions.service';
 
 import { Resource } from '@core/core.constants';
 
@@ -26,7 +26,7 @@ export class SuperAdminService extends BaseService {
       .create(Resource.SUPER_ADMIN, createSuperAdminDto, {
         throwError: true,
       });
-    return await this.userService.createSuperAdmin(createSuperAdminDto);
+    //return await this.userService.createSuperAdmin(createSuperAdminDto);
   }
 
   async find() {

@@ -29,17 +29,30 @@ import {
   CanRead,
   CanUpdate,
 } from '@permissions/permissions.decorators';
-import { AlsoAllow } from '@roles/roles.decorators';
+import { AllowOnly, AlsoAllow } from '@roles/roles.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
 import { UploadCompanyLogoDto } from './dto/upload-company-logo.dto';
 import { PhotoFieldInterceptor } from '@core/core.interceptors';
 import { Resource } from '@core/core.constants';
+import UpdateThemeDto from '@company/dto/update-theme.dto';
+import CreateThemeDto from '@company/dto/create-theme.dto';
 
 @ApiTags('Companies')
 @Auth(Role.SUPER_ADMIN)
 @Controller('companies')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
+
+  @Post('themes')
+  @AllowOnly(Role.COMPANY_ADMIN)
+  @CanCreate(Resource.THEME)
+  async createTheme(
+    @Body() createThemeDto: CreateThemeDto,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    this.companyService.setUser(user);
+    return await this.companyService.createTheme(createThemeDto);
+  }
 
   @Post()
   @CanCreate(Resource.COMPANY)
@@ -67,6 +80,17 @@ export class CompanyController {
   @CanRead(Resource.COMPANY)
   async findOne(@Param('id') id: string) {
     return await this.companyService.findOneById(+id);
+  }
+
+  @Patch('themes')
+  @AllowOnly(Role.COMPANY_ADMIN)
+  @CanUpdate(Resource.THEME)
+  async updateTheme(
+    @Body() updateThemeDto: UpdateThemeDto,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    this.companyService.setUser(user);
+    return await this.companyService.updateTheme(updateThemeDto);
   }
 
   @Patch(':id')
@@ -97,6 +121,14 @@ export class CompanyController {
   ) {
     this.companyService.setUser(user);
     return this.companyService.uploadCompanyLogo(+id, logo);
+  }
+
+  @Delete('themes')
+  @AllowOnly(Role.COMPANY_ADMIN)
+  @CanDelete(Resource.THEME)
+  deleteTheme(@GetUser() user: AuthenticatedUser) {
+    this.companyService.setUser(user);
+    return this.companyService.deleteTheme();
   }
 
   @Delete(':id')

@@ -11,15 +11,15 @@ import { SuperAdminService } from './super-admin.service';
 import { CreateSuperAdminDto } from './dto/create-super-admin.dto';
 import { UpdateSuperAdminDto } from './dto/update-super-admin.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { Auth, GetUser } from '../auth/auth.decorators';
+import { Auth, GetUser, IsPublic } from '@auth/auth.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
 import {
   CanCreate,
   CanRead,
   CanUpdate,
   CanDelete,
-} from '../permissions/permissions.decorators';
-import { Role } from '../roles/roles.constants';
+} from '@permissions/permissions.decorators';
+import { Role } from '@roles/roles.constants';
 import { Resource } from '@core/core.constants';
 
 @ApiTags('Super Admins')

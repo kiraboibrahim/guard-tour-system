@@ -12,7 +12,7 @@ import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { Paginate, PaginateQuery } from 'nestjs-paginate';
 import { ApiTags } from '@nestjs/swagger';
-import { Auth, IsPublic, GetUser } from '@auth/auth.decorators';
+import { Auth, GetUser, IsPublic } from '@auth/auth.decorators';
 import { Role } from '@roles/roles.constants';
 import {
   CanCreate,
@@ -21,7 +21,7 @@ import {
   CanUpdate,
 } from '@permissions/permissions.decorators';
 import { User as AuthenticatedUser } from '../auth/auth.types';
-import { AlsoAllow } from '@roles/roles.decorators';
+import { AllowOnly, AlsoAllow } from '@roles/roles.decorators';
 import { Resource } from '@core/core.constants';
 
 @ApiTags('Sites')
@@ -88,6 +88,19 @@ export class SiteController {
   ) {
     this.siteService.setUser(user);
     return this.siteService.findSiteNotifications(+id, query);
+  }
+
+  @Get(':id/:year/:month/performance')
+  @AllowOnly(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.SITE_OWNER)
+  @CanRead(Resource.SITE)
+  async findSitePerformance(
+    @Param('id') id: string,
+    @Param('month') month: string,
+    @Param('year') year: string,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    this.siteService.setUser(user);
+    return this.siteService.findSitePerformance(+id, year, month);
   }
 
   @Patch(':id')

@@ -1,4 +1,4 @@
-import { Role } from '../roles/roles.constants';
+import { Role } from '@roles/roles.constants';
 
 export type JWTPayload = {
   sub: number;
@@ -8,6 +8,7 @@ export type JWTPayload = {
   lastName: string;
   // companyId is undefined for super admins because superAdmins aren't affiliated to any company
   companyId?: number;
+  company?: any;
   // managedSiteId is only defined for site admins
   managedSiteId?: number;
 };

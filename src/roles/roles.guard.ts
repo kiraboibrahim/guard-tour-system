@@ -12,9 +12,9 @@ import {
   SECONDARY_ROLES_KEY,
 } from './roles.decorators';
 import { Role } from './roles.constants';
-import { User } from '../auth/auth.types';
-import { IsPublicMixin } from '../auth/auth.mixins';
-import { applyMixins } from '../core/core.utils';
+import { User } from '@auth/auth.types';
+import { IsPublicMixin } from '@auth/auth.mixins';
+import { applyMixins } from '@core/core.utils';
 
 @Injectable()
 export class RolesGuard implements CanActivate, IsPublicMixin {

@@ -18,5 +18,6 @@ export enum Resource {
   SITE_OWNER = 'SITE_OWNER',
   PATROL = 'PATROL',
   NOTIFICATION = 'NOTIFICATION',
+  THEME = 'THEME',
   STATS = 'STATISTICS',
 }
