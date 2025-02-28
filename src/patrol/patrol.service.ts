@@ -3,9 +3,9 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePatrolDto } from './dto/create-patrol.dto';
 import { Patrol } from './entities/patrol.entity';
-import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
-import { BaseService } from '../core/base/base.service';
-import { Site } from '../site/entities/site.entity';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
+import { BaseService } from '@core/base/base.service';
+import { Site } from '@site/entities/site.entity';
 
 @Injectable()
 export class PatrolService extends BaseService {

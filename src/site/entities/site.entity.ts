@@ -2,6 +2,7 @@ import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -23,6 +24,8 @@ import {
   SHIFT_TYPE,
   NIGHT_SHIFT_START_TIME,
 } from '@shift/shift.constants';
+import { stripEndSlash } from '@nestjs/common/utils/shared.utils';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
 
 @Entity()
 export class Site extends BaseEntity {
@@ -79,6 +82,13 @@ export class Site extends BaseEntity {
 
   @Column({ default: PATROL_TYPE.INDIVIDUAL })
   patrolType: string;
+
+  @Column({ nullable: true })
+  securityGuardCount: number;
+
+  @OneToOne(() => Patrol, { nullable: true })
+  @JoinColumn()
+  latestPatrol: Patrol;
 
   belongsToCompany(companyId: number) {
     return this.companyId === companyId;
@@ -155,6 +165,39 @@ export class Site extends BaseEntity {
         timeCreatedAt: 'DESC',
       },
     });
+  }
+
+  async updateLatestPatrol() {
+    const latestPatrol = await this.findLatestPatrol();
+    if (!latestPatrol) return;
+    if (this.latestPatrol?.id !== latestPatrol?.id) {
+      this.latestPatrol = latestPatrol;
+      return await Site.save(this);
+    }
+  }
+
+  async updateSecurityGuardCount() {
+    this.securityGuardCount = await SecurityGuard.countBy({
+      shift: { site: { id: this.id } },
+    });
+    return await Site.save(this);
+  }
+
+  static async *streamSites(limit = 10) {
+    let page = 1;
+    let offset = (page - 1) * limit;
+    while (true) {
+      const sites = await Site.find({
+        order: {
+          id: 'DESC',
+        },
+        skip: offset,
+        take: limit,
+      });
+      if (!sites.length || sites.length < limit) break;
+      offset = (++page - 1) * limit;
+      yield sites;
+    }
   }
 
   static async findNotificationEnabledSites() {

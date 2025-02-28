@@ -59,14 +59,21 @@ export class SiteService extends BaseService {
   async findOneById(id: string) {
     const site = await this.siteRepository.findOne({
       where: [{ id: +id }, { tagId: id }],
-      relations: { tags: true },
+      relations: {
+        tags: true,
+        latestPatrol: { securityGuard: { user: true } },
+      },
     });
     if (!!site) {
       const supervisors = await this.securityGuardRepository.findBy({
         type: SECURITY_GUARD_TYPE.SUPERVISOR,
         companyId: site.companyId,
       });
-      return { ...site, supervisors };
+      const securityGuardCount = await this.securityGuardRepository.countBy({
+        shift: { site: { id: +id } },
+      });
+      const latestSitePatrol = await site.findLatestPatrol();
+      return { ...site, supervisors, latestSitePatrol, securityGuardCount };
     }
   }
 

@@ -3,7 +3,7 @@ import {
   PaginateConfig,
   PaginationType,
 } from 'nestjs-paginate';
-import { MAX_ITEMS_PER_PAGE } from '../../core/core.constants';
+import { MAX_ITEMS_PER_PAGE } from '@core/core.constants';
 import { DelayedPatrolNotification } from '../entities/delayed-patrol-notification.entity';
 
 export const DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG: PaginateConfig<DelayedPatrolNotification> =

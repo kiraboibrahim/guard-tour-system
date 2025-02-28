@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Company } from '../company/entities/company.entity';
+import { Company } from '@company/entities/company.entity';
 import { Repository } from 'typeorm';
-import { CompanyAdmin } from '../company-admin/entities/company-admin.entity';
-import { SiteAdmin } from '../site-admin/entities/site-admin.entity';
-import { SecurityGuard } from '../security-guard/entities/security-guard.entity';
-import { Site } from '../site/entities/site.entity';
-import { Tag } from '../tag/entities/tag.entity';
+import { CompanyAdmin } from '@company-admin/entities/company-admin.entity';
+import { SiteAdmin } from '@site-admin/entities/site-admin.entity';
+import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
+import { Site } from '@site/entities/site.entity';
+import { Tag } from '@tag/entities/tag.entity';
 
 @Injectable()
 export class StatsService {

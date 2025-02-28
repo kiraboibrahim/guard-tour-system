@@ -19,7 +19,7 @@ import { Queue } from 'bullmq';
 const MIDNIGHT_SHARP_CRON = 'midnightSharpNotifications';
 const THIRTY_MIN_PAST_ONE_CRON = '30MinPastOneNotifications';
 @Injectable()
-export class DelayedPatrolNotificationService {
+export class PatrolReminderTask {
   constructor(
     @InjectQueue(DELAYED_PATROL_CALL_QUEUE)
     private delayedPatrolCallQueue: Queue,
