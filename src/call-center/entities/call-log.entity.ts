@@ -21,13 +21,17 @@ export class CallLog extends BaseEntity {
   @Column()
   date: string;
 
-  @ManyToOne(() => Site, { eager: true })
+  @ManyToOne(() => Site, { eager: true, onDelete: 'CASCADE' })
   site: Site;
 
   @Column({ default: false })
   isAnswered: boolean;
 
-  @ManyToOne(() => SecurityGuard, undefined, { nullable: true, eager: true })
+  @ManyToOne(() => SecurityGuard, undefined, {
+    nullable: true,
+    eager: true,
+    onDelete: 'SET NULL',
+  })
   answeredBy: SecurityGuard;
 
   @Column({ nullable: true, default: null })
