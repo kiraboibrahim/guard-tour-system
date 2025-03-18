@@ -1,5 +1,6 @@
 import {
   BaseEntity,
+  Between,
   Column,
   Entity,
   JoinColumn,
@@ -17,15 +18,16 @@ import { SiteOwner } from '../../site-owner/entities/site-owner.entity';
 import { Patrol } from '@patrol/entities/patrol.entity';
 import { DelayedPatrolNotification } from '@site/entities/delayed-patrol-notification.entity';
 import { Shift } from '@shift/entities/shift.entity';
-import { LocalTime, ZoneId } from '@js-joda/core';
+import { LocalDate, LocalTime, TemporalAdjusters, ZoneId } from '@js-joda/core';
 import {
   NIGHT_SHIFT_END_TIME,
-  DAY_SHIFT_END_TIME,
-  SHIFT_TYPE,
   NIGHT_SHIFT_START_TIME,
+  SHIFT_TYPE,
 } from '@shift/shift.constants';
-import { stripEndSlash } from '@nestjs/common/utils/shared.utils';
 import { SecurityGuard } from '@security-guard/entities/security-guard.entity';
+import { BadRequestException } from '@nestjs/common';
+import firstDayOfMonth = TemporalAdjusters.firstDayOfMonth;
+import { calculateDailyScore, getDateInfo } from '@core/core.utils';
 
 @Entity()
 export class Site extends BaseEntity {
@@ -86,7 +88,7 @@ export class Site extends BaseEntity {
   @Column({ nullable: true })
   securityGuardCount: number;
 
-  @OneToOne(() => Patrol, { nullable: true })
+  @OneToOne(() => Patrol, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn()
   latestPatrol: Patrol;
 
@@ -206,5 +208,47 @@ export class Site extends BaseEntity {
       where: [{ notificationsEnabled: true }],
       cache: CACHE_DURATION,
     });
+  }
+
+  static async getDailyScore(
+    siteId: number,
+    year: number,
+    month: number,
+    day: number,
+  ) {
+    const { date } = getDateInfo(year, month, day);
+    const patrols = await Patrol.find({
+      where: {
+        date: date.toString(),
+        siteId,
+      },
+      order: {
+        date: 'ASC',
+      },
+    });
+    return calculateDailyScore(patrols, year, month, day);
+  }
+
+  static async getMonthlyScore(siteId: number, year: number, month: number) {
+    const { previousMonthEndDate, nextMonthStartDate, daysInMonth } =
+      getDateInfo(year, month, 1);
+    const patrols = await Patrol.find({
+      where: {
+        date: Between(
+          previousMonthEndDate.toString(),
+          nextMonthStartDate.toString(),
+        ),
+        siteId,
+      },
+      order: {
+        date: 'ASC',
+      },
+    });
+    const months = [...Array(31).keys()].map((v) => v + 1);
+    const monthlyScore = months.reduce((monthlyScore, day) => {
+      const dailyScore = calculateDailyScore(patrols, year, month, day);
+      return monthlyScore + dailyScore;
+    }, 0);
+    return monthlyScore / daysInMonth;
   }
 }

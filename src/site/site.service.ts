@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Between, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
@@ -19,6 +19,7 @@ import { Resource } from '@core/core.constants';
 import { Shift } from '@shift/entities/shift.entity';
 import { CallLog } from '../call-center/entities/call-log.entity';
 import { SITE_CALL_LOGS_PAGINATION_CONFIG } from '../call-center/call-center.pagination';
+import { LocalDate, LocalTime } from '@js-joda/core';
 
 @Injectable()
 export class SiteService extends BaseService {
@@ -57,24 +58,34 @@ export class SiteService extends BaseService {
   }
 
   async findOneById(id: string) {
-    const site = await this.siteRepository.findOne({
-      where: [{ id: +id }, { tagId: id }],
-      relations: {
-        tags: true,
-        latestPatrol: { securityGuard: { user: true } },
-      },
-    });
-    if (!!site) {
-      const supervisors = await this.securityGuardRepository.findBy({
-        type: SECURITY_GUARD_TYPE.SUPERVISOR,
-        companyId: site.companyId,
+    const relations = {
+      tags: true,
+      latestPatrol: { securityGuard: { user: true } },
+    };
+    let site = null;
+    const MAX_ID = Math.pow(2, 31) - 1;
+    const isSafeID = +id <= MAX_ID;
+    // Postgres serial id can only support upto MAX_ID. Any further ID comparisons
+    // with ids bigger than that raises a QueryFailedError. TagIds are really so big
+    if (isSafeID) {
+      site = await Site.findOne({
+        where: [{ id: +id }, { tagId: id }],
+        relations,
       });
-      const securityGuardCount = await this.securityGuardRepository.countBy({
-        shift: { site: { id: +id } },
-      });
-      const latestSitePatrol = await site.findLatestPatrol();
-      return { ...site, supervisors, latestSitePatrol, securityGuardCount };
+    } else {
+      site = await Site.findOne({ where: { tagId: id }, relations });
     }
+    if (!site) return;
+
+    const supervisors = await this.securityGuardRepository.findBy({
+      type: SECURITY_GUARD_TYPE.SUPERVISOR,
+      companyId: site.companyId,
+    });
+    const securityGuardCount = await this.securityGuardRepository.countBy({
+      shift: { site: { id: site.id } },
+    });
+    const latestSitePatrol = await site.findLatestPatrol();
+    return { ...site, supervisors, latestSitePatrol, securityGuardCount };
   }
 
   async update(id: number, updateSiteDto: UpdateSiteDto) {
@@ -126,8 +137,16 @@ export class SiteService extends BaseService {
       DELAYED_PATROL_NOTIFICATION_PAGINATION_CONFIG,
     );
   }
+  async getSiteDailyScore(
+    siteId: number,
+    year: number,
+    month: number,
+    day: number,
+  ) {
+    return await Site.getDailyScore(siteId, year, month, day);
+  }
 
-  async findSitePerformance(siteId: number, year: string, month: string) {
-    return Math.random();
+  async getSiteMonthlyScore(siteId: number, year: number, month: number) {
+    return await Site.getMonthlyScore(siteId, year, month);
   }
 }

@@ -114,13 +114,21 @@ export class CompanyController {
   @CanUpdate(Resource.COMPANY)
   @Patch(':id/logo')
   @UseInterceptors(PhotoFieldInterceptor('logo'))
-  uploadPhotos(
+  uploadLogo(
     @Param('id') id: string,
     @UploadedFile() logo: Express.Multer.File,
     @GetUser() user: AuthenticatedUser,
   ) {
     this.companyService.setUser(user);
     return this.companyService.uploadCompanyLogo(+id, logo);
+  }
+
+  @AlsoAllow(Role.COMPANY_ADMIN)
+  @CanUpdate(Resource.COMPANY)
+  @Delete(':id/logo')
+  deleteLogo(@Param('id') id: string, @GetUser() user: AuthenticatedUser) {
+    this.companyService.setUser(user);
+    return this.companyService.deleteLogo(+id);
   }
 
   @Delete('themes')

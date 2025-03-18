@@ -12,8 +12,8 @@ import {
   LoadEntityIfExists,
   IsUGPhoneNumber,
   IsUnique,
-} from '../../core/core.validators';
-import { Company } from '../../company/entities/company.entity';
+} from '@core/core.validators';
+import { Company } from '@company/entities/company.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Site } from '../entities/site.entity';
 import { MAX_PATROL_DELAY_DURATIONS, PATROL_TYPE } from '../site.constants';

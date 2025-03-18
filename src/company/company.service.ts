@@ -121,6 +121,10 @@ export class CompanyService extends BaseService {
     return await Theme.updateTheme(companyId, updateThemeDto);
   }
 
+  async deleteLogo(companyId: number) {
+    return await Company.update({ id: companyId }, { logo: null });
+  }
+
   async deleteTheme() {
     const { companyId } = this.user;
     return await Theme.deleteTheme(companyId);

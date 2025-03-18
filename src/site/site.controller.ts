@@ -93,14 +93,27 @@ export class SiteController {
   @Get(':id/:year/:month/performance')
   @AllowOnly(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.SITE_OWNER)
   @CanRead(Resource.SITE)
-  async findSitePerformance(
+  async findSiteMonthlyPerformance(
     @Param('id') id: string,
     @Param('month') month: string,
     @Param('year') year: string,
     @GetUser() user: AuthenticatedUser,
   ) {
     this.siteService.setUser(user);
-    return this.siteService.findSitePerformance(+id, year, month);
+    return this.siteService.getSiteMonthlyScore(+id, +year, +month);
+  }
+  @Get(':id/:year/:month/:day/performance')
+  @AllowOnly(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.SITE_OWNER)
+  @CanRead(Resource.SITE)
+  async findSiteDailyPerformance(
+    @Param('id') id: string,
+    @Param('year') year: string,
+    @Param('month') month: string,
+    @Param('day') day: string,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    this.siteService.setUser(user);
+    return this.siteService.getSiteDailyScore(+id, +year, +month, +day);
   }
 
   @Patch(':id')

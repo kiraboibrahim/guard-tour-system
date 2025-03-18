@@ -21,8 +21,8 @@ export class Company extends BaseEntity {
   @Column()
   address: string;
 
-  @Column({ nullable: true })
-  logo: string;
+  @Column({ nullable: true, type: 'text' })
+  logo: string | null;
 
   @OneToOne(() => Theme, (theme) => theme.company, {
     eager: true,

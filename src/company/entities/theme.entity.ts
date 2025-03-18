@@ -25,7 +25,7 @@ export class Theme extends BaseEntity {
   @Column()
   accentColor: string;
 
-  @OneToOne(() => Company, (company) => company.theme)
+  @OneToOne(() => Company, (company) => company.theme, { onDelete: 'CASCADE' })
   @JoinColumn()
   company: Company;
 

@@ -3,7 +3,7 @@ import {
   PaginateConfig,
   PaginationType,
 } from 'nestjs-paginate';
-import { MAX_ITEMS_PER_PAGE } from '../core/core.constants';
+import { MAX_ITEMS_PER_PAGE } from '@core/core.constants';
 import { Tag } from './entities/tag.entity';
 
 export const TAG_PAGINATION_CONFIG: PaginateConfig<Tag> = {

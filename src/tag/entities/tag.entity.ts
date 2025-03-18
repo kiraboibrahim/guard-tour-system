@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Site } from '../../site/entities/site.entity';
+import { Site } from '@site/entities/site.entity';
 import { Exclude } from 'class-transformer';
-import { Company } from '../../company/entities/company.entity';
+import { Company } from '@company/entities/company.entity';
 
 @Entity()
 export class Tag {
